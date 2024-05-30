@@ -570,6 +570,8 @@ class FGW_protein:
                 for residue in chain:
                     if PDB.is_aa(residue.get_resname(), standard=True):
                         sequence += PDB.Polypeptide.protein_letters_3to1[residue.get_resname()]
+                    elif 'UNK' in residue.get_resname():
+                        sequence += 'X' #unkown
         assert len(sequence) == len(pI_list)
         fasta = ">" + name + '\n' + sequence    
         return FGW_protein(name = name, coords = coords, pI_list = pI_list,fasta=fasta)

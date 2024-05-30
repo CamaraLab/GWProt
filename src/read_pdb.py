@@ -134,7 +134,10 @@ def get_pdb_coords_pI(
     res_list = ""
     
     for res in residues:
-        res_list += res_3_to_1_dict[res.get_resname() ] # adds the 
+        if 'UNK' in res.get_resname():
+            res_list += 'X' #unknown
+        else:
+            res_list += res_3_to_1_dict[res.get_resname() ] # adds the 
     
         het_flag = res.get_id()[0]
         #print(res.get_resname())

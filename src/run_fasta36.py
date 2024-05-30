@@ -149,5 +149,5 @@ def run_ssearch_cigar_Ram(fasta1, #string
 
     return parse_ssearch_outputv2(input = cigar_result, allow_mismatch = allow_mismatch)
     
-
+#WARNING - when mismatch == False there sometimes are aligned residues which are different
 
