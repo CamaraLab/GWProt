@@ -15,7 +15,7 @@ from deprecated import deprecated
 
 import Bio.PDB
 from Bio import PDB, SeqIO
-
+from typing import Callable
 
 
 import IdInit
@@ -26,6 +26,7 @@ import run_fasta36
 from cajal import run_gw, qgw, gw_cython
 """
 copied 4/1/2024
+
 """
 
 
@@ -49,8 +50,8 @@ def pH_median(l: list[float]) -> float:
         return np.median(ll)
 
 def pI_iter_alg(proteinSequence: str,
-    N_term_count = 0: int,
-    C_term_count = 0: int) -> float:
+    N_term_count:int = 0,
+    C_term_count:int = 0) -> float:
     """
     Estimates the isoelectric point of a polypeptide using the Henderson-Hasselbach equation
     The code is based on code in the Sequence Manipulation Suite, 
@@ -246,7 +247,7 @@ class FGW_protein:
     def convolve_pIs_fasta(self, 
         kernel_list :list[int], 
         origin: int, 
-        inplace = False: bool) -> list[float]:
+        inplace :bool = False) -> list[float]:
         """
         This method applies a convolution process to the 'FGW_protein' object which smoothes out the isoelectic points associated
         to each residue by combining them with those of nearby residues. The intended use is that this could be applied before downsampling
@@ -313,8 +314,8 @@ class FGW_protein:
             return out_pI_list
             
     @staticmethod
-    def run_ssearch_indices(p1: FGW_protein,
-    p2: FGW_protein,
+    def run_ssearch_indices(p1: 'FGW_protein',
+    p2: 'FGW_protein',
     allow_mismatch: bool = True): 
         """
         Runs the ssearch36 program from the fasta36 packages and returns the indices of the two proteins which are aligned.
@@ -327,7 +328,7 @@ class FGW_protein:
         return run_fasta36.run_ssearch_cigar_Ram(fasta1 = p1.fasta, fasta2 = p2.fasta, allow_mismatch = allow_mismatch)
 
     def scale_ipdm(self,
-        scaler: function float -> float = lambda x :x, 
+        scaler: Callable[[float],float] = lambda x :x, 
         inplace: bool = False):
         """
         :param scaler: A function with which to scale the intraprotein distance matrix. It must send 0 to 0, be strictly monotonic increasing, and concave down.
@@ -344,7 +345,7 @@ class FGW_protein:
 
 
     def make_GW_cell(self, 
-        distribution: np.array[float] = None) -> gw_cython.GW_cell:
+        distribution: npt.NDArray[np.float_] = None) -> gw_cython.GW_cell:
         """
         Makes a 'gw_cython-GW_cell' object from the CAJAL softward package. This allows more efficient GW computations, but is not suitable for FGW.
         :param distribution: The mass distribution to be used.
@@ -355,7 +356,7 @@ class FGW_protein:
             distribution = GW_scripts.unif(len(self.pI_list))
 
         assert len(distribution) == self.ipdm.shape[0]
-        assert np.sum(distribution) == 1 #possibly off do to floating point rounding
+        #assert np.sum(distribution) == 1 #possibly off do to floating point rounding
 
 
         return gw_cython.GW_cell(self.ipdm,  distribution)
@@ -376,8 +377,8 @@ class FGW_protein:
         return GW_scripts.GW_identity_init(cell_1, cell_2)
         
     @staticmethod       
-    def run_GW(P1 :FGW_protein,
-        P2: FGW_protein) -> float:
+    def run_GW(P1 :'FGW_protein',
+        P2: 'FGW_protein') -> float:
         """
         This is a wrapper for the CAJAL code to create gw_cython.GW_cell object then compute the GW distance between them
         :param P1:
@@ -391,7 +392,7 @@ class FGW_protein:
 
 
     def downsample_by_indices(self, 
-        indices: list[int]) -> FGW_protein:
+        indices: list[int]) -> 'FGW_protein':
         """
         This creates a new 'FGW_protein' object consisting of the residues of 'self' in the input indices
         :param indices: The indices to keep.
@@ -414,13 +415,25 @@ class FGW_protein:
         
         #fasta_seq = self.fasta_seq[indices] #deprecated/unnecesary i think
         return FGW_protein(fasta = new_fasta, pI_list = pI_list, ipdm = ipdm, coords = coords, name = self.name+'_downsampled', scaled_flag = self.scaled_flag)
+
+    def recompute_ipdm(self) -> None:
+        """
+        This method recalculates the ipdm based on the coordinates. The two might not be compatible because of scaling or 'downsample_n(mean_sample =True)'.
+        Raises an error if 'self.coords is None'.
+        :return: Does not return
+        """
+        if self.coords is None:
+            raise Exception('self.coords is None')
+        else:
+            self.ipdm = squareform(pdist(self.coords))
+            self.scaled_flag = False
         
     def downsample_n(self,
         n:int = np.inf, 
         pI_combination: bool = True,
         pI_alg: str = 'iter',
         left_sample:bool = False,
-        mean_sample:bool = False):
+        mean_sample:bool = False) -> 'FGW_protein':
         """
         This method makes a new 'FGW_protein' object created by downsampling from 'self'. This is done by dividing 'self' into 'n' evenly sized segments, 
         then creates an 'FGW_protein' object whose residues are formed by those segments. Depending on the parameters this can be done with regular downsampling 
@@ -437,10 +450,6 @@ class FGW_protein:
             'mean_sample==True' uses the average of the coordinates in a segment.
         :return: A new 'FGW_protein' object created by downsampling from 'self'.
         """
-        
-
-
-    
 
 
         n = min(n, len(self.pI_list))
@@ -454,16 +463,18 @@ class FGW_protein:
         if self.coords is not None:
             if not mean_sample:
                 coords = self.coords[indices, :] #untested
-                ipdm = None
+    
             else: 
                 split_coord_list = read_pdb.split_list(self.coords, n)
                 coords = [np.mean(seg, axis = 0) for seg in split_coord_list]  #unsure about axis
-                coords = np.stack(coords) #untested
-
+                coords = np.stack(coords) 
+            ipdm = None
         else:
             coords = None
-            ii = np.ix_(indices,indices)
-            ipdm = self.ipdm[ii]
+
+        
+        ii = np.ix_(indices,indices)
+        ipdm = self.ipdm[ii]
 
         if pI_combination: 
             split_pI_list = read_pdb.split_list(self.pI_list, n)
@@ -526,7 +537,7 @@ class FGW_protein:
         
     @staticmethod
     def make_protein_from_files(pdb_file: str, 
-        fasta_file:str) -> FGW_protein:
+        fasta_file:str) -> 'FGW_protein':
         """
         Creates a FGW_protein object with the coordinate data from the 'pdb_file' and the sequence of the 'fasta_file'.
         :param pdb_file: Filepath to the .pdb file
@@ -541,7 +552,7 @@ class FGW_protein:
         return FGW_protein(name = name, coords = coords, pI_list = pI_list,fasta=fasta)
         
     @staticmethod
-    def make_protein_from_pdb(pdb_file:str) ->FGW_protein:
+    def make_protein_from_pdb(pdb_file:str) ->'FGW_protein':
         """
         Creates a FGW_protein object with the coordinate and sequence data from the 'pdb_file'
         :param pdb_file: Filepath to the .pdb file
@@ -560,21 +571,22 @@ class FGW_protein:
                 for residue in chain:
                     if PDB.is_aa(residue.get_resname(), standard=True):
                         sequence += PDB.Polypeptide.protein_letters_3to1[residue.get_resname()]
+                    elif 'UNK' in residue.get_resname():
+                        sequence += 'X' #unkown
         assert len(sequence) == len(pI_list)
         fasta = ">" + name + '\n' + sequence    
         return FGW_protein(name = name, coords = coords, pI_list = pI_list,fasta=fasta)
 
 
     @staticmethod
-    def run_FGW(p1: FGW_protein, p2:FGW_protein, alpha:float) -> float:
-
-    """
-    This calculates the fused Gromov-Wasserstein distance between two proteins. The computation is done with the Python 'ot' library. 
-    :param p1: The first protein
-    :param p2: The second protein
-    :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. A higher value of 'alpha' means more geometric weight, 'alpha' = 1 is equivalent to regular GW.
-    :return: The FGW distance
-    """
+    def run_FGW(p1: 'FGW_protein', p2:'FGW_protein', alpha:float) -> float:
+        """
+        This calculates the fused Gromov-Wasserstein distance between two proteins. The computation is done with the Python 'ot' library. 
+        :param p1: The first protein
+        :param p2: The second protein
+        :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. A higher value of 'alpha' means more geometric weight, 'alpha' = 1 is equivalent to regular GW.
+        :return: The FGW distance
+        """
 
         D1 = p1.ipdm
         D2 = p2.ipdm
@@ -602,7 +614,7 @@ class FGW_protein:
         return  0.5 * math.sqrt(d)
         
     @staticmethod
-    def run_FGW_seq_aln(p1:FGW_protein, p2:FGW_protein, alpha:float, n: int = np.inf,allow_mismatch:bool = True) -> float:
+    def run_FGW_seq_aln(p1:'FGW_protein', p2:'FGW_protein', alpha:float, n: int = np.inf,allow_mismatch:bool = True) -> float:
         """
         This calculates the fused Gromov-Wasserstein distance between two proteins when applied just to aligned residues. 
         It first applies sequence alignment, downsamples up to 'n' of the aligned residues, then applies FGW. 

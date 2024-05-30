@@ -26,152 +26,8 @@ import run_fasta36
 from cajal import run_gw, qgw, gw_cython
 """
 copied 4/1/2024
+
 """
-
-
-
-
-def pH_median(l: list[float]) -> float:
-    """
-    algorithm for approximating the isoelectric point, takes the median after ignoring 7's
-    returns 7 if the length is 0
-    :param l: list of isoelectric points of residues
-
-    :return: estimate of isoelectric point of polypeptide
-    """
-
-
-    
-    ll = [p for p in l if p!=7]
-    if len(ll) ==0:
-        return 7
-    else:
-        return np.median(ll)
-
-def pI_iter_alg(proteinSequence: str,
-    N_term_count:int = 0,
-    C_term_count:int = 0) -> float:
-    """
-    Estimates the isoelectric point of a polypeptide using the Henderson-Hasselbach equation
-    The code is based on code in the Sequence Manipulation Suite, 
-    and uses the pI values of residues and termini from Solomon’s Organic Chemistry, fifth edition
-
-    Stothard P. The sequence manipulation suite: JavaScript programs for analyzing and formatting protein and DNA sequences. Biotechniques. 
-    2000 Jun;28(6):1102, 1104. doi: 10.2144/00286ir01. PMID: 10868275.
-
-    :param proteinSequence : string of the polypeptide's residues in one-letter symbols
-    :param N_term_count : number of Nitrogen termini to include
-    :param C_term_count : number of Carbon termini to include
-    :return: the estimated isoelectric point
-    """
-
-
-        
-    """
-    //    Sequence Manipulation Suite. A collection of simple JavaScript programs
-    //    for generating, formatting, and analyzing short DNA and protein
-    //    sequences.
-    //    Copyright (C) 2020 Paul Stothard stothard@ualberta.ca
-    //
-    //    This program is free software: you can redistribute it and/or modify
-    //    it under the terms of the GNU General Public License as published by
-    //    the Free Software Foundation, either version 3 of the License, or
-    //    (at your option) any later version.
-    //
-    //    This program is distributed in the hope that it will be useful,
-    //    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    //    GNU General Public License for more details.
-    //
-    //    You should have received a copy of the GNU General Public License
-    //    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-    //
-    
-    //Written by Paul Stothard, University of Alberta, Canada 
-    rewritten in python and revised by Elijah Gunther (all errors are my own)
-    
-    https://github.com/paulstothard/sequence_manipulation_suite/blob/master/docs/scripts/protein_iep.js
-    
-    Stothard P. The sequence manipulation suite: JavaScript programs for analyzing and formatting protein and DNA sequences. Biotechniques. 
-    2000 Jun;28(6):1102, 1104. doi: 10.2144/00286ir01. PMID: 10868275.
-
-
-
-    Graham Solomons T.W., Fryhle C.B., Snyder S.A.. Solomons’ Organic Chemistry. 
-
-    """
-    #calculates pI of protein.
-    # N_term, C_term are whether the N (resp C) terminus is in this part of the protein
-    #and how many of them we include for the convolution
-
-    pH = 7.0
-    step = 1 #originally 3.5
-    charge = 0.0
-    last_charge = 0.0
-    
-    proteinSequence = str(proteinSequence).lower()
-    
-    #solomon
-    N_term_pK =  9.6
-    K_pK =  10.5
-    R_pK =  12.5
-    H_pK =  6
-    D_pK =  3.9
-    E_pK =  4.3
-    C_pK =  8.3
-    Y_pK =  10.1
-    C_term_pK = 2.4
-    
-    
-    
-    K_count = proteinSequence.count('k')
-    R_count = proteinSequence.count('r')
-    H_count = proteinSequence.count('h')
-    D_count = proteinSequence.count('d')
-    E_count = proteinSequence.count('e')
-    C_count = proteinSequence.count('c')
-    Y_count = proteinSequence.count('y')
-    
-    
-    
-    
-    while True:
-        charge = (K_count * partial_charge(K_pK, pH) +
-        R_count * partial_charge(R_pK, pH) +
-        H_count * partial_charge(H_pK, pH) -
-        D_count * partial_charge(pH, D_pK) -
-        E_count * partial_charge(pH, E_pK) -
-        C_count * partial_charge(pH, C_pK) -
-        Y_count * partial_charge(pH, Y_pK) +
-        N_term_count * partial_charge(N_term_pK, pH) - 
-        C_term_count * partial_charge(pH, C_term_pK)     )
-    
-    
-        if abs(charge) < 0.1:
-        #round(charge,2) == round(last_charge*100,2):
-            #print(charge, last_charge)
-            break #check that this is same as in python
-            
-        # (charge.toFixed(2) == (last_charge * 100).toFixed(2))
-        
-    
-        if charge > 0: 
-            pH = pH + step
-        else:
-            pH = pH - step
-    
-    
-        step = step*0.9 #originally 0.5
-    
-        last_charge = charge
-    
-    return pH
-
-
-def partial_charge(first, second):
-    #helper method for pI_iter_alg
-    charge = 10**( first - second)
-    return charge / (charge + 1)
 
 
 
@@ -192,7 +48,7 @@ class FGW_protein:
 
 
     def __init__(self, name, fasta, pI_list,  coords = None, ipdm = None, scaled_flag = False ):
-        #note - the fasta full text of the file, not the sequence
+        #note - the fasta is the sequence, not the file
         #input validation
         assert not (coords is None and ipdm is None)
         if not coords is None:
@@ -243,74 +99,9 @@ class FGW_protein:
         return fasta_seq1 == fasta_seq2 and self.pI_list == other.pI_list and (self.ipdm == other.ipdm).all()
       
 
-    def convolve_pIs_fasta(self, 
-        kernel_list :list[int], 
-        origin: int, 
-        inplace :bool = False) -> list[float]:
-        """
-        This method applies a convolution process to the 'FGW_protein' object which smoothes out the isoelectic points associated
-        to each residue by combining them with those of nearby residues. The intended use is that this could be applied before downsampling
-        so that the isoelectric points of discarded residues is still preserved. That is done automatically with downsample_n(pI_combination = True),
-        so this is most useful when applied before run_FGW_seq_aln() as that method discards unaligned residues.
-
-
-        The convolution works as follows: for each residue we make a virtual oligopeptide of copies of that residue and its neighbors, 
-        then use 'pI_iter_alg' to estimate the oligopeptide's isoelectric point. The number of copies is the entry of 'kernel_list', where the current residue is at position 'origin',
-        The isoelectric contributions of the protein's N- and C-termini are accounted for similarly. 
-
-
-
-
-
-        We recommend that the 'kernel_list' is symmetric about index 'origin' and unimodal. 
-        For instance '[1,2,3,2,1]' and '2'.
-
-
-        :param kernel_list: The list of how many copies of nearby residues we use when smoothing the isoelectric points
-        :param origin: The index in the 'kernel_list' of the current residue
-        :param inplace: Whether this modifies 'self.pI_list' or returns a new list
-        :return: For 'inplace==False' the new, smoothed list of isoelectric point values. For 'inplace==True' nothing is returned.
-        """
-
-
-        k = kernel_list
-        for a in kernel_list:
-            assert type(a) == int
-            assert a >= 0
-        assert 0 <= origin < len(k)
-        fasta_header, fasta = re.findall(string = self.fasta, pattern = r'^(>.+)\n([A-Z]*)$')[0]
-        out_pI_list = []
-
-        for i in range(len(self.pI_list)):
-            local_fasta_list = []
-    
-            for j in range(len(k)):
-                #print(i,j) #testing
-                try:
-                    if i+j -origin <0:
-                        continue
-                    local_fasta_list += [fasta[i+j -origin ] ]* k[j]
-                except IndexError:
-                    pass
-                    
-                if i+j -origin == 0:
-                    N_term_count = k[j]
-                    
-                else:
-                    N_term_count = 0
-                if i+j -origin == len(self.pI_list) -1:
-                    C_term_count = k[j]
-                    
-                else:
-                    C_term_count = 0
-                
-            out_pI_list.append(pI_iter_alg( local_fasta_list, N_term_count = N_term_count, C_term_count = C_term_count))
-
-        if inplace:
-            self.pI_list = out_pI_list
-            return 0
-        else:
-            return out_pI_list
+    def __len__(self):
+        return len(self.pI_list)
+ 
             
     @staticmethod
     def run_ssearch_indices(p1: 'FGW_protein',
@@ -427,75 +218,7 @@ class FGW_protein:
             self.ipdm = squareform(pdist(self.coords))
             self.scaled_flag = False
         
-    def downsample_n(self,
-        n:int = np.inf, 
-        pI_combination: bool = True,
-        pI_alg: str = 'iter',
-        left_sample:bool = False,
-        mean_sample:bool = False) -> 'FGW_protein':
-        """
-        This method makes a new 'FGW_protein' object created by downsampling from 'self'. This is done by dividing 'self' into 'n' evenly sized segments, 
-        then creates an 'FGW_protein' object whose residues are formed by those segments. Depending on the parameters this can be done with regular downsampling 
-        (simply picking one residue from each segment and copying its data) or by combining the coordinate data and/or isoelectric values of the residues in a segment.
-
-        :param n: The maximum number of residues in the output protein. If this is larger than the size of 'self', then there is no downsampling.
-        :param pI_combination: Whether to combine the isoelectric points of nearby residues when downsampling. If "False" then the values in 'pI_list' 
-            of the returned 'FGW_protein' are a subset of those of 'self.pI_list'. If "True" then 'pI_alg' is used to estimate the isoelectric point of
-            nearby residues
-        :param pI_alg: Which algorithm to use to estimate isoelectric points. 'pI_alg == "iter"' uses 'pI_iter_alg()' and 'pI_alg == "median"' uses 'pH_median'
-        :param left_sample: Whether to use the left-most (lowest index) or median residue from each segment. 'left_sample == True' uses the left-most, 
-            'left_sample== False' uses the median
-        :param mean_sample: Whether to average the coordinates of the residues in a segment. 'mean_sample == False' uses the coordinates of the residue determined by 'left_sample',
-            'mean_sample==True' uses the average of the coordinates in a segment.
-        :return: A new 'FGW_protein' object created by downsampling from 'self'.
-        """
-
-
-        n = min(n, len(self.pI_list))
-        l,s = np.linspace(0, len(self.pI_list), num=n, endpoint=False, dtype=int,retstep = True) 
-        if left_sample:
-            indices = np.array([int(i ) for i in l])
-        else:
-            indices = np.array([int(i + s//2) for i in l])
-
-
-        if self.coords is not None:
-            if not mean_sample:
-                coords = self.coords[indices, :] #untested
-    
-            else: 
-                split_coord_list = read_pdb.split_list(self.coords, n)
-                coords = [np.mean(seg, axis = 0) for seg in split_coord_list]  #unsure about axis
-                coords = np.stack(coords) 
-            ipdm = None
-        else:
-            coords = None
-
-        
-        ii = np.ix_(indices,indices)
-        ipdm = self.ipdm[ii]
-
-        if pI_combination: 
-            split_pI_list = read_pdb.split_list(self.pI_list, n)
-            if pI_alg == 'median':
-                pI_list = [pH_median(seg) for seg in split_pI_list]
-            elif pI_alg == 'iter':
-                split_res_list = read_pdb.split_list(self.get_fasta_seq(), n)
-                pI_list = [pI_iter_alg(split_res_list[0], N_term_count= 1)]  + [pI_iter_alg(seg) for seg in split_res_list[1:-1]] + [pI_iter_alg(split_res_list[-1], C_term_count= 1)]
-            else:
-                raise Exception("Invalid parameter for pI_alg, must be 'median' or 'iter'" )
-        else:
-            pI_list = [self.pI_list[i] for i in indices]
-
-        fasta_header, fasta_seq = re.findall( string = self.fasta, pattern = r'^(>.+)\n([A-Z]*)$')[0]
-        new_header = fasta_header + ' downsampled to ' + str(n)
-        new_seq = ''.join([fasta_seq[i] for i in indices])
-        new_fasta = new_header + '\n' + new_seq
-        
-        
-        #fasta_seq = self.fasta_seq[indices] #deprecated/unnecesary i think
-        return FGW_protein(fasta = new_fasta, pI_list = pI_list, ipdm = ipdm, coords = coords, name = self.name+'_downsampled', scaled_flag = self.scaled_flag)
-
+  
 
     def validate(self) -> bool:
         """
@@ -534,22 +257,7 @@ class FGW_protein:
         fasta_header, fasta_seq = re.findall( string = self.fasta, pattern = r'^(>.+)\n([A-Z]*)$')[0]
         return fasta_seq
         
-    @staticmethod
-    def make_protein_from_files(pdb_file: str, 
-        fasta_file:str) -> 'FGW_protein':
-        """
-        Creates a FGW_protein object with the coordinate data from the 'pdb_file' and the sequence of the 'fasta_file'.
-        :param pdb_file: Filepath to the .pdb file
-        :param fasta: Filepath to the .fasta file
-        :return: A new 'FGW_protein' object
-        """
-
-        with open(fasta_file, 'r') as fasta_in:
-            fasta = fasta_in.read()
-        coords, pI_list = read_pdb.get_pdb_coords_pI(filepath = pdb_file, n = np.inf, median = True)
-        name = re.findall(string = pdb_file, pattern = r'([^\/]+)\.pdb$')[0]
-        return FGW_protein(name = name, coords = coords, pI_list = pI_list,fasta=fasta)
-        
+ 
     @staticmethod
     def make_protein_from_pdb(pdb_file:str) ->'FGW_protein':
         """
@@ -571,7 +279,7 @@ class FGW_protein:
                     if PDB.is_aa(residue.get_resname(), standard=True):
                         sequence += PDB.Polypeptide.protein_letters_3to1[residue.get_resname()]
                     elif 'UNK' in residue.get_resname():
-                        sequence += 'X' #unkown
+                        sequence += '*' #unkown
         assert len(sequence) == len(pI_list)
         fasta = ">" + name + '\n' + sequence    
         return FGW_protein(name = name, coords = coords, pI_list = pI_list,fasta=fasta)
@@ -641,6 +349,5 @@ class FGW_protein:
 
 
 
-    
 
     
