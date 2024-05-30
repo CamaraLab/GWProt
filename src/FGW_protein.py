@@ -37,7 +37,7 @@ class FGW_protein:
 
     :param name: Simply for ease of use
     :param coords: The coordinates of the CA atoms of the protein, ordered sequentially
-    :param fasta: A string in the format of a fasta file containing a header and the sequence of the protein. Sequence has length n
+    :param seq: A string giving the sequence of the protein. Sequence has length n
     :param ipdm: The intra-protein distance matrix of a protein. 
         The (i,j)th entry is the (possibly scaled) distance between residues i and j. This is mutable can can change if distortion scaling is used.
     :param scaled_flag: Records whether the ipdm is the exact distance between residues or if it has been scaled.
@@ -47,8 +47,8 @@ class FGW_protein:
 
 
 
-    def __init__(self, name, fasta, pI_list,  coords = None, ipdm = None, scaled_flag = False ):
-        #note - the fasta is the sequence, not the file
+    def __init__(self, name, seq, pI_list,  coords = None, ipdm = None, scaled_flag = False ):
+        #note - the seq is the sequence, not the file
         #input validation
         assert not (coords is None and ipdm is None)
         if not coords is None:
@@ -68,11 +68,10 @@ class FGW_protein:
             assert ipdm.shape[0] == ipdm.shape[1]
             assert (ipdm == ipdm.T).all()
 
-        fasta_header, fasta_seq = re.findall(string = fasta, pattern = r'^(>.+)\n([A-Z]*)$')[0]
-        assert len(fasta_seq) ==len(pI_list)
+        assert len(seq) ==len(pI_list)
         
         self.name = name
-        self.fasta = fasta
+        self.seq = seq
         self.pI_list = pI_list
         self.coords = coords
         
@@ -86,17 +85,13 @@ class FGW_protein:
             
     def __eq__(self, other):
         """
-        Compares the underlying fasta sequences (not the full fasta file), the pI_lists, the ipdms, and the coords if both are defined.
-        This does NOT compare the names, scaled_flags, or fasta headers.
+        Compares the underlying seq sequences (not the full seq file), the pI_lists, the ipdms, and the coords if both are defined.
+        This does NOT compare the names, scaled_flags, or seq headers.
         """
 
-
-        fasta_header1, fasta_seq1 = re.findall(string = self.fasta, pattern = r'^(>.+)\n([A-Z]*)$')[0]
-        fasta_header2, fasta_seq2 = re.findall(string = other.fasta, pattern = r'^(>.+)\n([A-Z]*)$')[0]
-        
         if self.coords is not None and other.coords is not None and (self.coords != other.coords).any():
             return False  
-        return fasta_seq1 == fasta_seq2 and self.pI_list == other.pI_list and (self.ipdm == other.ipdm).all()
+        return self.seq == other.seq and self.pI_list == other.pI_list and (self.ipdm == other.ipdm).all()
       
 
     def __len__(self):
@@ -108,14 +103,15 @@ class FGW_protein:
     p2: 'FGW_protein',
     allow_mismatch: bool = True): 
         """
-        Runs the ssearch36 program from the fasta36 packages and returns the indices of the two proteins which are aligned.
+        Runs the ssearch36 program from the seq36 packages and returns the indices of the two proteins which are aligned.
         :param p1: First protein
         :param p2: Fecond protein
         :param allow_mismatch: Whether to include residues which are aligned but not the same type of amino acid
         :return: Two lists of indices, those of 'p1' and 'p2' which are aligned
         """ 
-
-        return run_fasta36.run_ssearch_cigar_Ram(fasta1 = p1.fasta, fasta2 = p2.fasta, allow_mismatch = allow_mismatch)
+        fasta1 = ">" + p1.name + '\n' + p1.seq
+        fasta2 = ">" + p2.name + '\n' + p2.seq
+        return run_fasta36.run_ssearch_cigar_Ram(fasta1 = fasta1, fasta2 = fasta2, allow_mismatch = allow_mismatch)
 
     def scale_ipdm(self,
         scaler: Callable[[float],float] = lambda x :x, 
@@ -131,7 +127,7 @@ class FGW_protein:
             self.ipdm = m
             self.scaled_flag = True
         else:
-            return FGW_protein(fasta = self.fasta, pI_list = self.pI_list, ipdm = m, coords = None, name = self.name+'_scaled', scaled_flag = True)
+            return FGW_protein(seq = self.seq, pI_list = self.pI_list, ipdm = m, coords = None, name = self.name+'_scaled', scaled_flag = True)
 
 
     def make_GW_cell(self, 
@@ -197,14 +193,9 @@ class FGW_protein:
         ipdm = self.ipdm[ii]
         pI_list = [self.pI_list[i] for i in indices]
 
-        fasta_header, fasta_seq = re.findall( string = self.fasta, pattern = r'^(>.+)\n([A-Z]*)$')[0]
-        new_header = fasta_header + ' downsampled'
-        new_seq = ''.join([fasta_seq[i] for i in indices])
-        new_fasta = new_header + '\n' + new_seq
+        new_seq = ''.join([self.seq[i] for i in indices])
         
-        
-        #fasta_seq = self.fasta_seq[indices] #deprecated/unnecesary i think
-        return FGW_protein(fasta = new_fasta, pI_list = pI_list, ipdm = ipdm, coords = coords, name = self.name+'_downsampled', scaled_flag = self.scaled_flag)
+        return FGW_protein(seq = new_seq, pI_list = pI_list, ipdm = ipdm, coords = coords, name = self.name+'_downsampled', scaled_flag = self.scaled_flag)
 
     def recompute_ipdm(self) -> None:
         """
@@ -241,22 +232,14 @@ class FGW_protein:
         assert (self.ipdm == self.ipdm.T).all()
         assert self.name is not None
 
-        fasta_header, fasta_seq = re.findall(string = self.fasta, pattern = r'^(>.+)\n([A-Z]*)$')[0]
-        assert len(fasta_seq) ==len(self.pI_list)
+        assert len(self.seq) ==len(self.pI_list)
 
-        if  len(self.pI_list)>=1 and ( self.pI_list[1:-1] != [read_pdb.writeProtIepMedian(r) for r in fasta_seq[1:-1]]):
+        if  len(self.pI_list)>=1 and ( self.pI_list[1:-1] != [read_pdb.writeProtIepMedian(r) for r in self.seq[1:-1]]):
             print('pI_list is wrong, could be caused by convolution')
         
         return True
 
-    def get_fasta_seq(self)->str:
-        """
-        Helper method to get the sequence of a protein
-        :return: The protein sequence
-        """
-        fasta_header, fasta_seq = re.findall( string = self.fasta, pattern = r'^(>.+)\n([A-Z]*)$')[0]
-        return fasta_seq
-        
+
  
     @staticmethod
     def make_protein_from_pdb(pdb_file:str) ->'FGW_protein':
@@ -281,8 +264,8 @@ class FGW_protein:
                     elif 'UNK' in residue.get_resname():
                         sequence += '*' #unkown
         assert len(sequence) == len(pI_list)
-        fasta = ">" + name + '\n' + sequence    
-        return FGW_protein(name = name, coords = coords, pI_list = pI_list,fasta=fasta)
+        
+        return FGW_protein(name = name, coords = coords, pI_list = pI_list,seq=sequence)
 
 
     @staticmethod
