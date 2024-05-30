@@ -141,25 +141,34 @@ def compare_proteins_in_pymol(file1, file2, output_file, threshold = 0.5):
     pm("cmd.zoom('all')")
     pm(f"cmd.save( '{output_file}') ")
 
-def show_proteins_with_values(file1, data, output_file):
-    p1 = FGW_protein.FGW_protein.make_protein_from_pdb(file1)
-
+def show_proteins_with_values(file,  output_file, *argv):
+    #final param is list of data
     cmd.delete('all')
-    cmd.load(file1, 'prot1')
-    residue_numbers1 = list(set(atom.resi_number for atom in cmd.get_model('prot1').atom))
+    data = list(argv)
+    n = len(data)
+    prots = {}
+    
+    for i in range(n):
+        prots[i] = FGW_protein.FGW_protein.make_protein_from_pdb(file1)
+        cmd.load(file, 'prot' + str(i))
+        if i ==0:
+            residue_numbers = list(set(atom.resi_number for atom in cmd.get_model('prot0').atom))
+            assert len(residue_numbers) == len(prots[i])
+            my_namespace = { 'res_num' : residue_numbers } 
+            
+        assert len(data[i]) == len(residue_numbers)
+        my_namespace['new_b' + str(i) ] = data[i]
+        cmd.alter(selection = 'prot' + str(i), expression = 'b = new_b' + str(i)+'[res_num.index(int(resi))]', space = my_namespace)
+        cmd.spectrum( expression = "b" , selection = 'prot'+str(i), palette = "yellow_red",byres = 1) 
 
-    assert len(residue_numbers1) == len(p1.pI_list)
-    assert len(data) == len(p1.pI_list)
-    my_namespace = {'new_b1' : data,  'res_num1' : residue_numbers1 } 
-    cmd.alter(selection = 'prot1', expression = 'b = new_b1[res_num1.index(int(resi))]', space = my_namespace)
-    cmd.spectrum( expression = "b" , selection = 'prot1', palette = "yellow_red",byres = 1)    
 
     cmd.zoom('all')
     cmd.center()
     cmd.bg_color('grey80')
     cmd.save(output_file)
    
-
+    
+    
 
 
 if __name__ == "__main__":

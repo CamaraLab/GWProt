@@ -37,7 +37,7 @@ class FGW_protein:
 
     :param name: Simply for ease of use
     :param coords: The coordinates of the CA atoms of the protein, ordered sequentially
-    :param seq: A string giving the sequence of the protein. Sequence has length n
+    :param seq: A string giving the sequence of the protein
     :param ipdm: The intra-protein distance matrix of a protein. 
         The (i,j)th entry is the (possibly scaled) distance between residues i and j. This is mutable can can change if distortion scaling is used.
     :param scaled_flag: Records whether the ipdm is the exact distance between residues or if it has been scaled.
@@ -182,7 +182,7 @@ class FGW_protein:
         """
         This creates a new 'FGW_protein' object consisting of the residues of 'self' in the input indices
         :param indices: The indices to keep.
-        :return: A new 'FGW_protein' object.
+        :return: A new 'FGW_protein' object
         """
         assert set(indices).issubset(set(range(len(self.pI_list))))
         if self.coords is not None:
