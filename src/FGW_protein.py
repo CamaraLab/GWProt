@@ -22,6 +22,7 @@ import IdInit
 import GW_scripts
 import read_pdb
 import run_fasta36
+import FGW_matrices
 
 from cajal import run_gw, qgw, gw_cython
 """
@@ -269,6 +270,71 @@ class FGW_protein:
 
 
     @staticmethod
+    def run_FGW_data_lists(p1: 'FGW_protein', p2:'FGW_protein', data1 :list[float] = None , data2 : list[float] = None , alpha:float) -> float:
+        """
+        This calculates the fused Gromov-Wasserstein distance between two proteins. The computation is done with the Python 'ot' library. 
+        :param p1: The first protein
+        :param p2: The second protein
+        :param data1: The data used in the first protein, default is its isoelectric points.
+        :param data2: The data used in the second protein, default is its isoelectric points.
+        :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. A higher value of 'alpha' means more geometric weight, 'alpha' = 1 is equivalent to regular GW.
+        :return: The FGW distance
+        """
+        #not yet tested
+        D1 = p1.ipdm
+        D2 = p2.ipdm
+        if data1 is None:
+            data1 = p1.pI_list
+        if data2 is None:
+            data2 = p2.pI_list
+        n1 = len(D1)
+        n2 = len(D2)
+        try:
+            assert n1 == len(data1)
+            assert n2 == len(data2)
+        except:
+            print(D1.shape, D2.shape, len(data1), len(data2))
+            assert False
+        
+        a = np.array([np.array([x]) for x in data1])
+        b = np.array(data2)
+        aa = np.broadcast_to(a,(n1,n2))
+        bb = np.broadcast_to(b,(n1,n2))
+        M = abs(aa-bb)
+        G0 = GW_scripts.id_initial_coupling_unif(n1,n2)
+        
+        d = ot.fused_gromov_wasserstein2(M=M, C1=D1, C2=D2, alpha = alpha, p= GW_scripts.unif(n1),q=GW_scripts.unif(n2), G0 = G0, loss_fun='square_loss')
+    
+        return  0.5 * math.sqrt(d)
+        
+    @staticmethod
+    def run_FGW_dict(p1: 'FGW_protein', p2:'FGW_protein', d: Dict[str , Dict[str ,float]] ,alpha:float) -> float:
+        """
+        This calculates the fused Gromov-Wasserstein distance between two proteins. The computation is done with the Python 'ot' library. 
+        :param p1: The first protein
+        :param p2: The second protein
+        :param d: The dictionary used for the fused distances based on the protein sequences. Of the form d['A']['B'] == float,
+        :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. A higher value of 'alpha' means more geometric weight, 'alpha' = 1 is equivalent to regular GW.
+        :return: The FGW distance
+        """
+        #not yet tested
+        D1 = p1.ipdm
+        D2 = p2.ipdm
+        n1 = len(p1)
+        n2 = len(p2)
+        # M has shape (n1,n2)
+        M = np.zeros((n1,n2))
+        for i in range(n1):
+            for j in range(n2):
+                M[i,j] = d[p1.seq[i]][p2.seq[j]]
+        
+        G0 = GW_scripts.id_initial_coupling_unif(n1,n2)
+        
+        d = ot.fused_gromov_wasserstein2(M=M, C1=D1, C2=D2, alpha = alpha, p= GW_scripts.unif(n1),q=GW_scripts.unif(n2), G0 = G0, loss_fun='square_loss')
+    
+        return  0.5 * math.sqrt(d)
+    
+    @staticmethod
     def run_FGW(p1: 'FGW_protein', p2:'FGW_protein', alpha:float) -> float:
         """
         This calculates the fused Gromov-Wasserstein distance between two proteins. The computation is done with the Python 'ot' library. 
@@ -277,7 +343,6 @@ class FGW_protein:
         :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. A higher value of 'alpha' means more geometric weight, 'alpha' = 1 is equivalent to regular GW.
         :return: The FGW distance
         """
-
         D1 = p1.ipdm
         D2 = p2.ipdm
         pI1 = p1.pI_list
@@ -299,7 +364,6 @@ class FGW_protein:
         G0 = GW_scripts.id_initial_coupling_unif(n1,n2)
         
         d = ot.fused_gromov_wasserstein2(M=M, C1=D1, C2=D2, alpha = alpha, p= GW_scripts.unif(n1),q=GW_scripts.unif(n2), G0 = G0, loss_fun='square_loss')
-    
     
         return  0.5 * math.sqrt(d)
         

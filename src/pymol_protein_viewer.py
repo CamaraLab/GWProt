@@ -143,6 +143,7 @@ def compare_proteins_in_pymol(file1, file2, output_file, threshold = 0.5):
 
 def show_proteins_with_values(file,  output_file, *argv):
     #final param is list of data
+    #not yet tested
     cmd.delete('all')
     data = list(argv)
     n = len(data)
