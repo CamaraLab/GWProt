@@ -23,6 +23,7 @@ import GW_scripts
 import read_pdb
 import run_fasta36
 import FGW_matrices
+import pymol_protein_viewer
 
 from cajal import run_gw, qgw, gw_cython
 """
@@ -48,7 +49,7 @@ class FGW_protein:
 
 
 
-    def __init__(self, name, seq, pI_list,  coords = None, ipdm = None, scaled_flag = False ):
+    def __init__(self, name : str, seq, pI_list,  coords = None, ipdm = None, scaled_flag = False ):
         #note - the seq is the sequence, not the file
         #input validation
         assert not (coords is None and ipdm is None)
@@ -89,14 +90,17 @@ class FGW_protein:
         Compares the underlying seq sequences (not the full seq file), the pI_lists, the ipdms, and the coords if both are defined.
         This does NOT compare the names, scaled_flags, or seq headers.
         """
-
-        if self.coords is not None and other.coords is not None and (self.coords != other.coords).any():
+        
+        if self.coords is not None and other.coords is not None and ((self.coords.shape != other.coords.shape) or (self.coords != other.coords).any()):
             return False  
         return self.seq == other.seq and self.pI_list == other.pI_list and (self.ipdm == other.ipdm).all()
       
 
     def __len__(self):
         return len(self.pI_list)
+        
+    def __str__(self):
+        return self.name
  
             
     @staticmethod
@@ -270,7 +274,7 @@ class FGW_protein:
 
 
     @staticmethod
-    def run_FGW_data_lists(p1: 'FGW_protein', p2:'FGW_protein', data1 :list[float] = None , data2 : list[float] = None , alpha:float) -> float:
+    def run_FGW_data_lists(p1: 'FGW_protein', p2:'FGW_protein', data1 :list[float] = None , data2 : list[float] = None , alpha:float = 1) -> float:
         """
         This calculates the fused Gromov-Wasserstein distance between two proteins. The computation is done with the Python 'ot' library. 
         :param p1: The first protein
@@ -304,11 +308,13 @@ class FGW_protein:
         G0 = GW_scripts.id_initial_coupling_unif(n1,n2)
         
         d = ot.fused_gromov_wasserstein2(M=M, C1=D1, C2=D2, alpha = alpha, p= GW_scripts.unif(n1),q=GW_scripts.unif(n2), G0 = G0, loss_fun='square_loss')
-    
+
+        if d <=0:
+            return 0
         return  0.5 * math.sqrt(d)
         
     @staticmethod
-    def run_FGW_dict(p1: 'FGW_protein', p2:'FGW_protein', d: Dict[str , Dict[str ,float]] ,alpha:float) -> float:
+    def run_FGW_dict(p1: 'FGW_protein', p2:'FGW_protein', d: dict[str , dict[str ,float]] ,alpha:float = 1) -> float:
         """
         This calculates the fused Gromov-Wasserstein distance between two proteins. The computation is done with the Python 'ot' library. 
         :param p1: The first protein
@@ -331,11 +337,12 @@ class FGW_protein:
         G0 = GW_scripts.id_initial_coupling_unif(n1,n2)
         
         d = ot.fused_gromov_wasserstein2(M=M, C1=D1, C2=D2, alpha = alpha, p= GW_scripts.unif(n1),q=GW_scripts.unif(n2), G0 = G0, loss_fun='square_loss')
-    
+        if d <=0:
+            return 0
         return  0.5 * math.sqrt(d)
     
     @staticmethod
-    def run_FGW(p1: 'FGW_protein', p2:'FGW_protein', alpha:float) -> float:
+    def run_FGW(p1: 'FGW_protein', p2:'FGW_protein', alpha: float = 1) -> float:
         """
         This calculates the fused Gromov-Wasserstein distance between two proteins. The computation is done with the Python 'ot' library. 
         :param p1: The first protein
@@ -364,7 +371,8 @@ class FGW_protein:
         G0 = GW_scripts.id_initial_coupling_unif(n1,n2)
         
         d = ot.fused_gromov_wasserstein2(M=M, C1=D1, C2=D2, alpha = alpha, p= GW_scripts.unif(n1),q=GW_scripts.unif(n2), G0 = G0, loss_fun='square_loss')
-    
+        if d <=0:
+            return 0
         return  0.5 * math.sqrt(d)
         
     @staticmethod
@@ -392,7 +400,9 @@ class FGW_protein:
 
         return FGW_protein.run_FGW(p3,p4, alpha = alpha)
         
-
+    @staticmethod
+    def show_proteins_with_values(file,  output_file,  *argv):
+        pymol_protein_viewer.show_proteins_with_values(file,  output_file, *argv)
 
 
 

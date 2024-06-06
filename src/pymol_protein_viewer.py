@@ -150,7 +150,7 @@ def show_proteins_with_values(file,  output_file, *argv):
     prots = {}
     
     for i in range(n):
-        prots[i] = FGW_protein.FGW_protein.make_protein_from_pdb(file1)
+        prots[i] = FGW_protein.FGW_protein.make_protein_from_pdb(file)
         cmd.load(file, 'prot' + str(i))
         if i ==0:
             residue_numbers = list(set(atom.resi_number for atom in cmd.get_model('prot0').atom))

@@ -29,6 +29,12 @@ RUN apt-get install git-all -y
 RUN cd fasta-36.3.8i/src; `
     make -f ../make/Makefile.linux_sse2 all
 
+#trying this out
+RUN  apt-get install -y apt-transport-https
+RUN apt-get update && apt-get install pymol -y --fix-missing
+#takes 8 minutes..
+# seems to be the shell python .. ?
+
 
 
 USER jovyan
