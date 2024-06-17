@@ -26,6 +26,12 @@ RUN conda install -c conda-forge pymol-open-source
 #RUN apt-get install pymol #fails
 RUN apt-get install pymol --fix-missing -y
 
+# we probably need these, but not tested yet
+# RUN conda install -c schrodinger pymol
+# RUN conda install -c schrodinger pymol-psico
+# RUN conda install -c speleo3 tmalign
+
+
 RUN wget  -v http://fasta.bioch.virginia.edu/wrpearson/fasta/CURRENT/fasta36-linux64.tar.gz
 RUN tar -xvzf fasta36-linux64.tar.gz
 RUN rm -r fasta36-linux64.tar.gz

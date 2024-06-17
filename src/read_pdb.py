@@ -9,6 +9,7 @@ import Bio.PDB.PDBParser
 import numpy.typing as npt
 import re
 import statistics
+import os
 
 def get_pdb_coords(
     # this takes in a pdb file and gets the coordinates of the CA atoms, outputting them as an array
