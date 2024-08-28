@@ -11,11 +11,15 @@ import re
 import statistics
 import os
 
+import warnings
+warnings.filterwarnings("ignore") #too many irrelevant issues with reading pdb files
+
 def get_pdb_coords(
     # this takes in a pdb file and gets the coordinates of the CA atoms, outputting them as an array
     # code mostly by Patrick and Pablo
     filepath : str,
-    n : int = np.inf #the max number of samples we take
+    n : int = np.inf, #the max number of samples we take
+    chain_id:str = None # chain id to use, if None use all
     ): #returns array of shape (n,3) of 3D coords of the CA's chosen amino acids
     """
     filepath is a full filepath.
@@ -31,6 +35,8 @@ def get_pdb_coords(
     cell = parser.get_structure(cellname,filepath)
     #print(cell)
     model = next(cell.get_models())
+    if chain_id is not None and not set(chain_id).issubset(set([a._id for a in model.get_chains()]))  :
+        print(f'ERROR: chain {chain_id} is not in pdb file')
     #print("model is")
     #print(model)
     residues = model.get_residues()
@@ -39,61 +45,21 @@ def get_pdb_coords(
     for res in residues:
 
         het_flag = res.get_id()[0]
-        #print(res.get_resname())
         if het_flag !=' ':
             continue
-        #sort(res)
-        atoms = res.get_atoms()  #N, CA, C ,  CB and O order varies
-        N = next(atoms)
-        assert N.get_id() == "N"
-        N_coords = N.get_coord()
-        N_vect = np.array(N_coords)
-        
-        CA = next(atoms)
-        assert CA.get_id() == "CA"
-        CA_coords = CA.get_coord()
-        CA_vect = np.array(CA_coords)
-        
-        if True:
-            coords.append(CA.get_coord())
-            continue
-        
-        C = next(atoms)
-        assert C.get_id() == "C"
-        C_coords = C.get_coord()
-        C_vect = np.array(C_coords)
-        
-        
-        
-        if res.get_resname() == "GLY": 
-            #calculate the imaginary CB location
-            #this has not yet been tested
-            N_C_avg = (N_vect + C_vect) /2
-        
-            CBh = CA_vect - N_C_avg #component of CB in the plane of CA,C,N
-        
-        
-            perp = np.cross( N_vect - CA_vect, C_vect - CA_vect) / np.linalg.norm(np.cross( N_vect - CA_vect, C_vect - CA_vect) )
-        
-            CBv =  perp* np.linalg.norm(C_vect - N_vect)/2
-        
-            CB_vect = CBv + CBh+ CA_coords
-            CB_coords = list(CB_vect)
-        
-            #seems correct now
-        else:
-            CB = next(atoms)
-            if CB.get_id() == "O" : 
-                CB = next(atoms)
-            assert CB.get_id() == "CB"
-            CB_coords = CB.get_coord()
-            CB_vect = np.array(CB_coords)   	
-        
-        if True:
-            coords.append(CA.get_coord())
-        
-        del CA
-        del res
+        if chain_id is not None:
+            if res.parent._id not in chain_id:
+                continue
+        if res.get_resname() != 'HOH' and het_flag == ' ':
+            atoms = res.get_atoms()  #N, CA, C ,  CB and O order varies
+            
+            for atom in atoms:
+                if atom.get_id == "CA":
+                    CA_coords = atom.get_coord()
+                    CA_vect = np.array(CA_coords)
+                coords.append(CA.vect)
+            
+            del res
         
         #del model
         #del cell
@@ -113,7 +79,8 @@ def get_pdb_coords_pI(
     # the second is of estimated isoelectric points of the oligopeptdes 
     filepath : str,
     n : int = np.inf, #the max number of samples we take
-    median: bool = False
+    median: bool = False,
+    chain_id :str = None
     ):
     
     location_type = "CA"
@@ -127,6 +94,9 @@ def get_pdb_coords_pI(
     cell = parser.get_structure(cellname,filepath)
     #print(cell)
     model = next(cell.get_models())
+
+    if chain_id is not None and not set(chain_id).issubset( set([a._id for a in model.get_chains()])):
+        print(f'ERROR: chain {chain_id} is not in pdb file')
     #print("model is")
     #print(model)
     residues = model.get_residues()
@@ -135,76 +105,30 @@ def get_pdb_coords_pI(
     res_list = ""
     
     for res in residues:
-        if 'UNK' in res.get_resname():
-            res_list += 'X' #unknown
-        else:
-            res_list += res_3_to_1_dict[res.get_resname() ] # adds the 
-    
+
         het_flag = res.get_id()[0]
-        #print(res.get_resname())
         if het_flag !=' ':
             continue
-        #sort(res)
+        if chain_id is not None:
+            if res.parent._id not in chain_id:
+                continue
+            # else:
+            #     print(res.parent._id )#debugging
+
+
         atoms = res.get_atoms()  #N, CA, C ,  CB and O order varies
-        N = next(atoms)
-        assert N.get_id() == "N"
-        N_coords = N.get_coord()
-        N_vect = np.array(N_coords)
+        for atom in atoms:
+            if atom.get_id() == "CA":
+                coords.append(np.array(atom.get_coord()))
+                
+                if 'UNK' in res.get_resname():
+                    res_list += 'X' #unknown
+                elif res.get_resname()  in res_3_to_1_dict.keys():
+                    res_list += res_3_to_1_dict[res.get_resname() ] # adds the 
     
-        CA = next(atoms)
-        assert CA.get_id() == "CA"
-        CA_coords = CA.get_coord()
-        CA_vect = np.array(CA_coords)
-    
-        if location_type == "CA":
-            coords.append(CA.get_coord())
-            continue
-    
-        C = next(atoms)
-        assert C.get_id() == "C"
-        C_coords = C.get_coord()
-        C_vect = np.array(C_coords)
-    
-        
-    
-        if res.get_resname() == "GLY": 
-            #calculate the imaginary CB location
-            #this has not yet been tested
-            N_C_avg = (N_vect + C_vect) /2
-    
-            CBh = CA_vect - N_C_avg #component of CB in the plane of CA,C,N
-    
-    
-            perp = np.cross( N_vect - CA_vect, C_vect - CA_vect) / np.linalg.norm(np.cross( N_vect - CA_vect, C_vect - CA_vect) )
-    
-            CBv =  perp* np.linalg.norm(C_vect - N_vect)/2
-    
-            CB_vect = CBv + CBh+ CA_coords
-            CB_coords = list(CB_vect)
-    
-            #seems correct now
-        else:
-            CB = next(atoms)
-            if CB.get_id() == "O" : 
-                CB = next(atoms)
-            assert CB.get_id() == "CB"
-            CB_coords = CB.get_coord()
-            CB_vect = np.array(CB_coords)   	
-    
-        if location_type == "CA":
-            coords.append(CA.get_coord())
-        elif location_type == "CB":
-            coords.append(CB_coords)
-        elif location_type == "virtual_center":
-    
-            Nproj = N_vect -  np.dot(N_vect - CA_vect , CB_vect - CA_vect )* (CB_vect - CA_vect)  #takes CA as origin
-    
-            direction= -1* Nproj/np.linalg.norm(Nproj)
-    
-            VC_vect = CA_vect + 2* np.linalg.norm(CB_vect - CA_vect) * direction
-            coords.append(list(VC_vect))
-            
-        del CA
+
+
+       
         del res
     
     #del model
@@ -245,7 +169,7 @@ def get_pdb_coords_pI(
         pI_segment_list.append(writeProtIep(res_segments[-1],  C_term =True))
     
     
-    return coord_list, pI_segment_list
+    return coord_list, pI_segment_list, res_list
 
 def split_list(l, n):
     #splits the list l into n (roughly) evenly sized smaller lists

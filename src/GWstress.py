@@ -20,18 +20,21 @@ from typing import Iterator, Iterable, Optional, TypeVar, Generic
 
 # imports used in compute_gw_copy.ipynb
 from Bio.SVDSuperimposer import SVDSuperimposer
-#import tmtools
-#from tmtools.io import get_structure, get_residue_data
-#from tmtools import tm_align
-import warnings
-warnings.filterwarnings('ignore')
 
 
-import IdInit
+import sys
+sys.path.insert(0,'../PGC020.a12/src')
+
+
+
 import GW_scripts
 import read_pdb
-import run_fasta36
-# copied 5/30/2024
+import FGW_protein
+import IdInit
+import pymol_tmalign_wrapper_Copy1
+from pymol import cmd
+
+
 
 def GW_stress(ipdm1, ipdm2, distr1 = None, distr2 = None, transport_plan = False):
     n1 = ipdm1.shape[0]
@@ -55,7 +58,7 @@ def GW_stress(ipdm1, ipdm2, distr1 = None, distr2 = None, transport_plan = False
     stress1 = np.einsum('ik,il->i',T,(np.einsum('ij,ij->ij',A,A) @T) )   + T @ np.einsum('kl,kl->kl',B,B) @b  -(2 * np.einsum('ab,ab->a', A @T @B, T))
     stress2 = np.einsum('kj,lj->j' ,T @ np.einsum('kl,kl->kl',B,B), T) +a.T @ np.einsum('ij,ij->ij',A,A) @T -(2 * np.einsum('ab,ab->b', A @T @B, T))
 
-
+   
     if transport_plan:
         if cost0 <= 0:
             return 0 , stress1, stress2, T
@@ -152,7 +155,6 @@ def FGW_stress(ipdm1, ipdm2, diff_mat, alpha, distr1 = None, distr2 = None, tran
     stress2 = geo_stress2 + fused_stress2
 
 
-
     if transport_plan:
         if cost0 <= 0:
             return 0 , stress1, stress2, T
@@ -245,35 +247,50 @@ def FGW_stress_seq_from_prots(p1,p2, alpha, transport_plan = False, n= 200, allo
         else:
             return 0.5* math.sqrt(cost0), stress1, stress2, inds1, inds2
 
-def FGW_stress_from_prots(p1,p2, alpha, transport_plan = False):
-    # redo_calc - same settings as original calculation
+def FGW_stress_from_prots(p1,p2, alpha, transport_plan = False, n= np.inf, d = None):
+    #d is the aa distance dictionary
 
-    
+
+    if d is None:
+        #use  pI data
+        p3 = p1
+        p4 = p2
+        D3 = p3.ipdm
+        D4 = p4.ipdm
+        pI3 = p3.pI_list
+        pI4 = p4.pI_list
+        n3 = len(D3)
+        n4 = len(D4)
+        distr1 = GW_scripts.unif(n3)
+        distr2 = GW_scripts.unif(n4)
         
-    p3 = p1
-    p4 = p2
+        try:
+            assert n3 == len(pI3)
+            assert n4 == len(pI4)
+        except:
+            print(D3.shape, D4.shape, len(pI3), len(pI4))
+            assert False
+        
+        a = np.array([np.array([x]) for x in pI3])
+        b = np.array(pI4)
+        aa = np.broadcast_to(a,(n3,n4))
+        bb = np.broadcast_to(b,(n3,n4))
+        M = abs(aa-bb)
+    else:
+        D3 = p1.ipdm
+        D4 = p2.ipdm
+        n1 = len(p1)
+        n2 = len(p2)
+        n3 = n1
+        n4 = n2
+        distr1 = GW_scripts.unif(n3)
+        distr2 = GW_scripts.unif(n4)
+        # M has shape (n1,n2)
+        M = np.zeros((n1,n2))
+        for i in range(n1):
+            for j in range(n2):
+                M[i,j] = d[p1.seq[i]][p2.seq[j]]
 
-    D3 = p3.ipdm
-    D4 = p4.ipdm
-    pI3 = p3.pI_list
-    pI4 = p4.pI_list
-    n3 = len(D3)
-    n4 = len(D4)
-    distr1 = GW_scripts.unif(n3)
-    distr2 = GW_scripts.unif(n4)
-    
-    try:
-        assert n3 == len(pI3)
-        assert n4 == len(pI4)
-    except:
-        print(D3.shape, D4.shape, len(pI3), len(pI4))
-        assert False
-    
-    a = np.array([np.array([x]) for x in pI3])
-    b = np.array(pI4)
-    aa = np.broadcast_to(a,(n3,n4))
-    bb = np.broadcast_to(b,(n3,n4))
-    M = abs(aa-bb)
     G0 = GW_scripts.id_initial_coupling_unif(n3,n4)
     
     #d = ot.fused_gromov_wasserstein2(M=M, C1=D1, C2=D2, alpha = alpha, p= GW_scripts.unif(n1),q=GW_scripts.unif(n2), G0 = G0, loss_fun='square_loss')
@@ -302,6 +319,11 @@ def FGW_stress_from_prots(p1,p2, alpha, transport_plan = False):
 
     assert (fused_stress1 > -1e-1).all() #1e-5 is for margin of floating point error
     assert (fused_stress2 > -1e-1).all()
+
+    # assert (geo_stress1 > -1e-1).all() #this often fails
+    # assert (geo_stress2 > -1e-1).all()
+
+
     
     stress1 = geo_stress1 + fused_stress1
     stress2 = geo_stress2 + fused_stress2
@@ -310,12 +332,12 @@ def FGW_stress_from_prots(p1,p2, alpha, transport_plan = False):
         if cost0 <= 0:
             return 0 , stress1, stress2, T
         else:
-            return 0.5* math.sqrt(cost0), stress1, stress2, inds1, inds2, T
+            return 0.5* math.sqrt(cost0), stress1, stress2, T
     else:  
         if cost0 <= 0:
-            return 0 , stress1, stress2, inds1, inds2,
+            return 0 , stress1, stress2
         else:
-            return 0.5* math.sqrt(cost0), stress1, stress2, 
+            return 0.5* math.sqrt(cost0), stress1, stress2
 
 
 def GW_stress_from_prots(p1,p2, transport_plan = False):
@@ -363,8 +385,65 @@ def get_pairing(T, threshold0 = 0.5, threshold1 = 0.5):
     return pairs
             
         
-        
-  
+
+
+
+def get_pymol_transport(file1, file2, aligner = 'cealign', TM_exe = '/home/elijah/pymol/bin/TMalign' ): #filepaths to pbds
+    # TM_exe filepath to TM align
+    cmd.delete('all')
+    cmd.load(file1, 'prot1')
+    cmd.load(file2, 'prot2')
+
+    coords01 = []
+    coords02 = []
+    cmd.iterate_state(1, "prot1 and name CA", "coords01.append((x, y, z))", space={'coords01': coords01})
+    cmd.iterate_state(1, "prot2 and name CA", "coords02.append((x, y, z))", space={'coords02': coords02})
+    coords01 = np.stack(coords01)
+    coords02 = np.stack(coords02)
+
+    match aligner:
+        case 'cealign':
+            cmd.cealign('prot1', 'prot2')
+        case 'align':
+            cmd.align('prot1', 'prot2')
+        case 'super':
+            cmd.super('prot1', 'prot2')     
+        case 'tmalign':
+            pymol_tmalign_wrapper_Copy1.tmalign('prot1', 'prot2', quiet=1, exe = TM_exe, return_alignment=False) 
+            #cmd.tmalign('prot1', 'prot2') 
+        case _:
+            raise ValueError("valid arguments for aligner are 'align', 'cealign', 'super', tmalign")
+    coords1 = []
+    coords2 = []
+    cmd.iterate_state(1, "prot1 and name CA", "coords1.append((x, y, z))", space={'coords1': coords1})
+    cmd.iterate_state(1, "prot2 and name CA", "coords2.append((x, y, z))", space={'coords2': coords2})
+    coords1 = np.stack(coords1)
+    coords2 = np.stack(coords2)
+    
+    
+    #print(coords1.shape)
+    #print(coords2.shape)
+    D = ot.dist(coords1, coords2)
+    #print(D.shape)
+    a = np.ones(coords1.shape[0])/coords1.shape[0]
+    b = np.ones(coords2.shape[0])/coords2.shape[0]
+
+    T = ot.emd(a,b, D)
+    stress = np.einsum('ij,ij ->ij', D,T)
+    cost = np.sum(stress)
+    stress1 = np.sum(stress, axis = 1)
+    stress2 = np.sum(stress, axis = 0)
+
+    return T, cost, stress1, stress2 
+
+
+#warning -  the pymol coords could be returned in a different order
+# or try cmd.get_coords(str selection)
+# not totally sure how ordering works
+
+# pymol_tmalign_wrapper_Copy1.tmalign('prot1', 'prot2', quiet=1, return_alignment=True)
+    
+    
 
 
 

@@ -118,7 +118,6 @@ def run_ssearch_cigar(fasta1, #filepath
 
 
 
-
 def parse_ssearch_outputv2(input,  allow_mismatch = True):
     #for parsing the output from the new run_ssearch code, assumes CIGAR format
     pattern = 'aln_code\\n\s+\(\s*\d+\)(?:[\s\\t]+[\d\.]+){7}\s+(\d+)\s+\d+\s+(\d+)'

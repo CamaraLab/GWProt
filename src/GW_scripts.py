@@ -139,7 +139,7 @@ def id_initial_coupling_unif(m,n):
 def random_permutation_initial_coupling_unif(m,n, seed = None):
     if seed:
         np.random.seed(seed)
-    P = id_initial_coupling(m,n)
+    P = id_initial_coupling_unif(m,n)
     Q = np.random.permutation(P)
     return(Q)
 
