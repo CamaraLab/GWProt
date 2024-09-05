@@ -70,56 +70,9 @@ def GW_stress(ipdm1, ipdm2, distr1 = None, distr2 = None, transport_plan = False
         else:
             return 0.5* math.sqrt(cost0), stress1, stress2
 
-def GW_stress_randomized(ipdm1, ipdm2, N = 10, distr1 = None, distr2 = None, transport_plan = False):
-    current_least_cost = np.inf
-    current_best_plan = None
 
-    n1 = ipdm1.shape[0]
-    n2 = ipdm2.shape[0]
-    
-    if distr1 is None:
-        distr1 = np.ones((n1))* (1/n1)
-    if distr2 is None:
-        distr2 = np.ones(n2)* (1/n2) 
 
-    T0 = ot.gromov.gromov_wasserstein(C1 = ipdm1, C2 = ipdm2, p=distr1, q=distr2, log = True, G0 = IdInit.id_initial_coupling(distr1, distr2))
-    cost0 = T0[1]['gw_dist']
-    T = T0[0]
-    current_least_cost = cost0
-    current_best_plan = T
-    
-    
-    for i in range(N):
-        G0 = IdInit.id_initial_coupling(distr1, distr2)
-        for j in range(50):
-            G0 += 0.5 * GW_scripts.random_permutation_initial_coupling(distr1, distr2)
-            G0 -= 0.5* GW_scripts.random_permutation_initial_coupling(distr1, distr2)
-            
-        T0 = ot.gromov.gromov_wasserstein(C1 = ipdm1, C2 = ipdm2, p=distr1, q=distr2, log = True, G0 = G0)
-        cost1 = T0[1]['gw_dist']
-        T1 = T0[0]
 
-        if 0<=cost1 < current_least_cost :
-            print('updated, iteration',i)
-            current_least_cost = cost1
-            current_best_plan = T1
-
-    
-    
-    A = ipdm1
-    a = distr1
-    B = ipdm2
-    b = distr2
-    T = current_best_plan
-
-    stress1 = np.einsum('ik,il->i',T,(np.einsum('ij,ij->ij',A,A) @T) )   + T @ np.einsum('kl,kl->kl',B,B) @b  -(2 * np.einsum('ab,ab->a', A @T @B, T))
-    stress2 = np.einsum('kj,lj->j' ,T @ np.einsum('kl,kl->kl',B,B), T) +a.T @ np.einsum('ij,ij->ij',A,A) @T -(2 * np.einsum('ab,ab->b', A @T @B, T))
-
-    if transport_plan:
-        return 0.5* math.sqrt(current_least_cost), stress1, stress2, T
-    else:
-        
-        return 0.5* math.sqrt(current_least_cost), stress1, stress2
 
 
 def FGW_stress(ipdm1, ipdm2, diff_mat, alpha, distr1 = None, distr2 = None, transport_plan = False):

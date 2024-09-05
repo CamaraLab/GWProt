@@ -111,7 +111,7 @@ def compare_proteins_in_pymol(file1, file2, output_file, threshold=0.5):
     pret, rot, trans = weighted_alignment.weighted_RMSD(p1.coords, p2.coords, T)
 
     ll = weighted_alignment.pymol_transform(pretrans=pret, rot=rot, posttrans=trans)
-
+ 
     cmd.delete("all")
     cmd.load(file1, "prot1")
     cmd.load(file2, "prot2")

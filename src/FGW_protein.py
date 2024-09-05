@@ -49,7 +49,7 @@ class FGW_protein:
 
 
 
-    def __init__(self, name : str, seq,  coords = None, ipdm = None, scaled_flag = False ):
+    def __init__(self, name : str, seq,  coords = None, ipdm = None, scaled_flag = False , distribution = None):
         #note - the seq is the sequence, not the file
         #input validation
         assert not (coords is None and ipdm is None)
@@ -73,6 +73,8 @@ class FGW_protein:
         self.seq = seq
         
         self.coords = coords
+
+
         
         self.scaled_flag = scaled_flag #whether the ipdm has been scaled
 
@@ -81,16 +83,22 @@ class FGW_protein:
         else:
             
             self.ipdm = ipdm
+
+        if distribution is None:
+            self.distribution = np.ones(self.ipdm.shape[0])/ self.ipdm.shape[0]
+        else:
+            assert distribution.shape == self.ipdm.shape[0]
+            self.distribution = distribution
             
     def __eq__(self, other):
         """
         Compares the underlying seq sequences (not the full seq file), the pI_lists, the ipdms, and the coords if both are defined.
-        This does NOT compare the names, scaled_flags, or seq headers.
+        This does NOT compare the names, scaled_flags.
         """
         
         if self.coords is not None and other.coords is not None and ((self.coords.shape != other.coords.shape) or (self.coords != other.coords).any()):
             return False  
-        return self.seq == other.seq  and (self.ipdm == other.ipdm).all()
+        return self.seq == other.seq  and (self.ipdm == other.ipdm).all() and (self.distribution == other.distribution).all()
       
 
     def __len__(self):
@@ -129,7 +137,7 @@ class FGW_protein:
             self.ipdm = m
             self.scaled_flag = True
         else:
-            return FGW_protein(seq = self.seq, ipdm = m, coords = None, name = self.name+'_scaled', scaled_flag = True)
+            return FGW_protein(seq = self.seq, ipdm = m, coords = None, name = self.name+'_scaled', scaled_flag = True, distribution = self.distribution)
 
 
     def make_GW_cell(self, 
@@ -140,33 +148,32 @@ class FGW_protein:
         :return: A 'gw_cython-GW_cell' object representing 'self'
         """
 
-        if distribution is None:
-            distribution = GW_scripts.unif(self.ipdm.shape[0])
-
-        assert len(distribution) == self.ipdm.shape[0]
-        #assert np.sum(distribution) == 1 #possibly off do to floating point rounding
 
 
-        return gw_cython.GW_cell(self.ipdm,  distribution)
+        return gw_cython.GW_cell(self.ipdm,  self.distribution)
             
 
     @staticmethod       
     def run_GW_from_cells(
         cell_1:gw_cython.GW_cell  , 
-        cell_2: gw_cython.GW_cell) -> float:
+        cell_2: gw_cython.GW_cell,
+        transport_plan = False) -> float:
 
         """
-        This is a wrapper for the CAJAL code to compute the GW distance between 'cell_1' and 'cell_2'
+        This is a wrapper for the CAJAL code to compute the GW distance between 'cell_1' and 'cell_2', 
+        outputs the computed transport plan if 'tranport_plan'
         :param cell_1:
         :param cell_2:
-        :return: Returns the GW distance
+        :param transport_plan:
+        :return: Returns the GW distance and transport plan
         """
 
-        return GW_scripts.GW_identity_init(cell_1, cell_2)
+        return GW_scripts.GW_identity_init(cell_1, cell_2, transport_plan= transport_plan)
         
     @staticmethod       
     def run_GW(P1 :'FGW_protein',
-        P2: 'FGW_protein') -> float:
+        P2: 'FGW_protein',
+        transport_plan = False) -> float:
         """
         This is a wrapper for the CAJAL code to create gw_cython.GW_cell objects then compute the GW distance between them
         :param P1:
@@ -176,7 +183,7 @@ class FGW_protein:
 
         cell_1 = P1.make_GW_cell()
         cell_2 = P2.make_GW_cell()
-        return FGW_protein.run_GW_from_cells(cell_1, cell_2)
+        return FGW_protein.run_GW_from_cells(cell_1, cell_2, transport_plan = transport_plan)
 
 
     def downsample_by_indices(self, 
@@ -194,11 +201,13 @@ class FGW_protein:
         ii = np.ix_(indices,indices)
         ipdm = self.ipdm[ii]
 
+        new_distribution = self.distribution[indices]
+
         new_seq = ''.join([self.seq[i] for i in indices])
         
-        return FGW_protein(seq = new_seq,  ipdm = ipdm, coords = coords, name = self.name+'_downsampled', scaled_flag = self.scaled_flag)
+        return FGW_protein(seq = new_seq,  ipdm = ipdm, coords = coords, name = self.name+'_downsampled', scaled_flag = self.scaled_flag, distribution = new_distribution)
 
-    def recompute_ipdm(self) -> None:
+    def reset_ipdm(self) -> None:
         """
         This method recalculates the ipdm based on the coordinates. The two might not be compatible because of scaling or 'downsample_n(mean_sample =True)'.
         Raises an error if 'self.coords is None'.
@@ -231,6 +240,7 @@ class FGW_protein:
         assert self.ipdm.shape[0] == self.ipdm.shape[1]
         assert (self.ipdm == self.ipdm.T).all()
         assert self.name is not None
+        assert self.distribution == self.ipdm.shape[1]
 
   
         return True
@@ -244,10 +254,14 @@ class FGW_protein:
         :param pdb_file: Filepath to the .pdb file
         :param chain_id: Which chain(s) to use, None uses all chains
         :return: A new 'FGW_protein' object
+
+        Gives uniform distribution
         """
 
         coords, _ , seq = read_pdb.get_pdb_coords_pI(filepath = pdb_file, n = np.inf, median = True, chain_id = chain_id)
         name = re.findall(string = pdb_file, pattern = r'([^\/]+)\.pdb$')[0]
+        if chain_id is not None:
+            name += '_'+chain_id
         # parser = PDB.PDBParser(QUIET=True)
         # structure = parser.get_structure('protein', pdb_file)
     
@@ -269,7 +283,7 @@ class FGW_protein:
 
 
     @staticmethod
-    def run_FGW_data_lists(p1: 'FGW_protein', p2:'FGW_protein', data1 :list[float] , data2 : list[float] , alpha:float = 1) -> float:
+    def run_FGW_data_lists(p1: 'FGW_protein', p2:'FGW_protein', data1 :list[float] , data2 : list[float] , alpha:float = 1, transport_plan = False) -> float:
         """
         This calculates the fused Gromov-Wasserstein distance between two proteins. The computation is done with the Python 'ot' library. 
         :param p1: The first protein
@@ -297,16 +311,93 @@ class FGW_protein:
         aa = np.broadcast_to(a,(n1,n2))
         bb = np.broadcast_to(b,(n1,n2))
         M = abs(aa-bb)
-        G0 = GW_scripts.id_initial_coupling_unif(n1,n2)
-        
-        d = ot.fused_gromov_wasserstein2(M=M, C1=D1, C2=D2, alpha = alpha, p= GW_scripts.unif(n1),q=GW_scripts.unif(n2), G0 = G0, loss_fun='square_loss')
+        G0 = GW_scripts.id_initial_coupling(p1.distribution,p2.distribution)
 
-        if d <=0:
-            return 0
-        return  0.5 * math.sqrt(d)
+        T , log= ot.fused_gromov_wasserstein(M=M, C1=D1, C2=D2, alpha = alpha, p= p1.distribution ,q=p2.distribution, G0 = G0, loss_fun='square_loss')
+        d = 0.5 * math.sqrt(log['fgw_dist'])
+
+        if transport_plan:
+            return d, T
+        else:
+            return d
+            
+  
+    def get_eccentricity(self, p =2):
+    #gets the eccentricity of each point with exponent p
+    # https://www.math.ucdavis.edu/~saito/data/acha.read.w12/memoli-gromov-dist.pdf 
+    # defn 5.3
+
+        ipdm = self.ipdm
+        distr = self.distribution
+
+        assert p >0
+        n = ipdm.shape[0]    
+
+            
+        if p == np.inf:
+            ipdm_pp =  ipdm* (distr != 0)
+            eccentricity = np.max(ipdm_pp, axis = 0)
+        else:
+            ipdm_pp = ipdm**p
+            ipdm_pp_w = ipdm_pp * distr #not sure about shape and broadcasting here
+            pre_stress = np.sum(ipdm_pp_w, axis = 0) #unclear which axis this should be
+            eccentricity = pre_stress**(1/p)
+
+        return eccentricity
+
+
+    @staticmethod
+    def GW_stress(prot1, prot2, T):
+
+        n1= len(prot1)
+        n2 = len(prot2)
+        assert T.shape = (n1,n2)
+
+
+        A = prot1.ipdm
+        a = prot1.distribution
+        B = prot2.ipdm
+        b = prot2.distribution
+
+        stress1 = np.einsum('ik,il->i',T,(np.einsum('ij,ij->ij',A,A) @T) )   + T @ np.einsum('kl,kl->kl',B,B) @b  -(2 * np.einsum('ab,ab->a', A @T @B, T))
+        stress2 = np.einsum('kj,lj->j' ,T @ np.einsum('kl,kl->kl',B,B), T) +a.T @ np.einsum('ij,ij->ij',A,A) @T -(2 * np.einsum('ab,ab->b', A @T @B, T))
+
+        return stress1, stress2
+
+
+    @staticmethod
+    def FGW_stress(prot1, prot2, diff_mat, alpha, T):
+    #now with FGW stress
+        n1= len(prot1)
+        n2 = len(prot2)
+        assert T.shape = (n1,n2)
+        assert 0 <= alpha <= 1
+
+
+        A = prot1.ipdm
+        a = prot1.distribution
+        B = prot2.ipdm
+        b = prot2.distribution
+        M = diff_mat
+
+
+
+        geo_stress1 = alpha * (np.einsum('ik,il->i',T,(np.einsum('ij,ij->ij',A,A) @T) )   + T @ np.einsum('kl,kl->kl',B,B) @b  -(2 * np.einsum('ab,ab->a', A @T @B, T)))
+        geo_stress2 = alpha *(np.einsum('kj,lj->j' ,T @ np.einsum('kl,kl->kl',B,B), T) +a.T @ np.einsum('ij,ij->ij',A,A) @T -(2 * np.einsum('ab,ab->b', A @T @B, T)))
+
+        
+
+
+        fused_stress1 = (1-alpha) * np.einsum('ik,ik->i', M,T)
+        fused_stress2 = (1-alpha) * np.einsum('ik,ik->k', M,T)
+
+        stress1 = geo_stress1 + fused_stress1
+        stress2 = geo_stress2 + fused_stress2
+
+        return stress1, stress2
         
     @staticmethod
-    def run_FGW_dict(p1: 'FGW_protein', p2:'FGW_protein', d: dict[str , dict[str ,float]] ,alpha:float = 1) -> float:
+    def run_FGW_dict(p1: 'FGW_protein', p2:'FGW_protein', d: dict[str , dict[str ,float]] ,alpha:float = 1, transport_plan = False) -> float:
         """
         This calculates the fused Gromov-Wasserstein distance between two proteins. The computation is done with the Python 'ot' library. 
         :param p1: The first protein
@@ -316,6 +407,8 @@ class FGW_protein:
         :return: The FGW distance
         """
         #not yet tested
+
+        assert 0 <= alpha <=1
         D1 = p1.ipdm
         D2 = p2.ipdm
         n1 = len(p1)
@@ -326,75 +419,50 @@ class FGW_protein:
             for j in range(n2):
                 M[i,j] = d[p1.seq[i]][p2.seq[j]]
         
-        G0 = GW_scripts.id_initial_coupling_unif(n1,n2)
-        
-        d = ot.fused_gromov_wasserstein2(M=M, C1=D1, C2=D2, alpha = alpha, p= GW_scripts.unif(n1),q=GW_scripts.unif(n2), G0 = G0, loss_fun='square_loss')
-        if d <=0:
-            return 0
-        return  0.5 * math.sqrt(d)
+        G0 = GW_scripts.id_initial_coupling(p1.distribution,p2.distribution)
+
+        T , log= ot.fused_gromov_wasserstein(M=M, C1=D1, C2=D2, alpha = alpha, p= p1.distribution ,q=p2.distribution, G0 = G0, loss_fun='square_loss')
+        d = 0.5 * math.sqrt(log['fgw_dist'])
+
+        if transport_plan:
+            return d, T
+        else:
+            return d
     
-    # @staticmethod
-    # def run_FGW(p1: 'FGW_protein', p2:'FGW_protein', alpha: float = 1) -> float:
-    #     """
-    #     This calculates the fused Gromov-Wasserstein distance between two proteins. The computation is done with the Python 'ot' library. 
-    #     :param p1: The first protein
-    #     :param p2: The second protein
-    #     :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. A higher value of 'alpha' means more geometric weight, 'alpha' = 1 is equivalent to regular GW.
-    #     :return: The FGW distance
-    #     """
-    #     D1 = p1.ipdm
-    #     D2 = p2.ipdm
-    #     pI1 = p1.pI_list
-    #     pI2 = p2.pI_list
-    #     n1 = len(D1)
-    #     n2 = len(D2)
-    #     try:
-    #         assert n1 == len(pI1)
-    #         assert n2 == len(pI2)
-    #     except:
-    #         print(D1.shape, D2.shape, len(pI1), len(pI2))
-    #         assert False
-        
-    #     a = np.array([np.array([x]) for x in pI1])
-    #     b = np.array(pI2)
-    #     aa = np.broadcast_to(a,(n1,n2))
-    #     bb = np.broadcast_to(b,(n1,n2))
-    #     M = abs(aa-bb)
-    #     G0 = GW_scripts.id_initial_coupling_unif(n1,n2)
-        
-    #     d = ot.fused_gromov_wasserstein2(M=M, C1=D1, C2=D2, alpha = alpha, p= GW_scripts.unif(n1),q=GW_scripts.unif(n2), G0 = G0, loss_fun='square_loss')
-    #     if d <=0:
-    #         return 0
-    #     return  0.5 * math.sqrt(d)
-        
-    # @staticmethod
-    # def run_FGW_seq_aln(p1:'FGW_protein', p2:'FGW_protein', alpha:float, n: int = np.inf,allow_mismatch:bool = True) -> float:
-    #     """
-    #     This calculates the fused Gromov-Wasserstein distance between two proteins when applied just to aligned residues. 
-    #     It first applies sequence alignment, downsamples up to 'n' of the aligned residues, then applies FGW. 
-    #     :param p1: The first protein
-    #     :param p2: The second protein
-    #     :param n: The maximum number of residues to use (to reduce runtime).
-    #     :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. A higher value of 'alpha' means more geometric weight, 'alpha' = 1 is equivalent to regular GW.
-    #     :return: The FGW distance
-    #     """
-    #     inds1, inds2 = FGW_protein.run_ssearch_indices(p1 =p1, p2 = p2, allow_mismatch = allow_mismatch)
 
-    #     if n < len(inds1):
-    #         l,s = np.linspace(0, len(inds1), num=n, endpoint=False, dtype=int,retstep = True) #new method I'm trying
-    #         subindices = np.array([int(i + s//2) for i in l])
-
-    #         inds1 = [inds1[i] for i in subindices]
-    #         inds2 = [inds2[i] for i in subindices]
-            
-    #     p3 = p1.downsample_by_indices(inds1)
-    #     p4 = p2.downsample_by_indices(inds2)
-
-    #     return FGW_protein.run_FGW(p3,p4, alpha = alpha)
         
+
+
     @staticmethod
-    def show_proteins_with_values(file,  output_file,  *argv):
-        pymol_protein_viewer.show_proteins_with_values(file,  output_file, *argv)
+    def get_switch_prob_sparse(T, prot_num = 0):
+        #prot_num is whether to use the oth or 1st protein entered in get_GW_transport
+        
+        if prot_num == 1:
+            return get_switch_prob_sparse(T.T, prot_num = 0)
+        
+        T_mod = T/ (np.sum(T, axis = 1)[np.newaxis]).T
+        TT_mod = T_mod.T
+        if np.count_nonzero(T) >= 5000:
+            warnings.warn('input has over 5,000 nonzero entries, may use too much RAM and crash')
+            
+        
+        T_sparse = sparse.COO.from_numpy(T_mod)
+        TT_sparse = sparse.COO.from_numpy(TT_mod)
+        #print(T_sparse.shape)
+        #print(TT_sparse.Ashape)
+        
+       # sparse_big_one= sparse.einsum( 'il,jk-> klij'  ,T_sparse, TT_sparse) #this one is probably wrong
+        sparse_big_one= sparse.einsum( 'il,kj-> ijkl'  ,T_sparse, TT_sparse)
+        
+        #  goal:
+        #  (i,j,k,l)th entry is the ijth entry of the matrix given by the kth colum and lth column transposed
+        L = sparse.tril(sparse_big_one, -1)
+        P1 = sparse.COO.todense(sparse.COO.sum(L, (2,3)))
+        
+        # U = sparse.triu(sparse_big_one, 1)
+        # P2 = sparse.COO.todense(sparse.COO.sum(U, (2,3))) #this is just the transpose of P1, up to floating point inaccuracies
+
+        return P1
 
 
 

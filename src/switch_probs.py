@@ -33,116 +33,48 @@ import FGW_protein
 import IdInit
 import sparse
 
-def get_switch_prob(i,j,T):
+# def get_switch_prob(i,j,T):
     
-    A = T[:,i][np.newaxis]
-    B = (T[:,j][np.newaxis]).T
+#     A = T[:,i][np.newaxis]
+#     B = (T[:,j][np.newaxis]).T
     
 
 
     
-    A = A / np.sum(A)
-    B = B / np.sum(B)
+#     A = A / np.sum(A)
+#     B = B / np.sum(B)
     
-    AB = B@A # maybe should be B@A
+#     AB = B@A # maybe should be B@A
 
-    upper = np.triu(AB, k=1)
-    lower = np.tril(AB, k = -1)
+#     upper = np.triu(AB, k=1)
+#     lower = np.tril(AB, k = -1)
 
-    #print(upper)
-    #print(lower)
-    return np.sum( lower), np.sum(upper)  #or just lower
+#     #print(upper)
+#     #print(lower)
+#     return np.sum( lower), np.sum(upper)  #or just lower
 
 
-def get_switch_probs(T):
-    T_mod = T/ (np.sum(T, axis = 1)[np.newaxis]).T
-    TT_mod = T_mod.T
-    print('modified Ts gotten')
-    big_one = np.einsum( 'il,jk-> klij'  ,T_mod, TT_mod)
-    print('big_one constructed')
+# def get_switch_probs(T):
+#     T_mod = T/ (np.sum(T, axis = 1)[np.newaxis]).T
+#     TT_mod = T_mod.T
+#     print('modified Ts gotten')
+#     big_one = np.einsum( 'il,jk-> klij'  ,T_mod, TT_mod)
+#     print('big_one constructed')
     
-    #  goal:
-    #  (i,j,k,l)th entry is the ijth entry of the matrix given by the kth colum and lth column transposed
-    L = np.tril(big_one, -1)
-    P1 = np.sum(L, (2,3))
-    print('L, P1 made')
+#     #  goal:
+#     #  (i,j,k,l)th entry is the ijth entry of the matrix given by the kth colum and lth column transposed
+#     L = np.tril(big_one, -1)
+#     P1 = np.sum(L, (2,3))
+#     print('L, P1 made')
     
-    U = np.triu(big_one, 1)
-    P2 = np.sum(U, (2,3))
-    print('U, P2 made')
+#     U = np.triu(big_one, 1)
+#     P2 = np.sum(U, (2,3))
+#     print('U, P2 made')
     
-    return P1, P2
+#     return P1, P2
 
-def get_GW_transport(ipdm1, ipdm2, distr1 = None, distr2 = None, cost = False):
-    n1 = ipdm1.shape[0]
-    n2 = ipdm2.shape[0]
-    
-    if distr1 is None:
-        distr1 = np.ones((n1))* (1/n1)
-    if distr2 is None:
-        distr2 = np.ones(n2)* (1/n2) 
-        
-    T0 = ot.gromov.gromov_wasserstein(C1 = ipdm1, C2 = ipdm2, p=distr1, q=distr2, log = True, G0 = IdInit.id_initial_coupling(distr1, distr2))
-    cost0 = T0[1]['gw_dist']
-    cost0 = max(0, cost0)
-    T = T0[0]
-    if cost:
-        return T, 0.5 *math.sqrt(cost0)
-    else:
-        return T
 
-def get_FGW_transport(ipdm1, ipdm2, diff_mat, alpha, distr1 = None, distr2 = None, cost = False):
-#now with FGW stress
-    n1 = ipdm1.shape[0]
-    n2 = ipdm2.shape[0]
-    
-    if distr1 is None:
-        distr1 = np.ones((n1))* (1/n1)
-    if distr2 is None:
-        distr2 = np.ones(n2)* (1/n2) 
-        
-    T0 = ot.gromov.fused_gromov_wasserstein(C1 = ipdm1, C2 = ipdm2, M = diff_mat, alpha = alpha, p=distr1, q=distr2, log = True, G0 = IdInit.id_initial_coupling(distr1, distr2))
-    cost0 = T0[1]['fgw_dist']
-    cost0 = max(0, cost0)
-    T = T0[0]
-    if cost:
-        return T, 0.5 *math.sqrt(cost0)
-    else:
-        return T
-    
-def get_GW_transport_from_prots(p1,p2,cost = False):
-    return get_GW_transport(p1.ipdm, p2.ipdm, cost = cost)
 
-def get_FGW_transport_from_prots(p1,p2, alpha, cost = False):   
-    p3 = p1
-    p4 = p2
-
-    D3 = p3.ipdm
-    D4 = p4.ipdm
-    pI3 = p3.pI_list
-    pI4 = p4.pI_list
-    n3 = len(D3)
-    n4 = len(D4)
-    distr1 = GW_scripts.unif(n3)
-    distr2 = GW_scripts.unif(n4)
-    assert n3 == len(pI3)
-    assert n4 == len(pI4)
-
-    a = np.array([np.array([x]) for x in pI3])
-    b = np.array(pI4)
-    aa = np.broadcast_to(a,(n3,n4))
-    bb = np.broadcast_to(b,(n3,n4))
-    M = abs(aa-bb)
-    G0 = GW_scripts.id_initial_coupling_unif(n3,n4)
-    
-    T0 = ot.gromov.fused_gromov_wasserstein(C1 = D3, C2 = D4, M = M, alpha = alpha, p=distr1, q=distr2, log = True, G0 = G0)
-    cost0 = T0[1]['fgw_dist']
-    cost0 = max(0, cost0)
-    T = T0[0]
-    if cost:
-        return T, 0.5 *math.sqrt(cost0)
-    else:
-        return T
         
 def get_switch_prob_sparse(T, prot_num = 0):
     #prot_num is whether to use the oth or 1st protein entered in get_GW_transport
