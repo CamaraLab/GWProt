@@ -101,11 +101,23 @@ class my_pymolPy3:
         return str, err
 
 
-def compare_proteins_in_pymol(file1, file2, output_file, threshold=0.5):
+def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, transport_plan: np.array = None, threshold:float =0.5):
+    """
+    currently assumes chain A
+
+
+    """
+
     p1 = FGW_protein.FGW_protein.make_protein_from_pdb(file1)
     p2 = FGW_protein.FGW_protein.make_protein_from_pdb(file2)
 
-    c, stress1, stress2, T = GWstress.GW_stress_from_prots(p1, p2, transport_plan=True)
+    if transport_plan is not None:
+        c, transport_plan = FGW_protein.run_GW(p1,p2, transport_plan=True)
+
+
+    assert transport_plan.shape == (len(p1), len(p2))
+
+
     ps = GWstress.get_pairing(T, threshold0=threshold, threshold1=threshold)
 
     pret, rot, trans = weighted_alignment.weighted_RMSD(p1.coords, p2.coords, T)
@@ -169,16 +181,25 @@ def compare_proteins_in_pymol(file1, file2, output_file, threshold=0.5):
     pm(f"cmd.save( '{output_file}') ")
 
 
-def show_proteins_with_values(file, output_file, *argv):
-    # final param is list of data
-    # not yet tested
+def show_proteins_with_values(file: str, output_file: str, *argv):
+    """
+    This loads a pdb file and displays it in pymol with colors based on the input lists, then saves it to a .pse file
+    :param file: input pdb file
+    :param output_file: where to save the new pymol scene, must end in '.pse'
+
+
+    """
     cmd.delete("all")
     data = list(argv)
     n = len(data)
     prots = {}
 
+
+
     for i in range(n):
         prots[i] = FGW_protein.FGW_protein.make_protein_from_pdb(file)
+        if len(prots[i]) != len(data[i]):
+            raise ValueError('length of protein does not match length of data')
         cmd.load(file, "prot" + str(i))
         if i == 0:
             residue_numbers = list(

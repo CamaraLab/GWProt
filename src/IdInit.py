@@ -109,6 +109,3 @@ def GW_init(P1,P2, init_type, seed = None):
     return  gw_cython.gw_cython_init_cost( A = P1.dmat, a = a,  c_A = P1.cell_constant, B = P2.dmat, b = b, c_B = P2.cell_constant, C = C)[1]
     
 
-
-
-#test 

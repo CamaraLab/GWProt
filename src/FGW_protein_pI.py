@@ -188,6 +188,8 @@ class FGW_protein_pI(FGW_protein):
     :param ipdm: The intra-protein distance matrix of a protein. 
         The (i,j)th entry is the (possibly scaled) distance between residues i and j. This is mutable can can change if distortion scaling is used.
     :param scaled_flag: Records whether the ipdm is the exact distance between residues or if it has been scaled.
+    :param distribution: Numpy array of the weighting of the residues, must sum to 1. Default is a uniform distribution.
+
 
     """
 
@@ -233,8 +235,10 @@ class FGW_protein_pI(FGW_protein):
         if distribution is None:
             self.distribution = np.ones(self.ipdm.shape[0])/ self.ipdm.shape[0]
         else:
-            assert distribution.shape == self.ipdm.shape[0]
+            assert distribution.shape[0] == self.ipdm.shape[0]
             self.distribution = distribution
+        assert math.isclose(np.sum(distribution),1)
+
             
     def __eq__(self, other):
         """
@@ -336,6 +340,8 @@ class FGW_protein_pI(FGW_protein):
 
         assert len(self.seq) ==len(self.pI_list)
         assert self.distribution == self.ipdm.shape[1]
+        assert math.isclose(np.sum(self.distribution),1)
+
 
 
         if  len(self.pI_list)>=1 and ( self.pI_list[1:-1] != [read_pdb.writeProtIepMedian(r) for r in self.seq[1:-1]]):
@@ -448,13 +454,14 @@ class FGW_protein_pI(FGW_protein):
    
     
     @staticmethod
-    def run_FGW(p1: 'FGW_protein_pI', p2:'FGW_protein_pI', alpha: float = 1) -> float:
+    def run_FGW(p1: 'FGW_protein_pI', p2:'FGW_protein_pI', alpha: float = 1, transport_plan: bool = False) -> float:
         """
         This calculates the fused Gromov-Wasserstein distance between two proteins. The computation is done with the Python 'ot' library. 
         :param p1: The first protein
         :param p2: The second protein
         :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. A higher value of 'alpha' means more geometric weight, 'alpha' = 1 is equivalent to regular GW.
-        :return: The FGW distance
+        :param transport_plan: Whether to return the computed transport plan
+        :return: Returns the FGW distance and transport plan if 'transport_plan'
         """
         assert 0 <= alpha <=1
         D1 = p1.ipdm
@@ -526,7 +533,7 @@ class FGW_protein_pI(FGW_protein):
         return stress1, stress2
         
     @staticmethod
-    def run_FGW_seq_aln(p1:'FGW_protein_pI', p2:'FGW_protein_pI', alpha:float, n: int = np.inf,allow_mismatch:bool = True) -> float:
+    def run_FGW_seq_aln(p1:'FGW_protein_pI', p2:'FGW_protein_pI', alpha:float, n: int = np.inf,allow_mismatch:bool = True, transport_plan: bool = False) -> float:
         """
         This calculates the fused Gromov-Wasserstein distance between two proteins when applied just to aligned residues. 
         It first applies sequence alignment, downsamples up to 'n' of the aligned residues, then applies FGW. 
@@ -534,6 +541,7 @@ class FGW_protein_pI(FGW_protein):
         :param p2: The second protein
         :param n: The maximum number of residues to use (to reduce runtime).
         :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. A higher value of 'alpha' means more geometric weight, 'alpha' = 1 is equivalent to regular GW.
+        :param transport_plan: Whether to return the computed transport plan
         :return: The FGW distance
         """
         inds1, inds2 = FGW_protein.run_ssearch_indices(p1 =p1, p2 = p2, allow_mismatch = allow_mismatch)
@@ -548,7 +556,7 @@ class FGW_protein_pI(FGW_protein):
         p3 = p1.downsample_by_indices(inds1)
         p4 = p2.downsample_by_indices(inds2)
 
-        return FGW_protein_pI.run_FGW(p3,p4, alpha = alpha)
+        return FGW_protein_pI.run_FGW(p3,p4, alpha = alpha, transport_plan = transport_plan)
 
     def convolve_pIs(self, 
         kernel_list :list[int], 

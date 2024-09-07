@@ -1,6 +1,5 @@
 import os
 os.environ['OPENBLAS_NUM_THREADS'] = '1' #should be first, before ot
-
 import time
 import re
 import math
@@ -12,6 +11,7 @@ import numpy.typing as npt
 import itertools as it
 from scipy.spatial.distance import *
 from deprecated import deprecated
+import sparse
 
 import Bio.PDB
 from Bio import PDB, SeqIO
@@ -43,15 +43,15 @@ class FGW_protein:
     :param ipdm: The intra-protein distance matrix of a protein. 
         The (i,j)th entry is the (possibly scaled) distance between residues i and j. This is mutable can can change if distortion scaling is used.
     :param scaled_flag: Records whether the ipdm is the exact distance between residues or if it has been scaled.
+    :param distribution: Numpy array of the weighting of the residues, must sum to 1. Default is a uniform distribution.
 
     """
 
 
 
 
-    def __init__(self, name : str, seq,  coords = None, ipdm = None, scaled_flag = False , distribution = None):
-        #note - the seq is the sequence, not the file
-        #input validation
+    def __init__(self, name : str, seq: str,  coords = None, ipdm = None, scaled_flag :bool = False , distribution = None):
+
         assert not (coords is None and ipdm is None)
         if not coords is None:
             coords = np.array(coords)
@@ -87,13 +87,14 @@ class FGW_protein:
         if distribution is None:
             self.distribution = np.ones(self.ipdm.shape[0])/ self.ipdm.shape[0]
         else:
-            assert distribution.shape == self.ipdm.shape[0]
+            assert distribution.shape[0] == self.ipdm.shape[0]
             self.distribution = distribution
+        assert math.isclose(np.sum(distribution),1)
             
     def __eq__(self, other):
         """
-        Compares the underlying seq sequences (not the full seq file), the pI_lists, the ipdms, and the coords if both are defined.
-        This does NOT compare the names, scaled_flags.
+        Compares the underlying sequences, the ipdms, distributions, and the coords if both are defined.
+        This does NOT compare the names or scaled_flags.
         """
         
         if self.coords is not None and other.coords is not None and ((self.coords.shape != other.coords.shape) or (self.coords != other.coords).any()):
@@ -124,10 +125,11 @@ class FGW_protein:
         return run_fasta36.run_ssearch_cigar_Ram(fasta1 = fasta1, fasta2 = fasta2, allow_mismatch = allow_mismatch)
 
     def scale_ipdm(self,
-        scaler: Callable[[float],float] = lambda x :x, 
+        scaler: Callable[[float],float] = math.sqrt, 
         inplace: bool = False):
         """
-        :param scaler: A function with which to scale the intraprotein distance matrix. It must send 0 to 0, be strictly monotonic increasing, and concave down.
+        :param scaler: A function with which to scale the intraprotein distance matrix. It must send 0 to 0, be strictly monotonic increasing, and concave down. 
+        Default is the square root function.
         :param inplace: Whether to modify 'self.ipdm' or output the scaled ipdm.
         :return: The scaled ipdm if 'inplace == False', and 'None' if 'inplace == True'.
         """
@@ -148,8 +150,6 @@ class FGW_protein:
         :return: A 'gw_cython-GW_cell' object representing 'self'
         """
 
-
-
         return gw_cython.GW_cell(self.ipdm,  self.distribution)
             
 
@@ -157,15 +157,15 @@ class FGW_protein:
     def run_GW_from_cells(
         cell_1:gw_cython.GW_cell  , 
         cell_2: gw_cython.GW_cell,
-        transport_plan = False) -> float:
+        transport_plan:bool = False) -> float:
 
         """
         This is a wrapper for the CAJAL code to compute the GW distance between 'cell_1' and 'cell_2', 
-        outputs the computed transport plan if 'tranport_plan'
+        outputs the computed transport plan if 'tranport_plan'.
         :param cell_1:
         :param cell_2:
-        :param transport_plan:
-        :return: Returns the GW distance and transport plan
+        :param transport_plan: Whether to return the computed transport plan
+        :return: Returns the GW distance and transport plan if 'transport_plan'
         """
 
         return GW_scripts.GW_identity_init(cell_1, cell_2, transport_plan= transport_plan)
@@ -173,12 +173,14 @@ class FGW_protein:
     @staticmethod       
     def run_GW(P1 :'FGW_protein',
         P2: 'FGW_protein',
-        transport_plan = False) -> float:
+        transport_plan:bool = False) -> float:
         """
-        This is a wrapper for the CAJAL code to create gw_cython.GW_cell objects then compute the GW distance between them
+        This is a wrapper for the CAJAL code to create gw_cython.GW_cell objects then compute the GW distance between them.
+        Returns the GW distance and transport plan if 'transport_plan'
         :param P1:
         :param P2:
-        :return: Returns the GW distance
+        :param transport_plan: Whether to return the computed transport plan
+        :return: Returns the GW distance and transport plan if 'transport_plan'
         """
 
         cell_1 = P1.make_GW_cell()
@@ -240,7 +242,8 @@ class FGW_protein:
         assert self.ipdm.shape[0] == self.ipdm.shape[1]
         assert (self.ipdm == self.ipdm.T).all()
         assert self.name is not None
-        assert self.distribution == self.ipdm.shape[1]
+        assert self.distribution[0] == self.ipdm.shape[1]
+        assert math.isclose(np.sum(self.distribution),1) 
 
   
         return True
@@ -262,22 +265,7 @@ class FGW_protein:
         name = re.findall(string = pdb_file, pattern = r'([^\/]+)\.pdb$')[0]
         if chain_id is not None:
             name += '_'+chain_id
-        # parser = PDB.PDBParser(QUIET=True)
-        # structure = parser.get_structure('protein', pdb_file)
-    
-        # # Extract sequence from structure
-        # sequence = ""
-        # for model in structure:
-        #     for chain in model:
-        #         if chain_id is not None and chain._id not in chain_id:
-        #             #print(chain._id) #debugging
-        #             continue
-        #         for residue in chain:
-        #             if residue.get_id()[0] == ' ': 
-        #                 sequence += PDB.Polypeptide.protein_letters_3to1[residue.get_resname()]
-        #             elif 'UNK' in residue.get_resname():
-        #                 sequence += '*' #unkown
-        # assert len(sequence) == len(coords)
+
         
         return FGW_protein(name = name, coords = coords, seq=seq)
 
@@ -291,7 +279,8 @@ class FGW_protein:
         :param data1: The data used in the first protein, default is its isoelectric points.
         :param data2: The data used in the second protein, default is its isoelectric points.
         :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. A higher value of 'alpha' means more geometric weight, 'alpha' = 1 is equivalent to regular GW.
-        :return: The FGW distance
+        :param transport_plan: Whether to return the computed transport plan
+        :return: Returns the FGW distance and transport plan if 'transport_plan'
         """
         #not yet tested
         D1 = p1.ipdm
@@ -322,10 +311,12 @@ class FGW_protein:
             return d
             
   
-    def get_eccentricity(self, p =2):
-    #gets the eccentricity of each point with exponent p
-    # https://www.math.ucdavis.edu/~saito/data/acha.read.w12/memoli-gromov-dist.pdf 
-    # defn 5.3
+    def get_eccentricity(self, p: float =2):
+        """
+        This calculates the eccentricity of a protein with exponent p as defined in https://www.math.ucdavis.edu/~saito/data/acha.read.w12/memoli-gromov-dist.pdf, Definition 5.3.
+        :param p: The exponent, 0< p <= np.inf
+        :return: The eccentricities of each residue, as a np.array
+        """
 
         ipdm = self.ipdm
         distr = self.distribution
@@ -339,19 +330,29 @@ class FGW_protein:
             eccentricity = np.max(ipdm_pp, axis = 0)
         else:
             ipdm_pp = ipdm**p
-            ipdm_pp_w = ipdm_pp * distr #not sure about shape and broadcasting here
-            pre_stress = np.sum(ipdm_pp_w, axis = 0) #unclear which axis this should be
+            ipdm_pp_w = ipdm_pp * distr 
+            pre_stress = np.sum(ipdm_pp_w, axis = 0) 
             eccentricity = pre_stress**(1/p)
 
         return eccentricity
 
 
     @staticmethod
-    def GW_stress(prot1, prot2, T):
+    def GW_stress(prot1: 'FGW_protein', prot2: 'FGW_protein', T: np.array):
+        """
+        This calculates the stress, i.e. the contribution of each residue to the sum in the GW cost, using the transport plan 'T'.
+        This is output as two np.arrays, one for 'prot1', the second for 'prot2'.
+        WARNING - np.sum(stress1) != c, where c is the GW cost; rather math.sqrt(np.sum(stress1))/2 == c; and similarly for stress2.
+
+        :param prot1: The first FGW_protein
+        :param prot2: The second FGW_protein
+        :param T: The transport plan to be used
+        :return: stress1, stress2; the stresses for the two proteins
+        """
 
         n1= len(prot1)
         n2 = len(prot2)
-        assert T.shape = (n1,n2)
+        assert T.shape == (n1,n2)
 
 
         A = prot1.ipdm
@@ -366,11 +367,23 @@ class FGW_protein:
 
 
     @staticmethod
-    def FGW_stress(prot1, prot2, diff_mat, alpha, T):
-    #now with FGW stress
+    def FGW_stress(prot1: 'FGW_protein', prot2: 'FGW_protein', T: np.array, diff_mat : np.array, alpha:float):
+        """
+        This calculates the stress, i.e. the contribution of each residue to the sum in the FGW cost, using the transport plan 'T'.
+        This is output as two np.arrays, one for 'prot1', the second for 'prot2'.
+        WARNING - np.sum(stress1) != c, where c is the GW cost; rather math.sqrt(np.sum(stress1))/2 == c; and similarly for stress2.
+
+        :param prot1: The first FGW_protein
+        :param prot2: The second FGW_protein
+        :param diff_mat: The difference matrix in the feature space
+        :param T: The transport plan to be used
+        :param alpha: The trade-off constant between the fused cost and the geometric cost
+        :return: stress1, stress2; the stresses for the two proteins
+        """        
         n1= len(prot1)
         n2 = len(prot2)
-        assert T.shape = (n1,n2)
+        assert T.shape == (n1,n2)
+        assert diff_mat.shape == (n1,n2)
         assert 0 <= alpha <= 1
 
 
@@ -397,16 +410,17 @@ class FGW_protein:
         return stress1, stress2
         
     @staticmethod
-    def run_FGW_dict(p1: 'FGW_protein', p2:'FGW_protein', d: dict[str , dict[str ,float]] ,alpha:float = 1, transport_plan = False) -> float:
+    def run_FGW_dict(p1: 'FGW_protein', p2:'FGW_protein', d: dict[str , dict[str ,float]] ,alpha:float = 1, transport_plan: bool = False) -> float:
         """
         This calculates the fused Gromov-Wasserstein distance between two proteins. The computation is done with the Python 'ot' library. 
         :param p1: The first protein
         :param p2: The second protein
-        :param d: The dictionary used for the fused distances based on the protein sequences. Of the form d['A']['B'] == float,
-        :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. A higher value of 'alpha' means more geometric weight, 'alpha' = 1 is equivalent to regular GW.
-        :return: The FGW distance
+        :param d: The dictionary used for the fused distances based on the protein sequences. Of the form 'd['A']['B'] == float'
+        :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. 
+        A higher value of 'alpha' means more geometric weight, 'alpha' = 1 is equivalent to regular GW.
+        :param transport_plan: Whether to return the transport plan
+        :return: Returns the FGW distance and transport plan if 'transport_plan'
         """
-        #not yet tested
 
         assert 0 <= alpha <=1
         D1 = p1.ipdm
@@ -428,20 +442,58 @@ class FGW_protein:
             return d, T
         else:
             return d
+
+
+        @staticmethod
+    def run_FGW_diff_mat(p1: 'FGW_protein', p2:'FGW_protein', diff_mat: np.array ,alpha:float = 1, transport_plan: bool = False) -> float:
+        """
+        This calculates the fused Gromov-Wasserstein distance between two proteins. The computation is done with the Python 'ot' library. 
+        :param p1: The first protein
+        :param p2: The second protein
+        :param d: A user-inputted matrix of the differences in the feature space between the residues of the two proteins. Of shape ('len(p1)','len(p2)').
+        :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. 
+        A higher value of 'alpha' means more geometric weight, 'alpha' = 1 is equivalent to regular GW.
+        :param transport_plan: Whether to return the transport plan
+        :return: Returns the FGW distance and transport plan if 'transport_plan'
+        """
+
+        assert 0 <= alpha <=1
+        D1 = p1.ipdm
+        D2 = p2.ipdm
+        n1 = len(p1)
+        n2 = len(p2)
+        assert diff_mat.shape == (n1,n2)
+
+        
+        G0 = GW_scripts.id_initial_coupling(p1.distribution,p2.distribution)
+
+        T , log= ot.fused_gromov_wasserstein(M=M, C1=D1, C2=D2, alpha = alpha, p= p1.distribution ,q=p2.distribution, G0 = G0, loss_fun='square_loss')
+        d = 0.5 * math.sqrt(log['fgw_dist'])
+
+        if transport_plan:
+            return d, T
+        else:
+            return d
     
 
         
 
 
     @staticmethod
-    def get_switch_prob_sparse(T, prot_num = 0):
-        #prot_num is whether to use the oth or 1st protein entered in get_GW_transport
+    def get_switch_prob_sparse(T: np.array, prot_num: int = 0):
+        """
+        Calculates the probability that the order of two residues are switched or not when the transport plan is applied.
+        This can be used to detect circular permutations between two proteins. 
+        :param T: The transport plan to use
+        :param prot_num: Which protein to use, 0 uses the 0th axis of 'T', 1 uses the 1st axis.
+        :return: A square np.array whose ijth entry is the probability that residues i and j are kept in the same order.
+        """
         
         if prot_num == 1:
             return get_switch_prob_sparse(T.T, prot_num = 0)
         
         T_mod = T/ (np.sum(T, axis = 1)[np.newaxis]).T
-        TT_mod = T_mod.T
+        TT_mod = T_mod.Thttps://buycycle.com/en-us/bike/default663ce01627ea8-63031
         if np.count_nonzero(T) >= 5000:
             warnings.warn('input has over 5,000 nonzero entries, may use too much RAM and crash')
             
