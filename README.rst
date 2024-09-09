@@ -1,9 +1,16 @@
-Template for the Read the Docs tutorial
+GWProt - Gromov-Wasserstein for Protein Structual Alignment
 =======================================
 
-This GitHub template includes fictional Python library
-with some basic Sphinx docs.
+GWProt is a Python library for structural alignment of proteins using the Gromov-Wasserstein distance.
+Currently it requires PDB (Protein Data Bank) files of proteins.
 
-Read the tutorial here:
+[BioarXiv link]
 
-https://docs.readthedocs.io/en/stable/tutorial/
+Installation
+=======================================
+
+To do
+
+
+Documentation
+=======================================

@@ -1,6 +1,6 @@
 Gromov-Wasserstein for Protein Morphology
 
-
+WARNING -- THIS IS VERY OUTDATED!!!
 
 Our approach is fundamentally geometric - we treat a protein as a point cloud given by its alpha Carbons. 
 Our underlying approach does not require further information though it is useful to incorporate it.

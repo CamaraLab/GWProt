@@ -1,10 +1,10 @@
 .. CAJAL documentation master file
 
 
-Welcome to prOTein's documentation!
+Welcome to GWProt's documentation!
 ===================================
 
-**prOTein**  is a Python library for applying Gromov-Wasserstein to protein morphology.
+**GWProt**  is a Python library for applying Gromov-Wasserstein to protein morphology.
 
 Check out the :doc:`usage` section for further information, including
 how to :ref:`installation` the project.
@@ -22,7 +22,9 @@ how to :ref:`installation` the project.
    :caption: Usage and API
 
    usage
-   FGW_protein 
+   FGW_protein
+   FGW_protein_pI
+   Stresses 
    docker
 
 
