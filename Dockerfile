@@ -21,12 +21,15 @@ RUN apt-get install git --fix-missing  -y
 RUN apt-get install make --fix-missing  -y
 RUN apt-get install gcc --fix-missing  -y
 
+RUN apt-get install ffmpeg libsm6 libxext6  -y
 
+#check these, might be the wrong ones
 RUN conda install -c conda-forge pymol-open-source
 #RUN apt-get install pymol #fails
 RUN apt-get install pymol --fix-missing -y
 
 # we probably need these, but not tested yet
+# RUN conda install -c conda-forge -c schrodinger pymol-bundle  #this one works I think
 # RUN conda install -c schrodinger pymol
 # RUN conda install -c schrodinger pymol-psico
 # RUN conda install -c speleo3 tmalign
@@ -40,6 +43,7 @@ RUN cd fasta-36.3.8i/src; `
     
 USER jovyan
 RUN /opt/conda/bin/python3 -m pip install pot `
+cajal `
  biopython==1.81 `
  umap-learn==0.5.3 `
  multiprocess `
