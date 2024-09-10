@@ -10,31 +10,39 @@ FROM jupyter/base-notebook
 
 
 USER root
-
-
-
 RUN apt-get update -y
 RUN apt-get update && apt-get upgrade -y
 RUN apt-get install nano
-RUN apt-get install git --fix-missing  -yy
-
-
+RUN apt-get install git --fix-missing  -y
 RUN apt-get install make --fix-missing  -y
+RUN apt-get install cmake --fix-missing  -y
 RUN apt-get install gcc --fix-missing  -y
-
 RUN apt-get install ffmpeg libsm6 libxext6  -y
 RUN  conda update -n base -c conda-forge conda -y
+RUN conda install numpy
+RUN apt-get install git build-essential python3-dev libglew-dev `
+  libpng-dev libfreetype6-dev libxml2-dev `
+  libmsgpack-dev python3-pyqt5.qtopengl libglm-dev libnetcdf-dev --fix-missing -y
 
+
+RUN git clone https://github.com/schrodinger/pymol-open-source.git
+RUN git clone https://github.com/rcsb/mmtf-cpp.git
+RUN mv mmtf-cpp/include/mmtf* pymol-open-source/include/
+WORKDIR pymol-open-source
+
+RUN python3 setup.py build install
+
+RUN apt install python3-pip -y 
 
 #check these, might be the wrong ones - we want version 3, version 2 causes seg faults
 
 #version 2.5.0 :
-RUN conda install -c conda-forge pymol-open-source
+#RUN conda install -c conda-forge pymol-open-source
 #RUN apt-get install pymol #fails
 
 #version 2.5.0 :
 #actually, this may not work..
-RUN apt-get install pymol --fix-missing -y  
+#RUN apt-get install pymol --fix-missing -y  
 
 # we probably need these, but not tested yet
 # RUN conda install -c conda-forge -c schrodinger pymol-bundle  #this one works I think
@@ -53,7 +61,9 @@ RUN tar -xvzf fasta36-linux64.tar.gz
 RUN rm -r fasta36-linux64.tar.gz
 RUN cd fasta-36.3.8i/src; `
     make -f ../make/Makefile.linux_sse2 all
-    
+   
+
+#commented out for testing: 
 USER jovyan
 RUN /opt/conda/bin/python3 -m pip install pot `
  cajal `

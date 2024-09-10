@@ -33,7 +33,6 @@ import sys
 import GW_scripts
 import read_pdb
 import FGW_protein
-import IdInit
 import pymol_tmalign_wrapper_Copy1
 from pymol import cmd
 

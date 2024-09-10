@@ -30,7 +30,6 @@ sys.path.insert(0,'../PGC020.a12/src')
 import GW_scripts
 import read_pdb
 import FGW_protein
-import IdInit
 import pymol_tmalign_wrapper_Copy1
 from pymol import cmd
 

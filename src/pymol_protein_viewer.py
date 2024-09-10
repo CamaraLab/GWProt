@@ -1,5 +1,4 @@
 import os
-import pymolPy3
 import math
 import numpy as np
 from subprocess import Popen, PIPE, STDOUT
@@ -18,22 +17,26 @@ import pymol
 import GW_scripts
 import read_pdb
 import FGW_protein
-import IdInit
 import GWstress
 import weighted_alignment
 
-# copied to src 5/30/2024 from pymol_protein_viewer1
+"""
+This needs to be rewritten using my_pymolPy3 instead of pymol.cmd, so it can work with pymol 3
+and should also be compatible with pymol 2
+
+"""
 
 
 class my_pymolPy3:
     # pretty much the one from online
+    # https://github.com/carbonscott/pymolPy3
     def __init__(self):
 
         #     self.pymolpy3 = Popen(['pymol' ,'-pc'], shell=True, 
         #         stdin=subprocess.PIPE, stdout=subprocess.PIPE,
         #         stderr=subprocess.STDOUT, text = True, universal_newlines=True)
         self.pymolpy3 = Popen(
-            ["pymol", "-pc"], # -p means get commands from stdin
+            ["pymol", "-pc"], # -p means get commands from stdin #  -K to continue going
             shell=False,
             stdin=PIPE,
             stdout=PIPE,
@@ -41,7 +44,17 @@ class my_pymolPy3:
             universal_newlines=True,
         )
 
-        # todo - add code here that gets the version of pymol
+        # "pymol --version" gives the version
+        V =  Popen(
+            ["pymol", "--version"], 
+            shell=False,
+            stdin=PIPE,
+            stdout=PIPE,
+            stderr=PIPE,
+            universal_newlines=True,
+        )
+        self.version = V.stdout.read().split()[1]
+
 
     def __del__(self):
 
@@ -55,7 +68,7 @@ class my_pymolPy3:
 
     def __call__(self, s, pause=False):
         # Keep reading the new pymol command as a byte string...
-        self.pymolpy3.stdin.write(s + "\n")
+        self.pymolpy3.stdin.write( s + "\n")
 
         # Flush it asap...
         self.pymolpy3.stdin.flush()
@@ -70,6 +83,22 @@ class my_pymolPy3:
             os.remove("lock.tmp")
         return 0
 
+    def cmd(self, *args):
+        command = 'cmd.' 
+        a0 = args[0].strip()
+        if "transform_selection" in a0 and "2." in self.version:
+            raise ValueError("Pymol 2 can segmentation fault when running transform_selection")
+        command+= a0 + '('
+        
+        for a in args[1:]:
+            a = a.strip()
+            command += "'" + a + "',"
+        
+        command = command.removesuffix(',')
+        command += ')'
+        self(command)
+        print(command)
+        
     def quit(self):
         self("quit")
 
@@ -125,36 +154,38 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, transport_
 
     pret, rot, trans = weighted_alignment.weighted_RMSD(p1.coords, p2.coords, T)
 
-    ll = weighted_alignment.pymol_transform(pretrans=pret, rot=rot, posttrans=trans)
+    ll = weighted_alignment._pymol_transform(pretrans=pret, rot=rot, posttrans=trans)
  
-    cmd.delete("all")
-    cmd.load(file1, "prot1")
-    cmd.load(file2, "prot2")
+    pm = my_pymolPy3()
+
+    cmd.delete('all')
+    cmd.load(file1, 'prot1')
+    cmd.load(file2, 'prot2')
     # cmd.cealign('prot1', 'prot2')
     residue_numbers1 = list(
-        set(atom.resi_number for atom in cmd.get_model("prot1").atom)
+        set(atom.resi_number for atom in cmd.get_model('prot1').atom)
     )
     residue_numbers2 = list(
-        set(atom.resi_number for atom in cmd.get_model("prot2").atom)
+        set(atom.resi_number for atom in cmd.get_model('prot2').atom)
     )
     my_namespace = {
-        "new_b1": stress1,
-        "new_b2": stress2,
-        "res_num1": residue_numbers1,
-        "res_num2": residue_numbers2,
+        'new_b1': stress1,
+        'new_b2': stress2,
+        'res_num1': residue_numbers1,
+        'res_num2': residue_numbers2,
     }
     cmd.alter(
-        selection="prot1",
-        expression="b = new_b1[res_num1.index(int(resi))]",
+        selection='prot1',
+        expression='b = new_b1[res_num1.index(int(resi))]',
         space=my_namespace,
     )
     cmd.alter(
-        selection="prot2",
-        expression="b = new_b2[res_num2.index(int(resi))]",
+        selection='prot2',
+        expression='b = new_b2[res_num2.index(int(resi))]',
         space=my_namespace,
     )
-    cmd.spectrum(expression="b", selection="prot1", palette="yellow_red", byres=1)
-    cmd.spectrum(expression="b", selection="prot2", palette="blue_red", byres=1)
+    cmd.spectrum(expression='b', selection='prot1', palette='yellow_red', byres=1)
+    cmd.spectrum(expression='b', selection='prot2', palette='blue_red', byres=1)
 
     # Iterate through each pair of residues
     for p in ps:
@@ -162,21 +193,20 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, transport_
         j = residue_numbers2[p[1]]
 
         # Construct the selection strings for the atoms of interest
-        atom_selection1 = f"prot1//A/{i}/CA"
-        atom_selection2 = f"prot2//A/{j}/CA"
+        atom_selection1 = f'prot1//A/{i}/CA'
+        atom_selection2 = f'prot2//A/{j}/CA'
 
         # Calculate and draw the distance between the selected atoms
         cmd.distance(
-            f"d{i}_{j}", selection1=atom_selection1, selection2=atom_selection2
+            f'd{i}_{j}', selection1=atom_selection1, selection2=atom_selection2
         )
-        cmd.show("dashes", f"d{i}_{j}")
-        cmd.hide("labels", f"d{i}_{j}")
+        cmd.show('dashes', f'd{i}_{j}')
+        cmd.hide('labels', f'd{i}_{j}')
     cmd.set("dash_gap", "0")
     cmd.set("dash_width", "1")
     cmd.zoom("all")
     cmd.bg_color("grey80")
     cmd.save("temp.pse")
-    pm = my_pymolPy3()
     pm("cmd.load( 'temp.pse') ")
     print('WARNING - this can cause a segmentation fault with Pymol 2')
     pm(f"cmd.transform_selection( 'prot2' , matrix =  {ll})")
@@ -186,14 +216,13 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, transport_
 
 
 def show_proteins_with_values(file: str, output_file: str, *argv):
-    """
+    """    
     This loads a pdb file and displays it in pymol with colors based on the input lists, then saves it to a .pse file
     :param file: input pdb file
     :param output_file: where to save the new pymol scene, must end in '.pse'
 
-
     """
-    cmd.delete("all")
+    cmd.delete('all')
     data = list(argv)
     n = len(data)
     prots = {}
@@ -204,33 +233,33 @@ def show_proteins_with_values(file: str, output_file: str, *argv):
         prots[i] = FGW_protein.FGW_protein.make_protein_from_pdb(file)
         if len(prots[i]) != len(data[i]):
             raise ValueError('length of protein does not match length of data')
-        cmd.load(file, "prot" + str(i))
+        cmd.load(file, 'prot' + str(i))
         if i == 0:
             residue_numbers = list(
-                set(atom.resi_number for atom in cmd.get_model("prot0").atom)
+                set(atom.resi_number for atom in cmd.get_model('prot0').atom)
             )
             assert len(residue_numbers) == len(prots[i])
-            my_namespace = {"res_num": residue_numbers}
+            my_namespace = {'res_num': residue_numbers}
 
         assert len(data[i]) == len(residue_numbers)
-        my_namespace["new_b" + str(i)] = data[i]
+        my_namespace['new_b' + str(i)] = data[i]
         cmd.alter(
-            selection="prot" + str(i),
-            expression="b = new_b" + str(i) + "[res_num.index(int(resi))]",
+            selection='prot' + str(i),
+            expression='b = new_b' + str(i) + '[res_num.index(int(resi))]',
             space=my_namespace,
         )
         cmd.spectrum(
-            expression="b", selection="prot" + str(i), palette="yellow_red", byres=1
+            expression='b', selection='prot' + str(i), palette='yellow_red', byres=1
         )
 
-    cmd.zoom("all")
+    cmd.zoom('all')
     cmd.center()
-    cmd.bg_color("grey80")
+    cmd.bg_color('grey80')
     cmd.save(output_file)
 
 def show_proteins(files, output_file):
     # files is list of (pdb file, chain id) or pdb file
-    cmd.delete("all")
+    cmd.delete('all')
     n = len(files)
 
     for f in files:
@@ -241,7 +270,7 @@ def show_proteins(files, output_file):
             file, chain = f
             cmd.load(file, file.split('.')[-2]+ '_' + chain)
             if chain not in cmd.get_chains(file.split('.')[-2]+ '_' + chain):
-                raise ValueError(f"Chain {chain} is not found in {file}")
+                raise ValueError(f'Chain {chain} is not found in {file}')
             cmd.hide( '(' +file.split('.')[-2]+ '_' + chain + f' and not chain {chain} )')
         else:
             raise ValueError('Incorrect input format')
@@ -259,12 +288,9 @@ def show_proteins(files, output_file):
             cmd.cealign(sele0, sele1)
 
 
-    cmd.zoom("all")
+    cmd.zoom('all')
     cmd.center('all')
-    cmd.bg_color("grey80")
+    cmd.bg_color('grey80')
     cmd.save(output_file)
 
 
-if __name__ == "__main__":
-    # this might not be necessary and could cause issues
-    pymol.finish_launching(["pymol", "-pc"])
