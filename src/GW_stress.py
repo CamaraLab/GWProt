@@ -127,67 +127,37 @@ def get_pairing(T, threshold0 = 0.5, threshold1 = 0.5):
                 pairs.append((i,j))
     return pairs
             
+
+def earth_mover_distance_stress(X,Y, T = None, distr1 = None, distr2 = None):
+    """
+    Calculates the earth mover distance stresses between point clouds X and Y. 
+
+
+    """
+
+
+    # D = ot.dist(coords1, coords2)
+    # #print(D.shape)
+    # a = np.ones(coords1.shape[0])/coords1.shape[0]
+    # b = np.ones(coords2.shape[0])/coords2.shape[0]
+
+    # T = ot.emd(a,b, D)
+    # stress = np.einsum('ij,ij ->ij', D,T)
+    # cost = np.sum(stress)
+    # stress1 = np.sum(stress, axis = 1)
+    # stress2 = np.sum(stress, axis = 0)
         
 
 
 
-def get_pymol_transport(file1, file2, aligner = 'cealign', TM_exe = '/home/elijah/pymol/bin/TMalign' ): #filepaths to pbds
-    # TM_exe filepath to TM align
-    cmd.delete('all')
-    cmd.load(file1, 'prot1')
-    cmd.load(file2, 'prot2')
-
-    coords01 = []
-    coords02 = []
-    cmd.iterate_state(1, "prot1 and name CA", "coords01.append((x, y, z))", space={'coords01': coords01})
-    cmd.iterate_state(1, "prot2 and name CA", "coords02.append((x, y, z))", space={'coords02': coords02})
-    coords01 = np.stack(coords01)
-    coords02 = np.stack(coords02)
-
-    match aligner:
-        case 'cealign':
-            cmd.cealign('prot1', 'prot2')
-        case 'align':
-            cmd.align('prot1', 'prot2')
-        case 'super':
-            cmd.super('prot1', 'prot2')     
-        case 'tmalign':
-            pymol_tmalign_wrapper_Copy1.tmalign('prot1', 'prot2', quiet=1, exe = TM_exe, return_alignment=False) 
-            #cmd.tmalign('prot1', 'prot2') 
-        case _:
-            raise ValueError("valid arguments for aligner are 'align', 'cealign', 'super', tmalign")
-    coords1 = []
-    coords2 = []
-    cmd.iterate_state(1, "prot1 and name CA", "coords1.append((x, y, z))", space={'coords1': coords1})
-    cmd.iterate_state(1, "prot2 and name CA", "coords2.append((x, y, z))", space={'coords2': coords2})
-    coords1 = np.stack(coords1)
-    coords2 = np.stack(coords2)
-    
-    
-    #print(coords1.shape)
-    #print(coords2.shape)
-    D = ot.dist(coords1, coords2)
-    #print(D.shape)
-    a = np.ones(coords1.shape[0])/coords1.shape[0]
-    b = np.ones(coords2.shape[0])/coords2.shape[0]
-
-    T = ot.emd(a,b, D)
-    stress = np.einsum('ij,ij ->ij', D,T)
-    cost = np.sum(stress)
-    stress1 = np.sum(stress, axis = 1)
-    stress2 = np.sum(stress, axis = 0)
-
-    return T, cost, stress1, stress2 
 
 
-#warning -  the pymol coords could be returned in a different order
-# or try cmd.get_coords(str selection)
-# not totally sure how ordering works
-
-# pymol_tmalign_wrapper_Copy1.tmalign('prot1', 'prot2', quiet=1, return_alignment=True)
-    
-    
-
+def random_permutation_initial_coupling(a,b, seed = None):
+    if seed:
+        np.random.seed(seed)
+    P = id_initial_coupling(a,b)
+    Q = np.random.permutation(P)
+    return Q
 
 
 

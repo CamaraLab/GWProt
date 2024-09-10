@@ -6,6 +6,7 @@ from subprocess import Popen, PIPE, STDOUT
 import pickle
 import time
 import sys
+import re
 
 sys.path.insert(0, "../PGC020.a12/src")
 sys.path.insert(0, "../PGC020.a3")
@@ -32,13 +33,15 @@ class my_pymolPy3:
         #         stdin=subprocess.PIPE, stdout=subprocess.PIPE,
         #         stderr=subprocess.STDOUT, text = True, universal_newlines=True)
         self.pymolpy3 = Popen(
-            ["pymol", "-pc"],
+            ["pymol", "-pc"], # -p means get commands from stdin
             shell=False,
             stdin=PIPE,
             stdout=PIPE,
             stderr=PIPE,
             universal_newlines=True,
         )
+
+        # todo - add code here that gets the version of pymol
 
     def __del__(self):
 
@@ -175,6 +178,7 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, transport_
     cmd.save("temp.pse")
     pm = my_pymolPy3()
     pm("cmd.load( 'temp.pse') ")
+    print('WARNING - this can cause a segmentation fault with Pymol 2')
     pm(f"cmd.transform_selection( 'prot2' , matrix =  {ll})")
     pm("cmd.center('all')")
     pm("cmd.zoom('all')")
@@ -262,4 +266,5 @@ def show_proteins(files, output_file):
 
 
 if __name__ == "__main__":
+    # this might not be necessary and could cause issues
     pymol.finish_launching(["pymol", "-pc"])

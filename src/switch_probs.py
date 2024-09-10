@@ -33,6 +33,9 @@ import FGW_protein
 import IdInit
 import sparse
 
+
+# the method to calculate switch probs has been moved to FGW_protein.py , the other stuff is probably not worth keeping
+
 # def get_switch_prob(i,j,T):
     
 #     A = T[:,i][np.newaxis]

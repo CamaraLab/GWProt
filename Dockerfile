@@ -16,22 +16,35 @@ USER root
 RUN apt-get update -y
 RUN apt-get update && apt-get upgrade -y
 RUN apt-get install nano
-RUN apt-get install git --fix-missing  -y
+RUN apt-get install git --fix-missing  -yy
+
 
 RUN apt-get install make --fix-missing  -y
 RUN apt-get install gcc --fix-missing  -y
 
 RUN apt-get install ffmpeg libsm6 libxext6  -y
+RUN  conda update -n base -c conda-forge conda -y
 
-#check these, might be the wrong ones
+
+#check these, might be the wrong ones - we want version 3, version 2 causes seg faults
+
+#version 2.5.0 :
 RUN conda install -c conda-forge pymol-open-source
 #RUN apt-get install pymol #fails
-RUN apt-get install pymol --fix-missing -y
+
+#version 2.5.0 :
+#actually, this may not work..
+RUN apt-get install pymol --fix-missing -y  
 
 # we probably need these, but not tested yet
 # RUN conda install -c conda-forge -c schrodinger pymol-bundle  #this one works I think
 # RUN conda install -c schrodinger pymol
 # RUN conda install -c schrodinger pymol-psico
+
+#might be version 2.5.7 , does not run, likely dependency issue
+# RUN conda install -c schrodinger -c conda-forge pymol 
+
+
 # RUN conda install -c speleo3 tmalign
 
 
@@ -43,7 +56,7 @@ RUN cd fasta-36.3.8i/src; `
     
 USER jovyan
 RUN /opt/conda/bin/python3 -m pip install pot `
-cajal `
+ cajal `
  biopython==1.81 `
  umap-learn==0.5.3 `
  multiprocess `

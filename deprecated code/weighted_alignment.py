@@ -4,6 +4,7 @@ import Bio.PDB
 import Bio.SVDSuperimposer
 import warnings
 import ot
+import math
 
 from numpy import dot, transpose, sqrt
 from numpy.linalg import svd, det
@@ -38,32 +39,54 @@ def transform(X, rot = np.identity(3), trans = np.zeros((1,3))):
 #THIS NEEDS more TESTING
 #no currently known bugs though
 
-def weighted_RMSD(X,Y, weights):
+def weighted_RMSD(X:np.array ,Y:np.array, T:np.array):
+    """
+    This method uses the Kabsch algorithm to find a rigid, orientation-preserving transformation that minimizes weighted RMSD.
+
+    Explicitly it finds a special orthogonal matrix S which minimizes
+
+    sum_{i,j} |(x_i - x')- S(y_j - y')|^2 * T_{i,j} 
+
+    where x' is the weighted mean of the x_i and y' is the weighted mean of the y'.
+
+    Note - in general there may not be a unique solution matrix S which minimizes this. 
+
+    :pararm X: A np.array with of (n,3) representing the n vector in R^3 defining X
+    :pararm Y: A np.array with of (m,3) representing the m vector in R^3 defining Y
+    :param T: A np.array of shape (n,m) representing the weights for the alignment. Its entries must be non-negative.
+    So T[i,j] defines how strongly the distance between X[i,:] and Y[j,:] should be weighted in the minimization.
+    :return: -y_mean, rot, x_mean ; where rot is a 3x3 matrix.
+
+    Note that if n == m and T is the identity matrix, this is just the usual Kabsch algorithm for minimizing RMSD between X and Y.
+
+    """
     
-#return pretranslation, rotation, posttranslation
-# assumed weights sum to 1
+    #return pretranslation, rotation, posttranslation
+    # assumed weights sum to 1
 
 
 
-# Y is the mobile one here, so
-# X ~ (Y+ pre) @ rot +post
-    
-    #code adapted from the Bio.SVDSuperimposer package:
-    
-# Copyright (C) 2002, Thomas Hamelryck (thamelry@vub.ac.be)
-#
-# This file is part of the Biopython distribution and governed by your
-# choice of the "Biopython License Agreement" or the "BSD 3-Clause License".
-# Please see the LICENSE file that should have been included as part of this
-# package.
-    
+    # Y is the mobile one here, so
+    # X ~ (Y+ pre) @ rot +post
+        
+        #code adapted from the Bio.SVDSuperimposer package:
+        
+    # Copyright (C) 2002, Thomas Hamelryck (thamelry@vub.ac.be)
+    #
+    # This file is part of the Biopython distribution and governed by your
+    # choice of the "Biopython License Agreement" or the "BSD 3-Clause License".
+    # Please see the LICENSE file that should have been included as part of this
+    # package.
+
+    weights = T
+    assert len(X.shape) == len(Y.shape) == len(weights.shape)
+
     assert X.shape[0] == weights.shape[0]
     assert Y.shape[0] == weights.shape[1]
     assert X.shape[1] ==3
     assert Y.shape[1] ==3
+    assert (weights >0 ).all()
 
-    # print('X.shape',X.shape)
-    # print('Y.shape',Y.shape)
     
     new_X = []
     new_Y = []
@@ -119,7 +142,9 @@ transform based on matrix and vector in pymol:
 
 
 
-def pymol_transform( pretrans, rot, posttrans, Bio_format = True):
+def _pymol_transform( pretrans, rot, posttrans, Bio_format = True):
+    # helper that changes this into the matrix format specific to pymol
+
     #Bio_format: row vectors, right multiplication. This is how the RMSD alignments do it
     # not Bio_format: column vectors, left multiplication
     warnings.warn('deprecation - this may use different target/mobile conventions than other functions')
