@@ -18,7 +18,7 @@ from Bio import PDB, SeqIO
 from typing import Callable
 
 
-import IdInit
+
 import GW_scripts
 import read_pdb
 import run_fasta36

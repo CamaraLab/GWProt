@@ -63,7 +63,7 @@ RUN cd fasta-36.3.8i/src; `
     make -f ../make/Makefile.linux_sse2 all
    
 
-#commented out for testing: 
+# this still has issues
 USER jovyan
 RUN /opt/conda/bin/python3 -m pip install pot `
  cajal `

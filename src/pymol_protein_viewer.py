@@ -168,6 +168,7 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, transport_
     residue_numbers2 = list(
         set(atom.resi_number for atom in cmd.get_model('prot2').atom)
     )
+    #best idea is to all of this as python within pymol
     my_namespace = {
         'new_b1': stress1,
         'new_b2': stress2,

@@ -20,7 +20,7 @@ from typing import Iterator, Iterable, Optional, TypeVar, Generic
 
 # imports used in compute_gw_copy.ipynb
 from Bio.SVDSuperimposer import SVDSuperimposer
-
+ 
 
 import sys
 sys.path.insert(0,'../PGC020.a12/src')
@@ -131,7 +131,7 @@ def earth_mover_distance_stress(X,Y, T = None, distr1 = None, distr2 = None):
     """
     Calculates the earth mover distance stresses between point clouds X and Y. 
 
-
+    To Do
     """
 
 
@@ -149,14 +149,6 @@ def earth_mover_distance_stress(X,Y, T = None, distr1 = None, distr2 = None):
 
 
 
-
-
-def random_permutation_initial_coupling(a,b, seed = None):
-    if seed:
-        np.random.seed(seed)
-    P = id_initial_coupling(a,b)
-    Q = np.random.permutation(P)
-    return Q
 
 
 

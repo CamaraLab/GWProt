@@ -17,19 +17,8 @@ from scipy.spatial.distance import *
 
 from cajal import run_gw, qgw, gw_cython # triangle_ineq_parallel, 
 
-import IdInit
 
 
-
-
-
-
-def get_nearest_mat(dmat):
-    outmat = []
-    for row in dmat:
-        outrow = np.argsort(row)
-        outmat.append(outrow)
-    return np.stack(outmat)
 
 
 

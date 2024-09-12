@@ -185,3 +185,32 @@ def random_permutation_initial_coupling_unif(m,n, seed = None):
     Q = np.random.permutation(P)
     return(Q)
     
+
+
+
+def reform_transport_plan(T, coords1, coords2):
+    # takes in two sets of coordinates with a transport plan
+    # applies the rigid translation minimizing weighted RMSD according to the transport plan (of weights)
+    # 
+    n ,m = T.shape
+    assert coords1.shape == (n,3)
+    assert coords2.shape == (m,3)
+
+    pretrans, rot, posttrans = weighted_RMSD( coords1 , coords2, T)
+    shifted_coords2 = (coords2 + pretrans) @ rot + posttrans # this is the way
+    D = ot.dist(coords1, shifted_coords2)
+    #print(D.shape)
+    a = np.ones(coords1.shape[0])/coords1.shape[0]
+    b = np.ones(shifted_coords2.shape[0])/coords2.shape[0]
+
+    TT = ot.emd(a,b, D)
+
+    stress = np.einsum('ij,ij ->ij', D,T)
+    cost = np.sum(stress)
+    stress1 = np.sum(stress, axis = 1)
+    stress2 = np.sum(stress, axis = 0)
+
+    return TT , cost, stress1, stress2 #pretrans, rot, posttrans, shifted_coords2
+
+    
+    

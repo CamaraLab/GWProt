@@ -241,22 +241,24 @@ def get_hydrophobicity():
         HH_dict[k] = k_dict
     return HH_dict
 
-def get_SASA(file):
-    #returns solvent accessible surface area according to pymol
-    # this seems to work, but could be annoying to integrate
+
+# deleted bc not compatible with pymol 3
+# def get_SASA(file):
+#     #returns solvent accessible surface area according to pymol
+#     # this seems to work, but could be annoying to integrate
     
 
-    from pymol import cmd
-    import pymol
+#     from pymol import cmd
+#     import pymol
     
     
-    pymol.finish_launching(['pymol', '-pc'])
-    cmd.delete('all')
-    cmd.load(file, 'prot1')
-    residue_numbers = list(set(atom.resi_number for atom in cmd.get_model('prot1').atom))
+#     pymol.finish_launching(['pymol', '-pc'])
+#     cmd.delete('all')
+#     cmd.load(file, 'prot1')
+#     residue_numbers = list(set(atom.resi_number for atom in cmd.get_model('prot1').atom))
     
     
-    SAS = [cmd.get_area(f'prot1 and resi {i}') for i in residue_numbers ]
-    return SAS
+#     SAS = [cmd.get_area(f'prot1 and resi {i}') for i in residue_numbers ]
+#     return SAS
 
 
