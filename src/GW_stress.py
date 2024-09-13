@@ -30,8 +30,6 @@ sys.path.insert(0,'../PGC020.a12/src')
 import GW_scripts
 import read_pdb
 import FGW_protein
-import pymol_tmalign_wrapper_Copy1
-from pymol import cmd
 
 
 
@@ -40,7 +38,7 @@ def GW_stress(prot1, prot2, T):
 
     n1= len(prot1)
     n2 = len(prot2)
-    assert T.shape = (n1,n2)
+    assert T.shape == (n1,n2)
 
 
     A = prot1.ipdm
@@ -61,7 +59,7 @@ def FGW_stress(prot1, prot2, diff_mat, alpha, T):
 #now with FGW stress
     n1= len(prot1)
     n2 = len(prot2)
-    assert T.shape = (n1,n2)
+    assert T.shape == (n1,n2)
     assert 0 <= alpha <= 1
 
 

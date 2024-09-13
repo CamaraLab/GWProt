@@ -28,11 +28,11 @@ def get_pdb_coords(
     
     pattern =  r'\/?([^\/]+)\.pdb$'
 
-    cellname = re.findall(pattern,filepath )[0]
+    #cellname = re.findall(pattern,filepath )[0]
     parser = Bio.PDB.PDBParser() #aaaaahahhaha
     #print(cellname,filepath) #for debugging
     
-    cell = parser.get_structure(cellname,filepath)
+    cell = parser.get_structure(filepath ,filepath) #unsure if this works
     #print(cell)
     model = next(cell.get_models())
     if chain_id is not None and not set(chain_id).issubset(set([a._id for a in model.get_chains()]))  :
@@ -87,11 +87,11 @@ def get_pdb_coords_pI(
     pKSet = "solomon"
     pattern =  r'\/([^\/]+)\.pdb$' 
     
-    cellname = re.findall(pattern,filepath )[0]
+    #cellname = re.findall(pattern,filepath )[0]
     parser = Bio.PDB.PDBParser() #aaaaahahhaha
     #print(cellname,filepath) #for debugging
     
-    cell = parser.get_structure(cellname,filepath)
+    cell = parser.get_structure(filepath,filepath)
     #print(cell)
     model = next(cell.get_models())
 

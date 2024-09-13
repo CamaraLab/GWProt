@@ -236,7 +236,7 @@ class FGW_protein_pI(FGW_protein):
         else:
             assert distribution.shape[0] == self.ipdm.shape[0]
             self.distribution = distribution
-        assert math.isclose(np.sum(distribution),1)
+        assert math.isclose(np.sum(self.distribution),1)
 
             
     def __eq__(self, other):

@@ -89,7 +89,7 @@ class FGW_protein:
         else:
             assert distribution.shape[0] == self.ipdm.shape[0]
             self.distribution = distribution
-        assert math.isclose(np.sum(distribution),1)
+        assert math.isclose(np.sum(self.distribution),1)
             
     def __eq__(self, other):
         """
@@ -444,7 +444,7 @@ class FGW_protein:
             return d
 
 
-        @staticmethod
+    @staticmethod
     def run_FGW_diff_mat(p1: 'FGW_protein', p2:'FGW_protein', diff_mat: np.array ,alpha:float = 1, transport_plan: bool = False) -> float:
         """
         This calculates the fused Gromov-Wasserstein distance between two proteins. The computation is done with the Python 'ot' library. 
@@ -493,7 +493,7 @@ class FGW_protein:
             return get_switch_prob_sparse(T.T, prot_num = 0)
         
         T_mod = T/ (np.sum(T, axis = 1)[np.newaxis]).T
-        TT_mod = T_mod.Thttps://buycycle.com/en-us/bike/default663ce01627ea8-63031
+        TT_mod = T_mod.T 
         if np.count_nonzero(T) >= 5000:
             warnings.warn('input has over 5,000 nonzero entries, may use too much RAM and crash')
             
