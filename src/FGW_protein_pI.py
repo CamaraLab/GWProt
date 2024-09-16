@@ -308,7 +308,7 @@ class FGW_protein_pI(FGW_protein):
         pI_list = [self.pI_list[i] for i in indices]
 
         new_seq = ''.join([self.seq[i] for i in indices])
-        new_distribution = self.distribution[indices]
+        new_distribution = self.distribution[indices]/np.sum(self.distribution[indices])
 
         
         return FGW_protein_pI(seq = new_seq, pI_list = pI_list, ipdm = ipdm, coords = coords, name = self.name+'_downsampled', scaled_flag = self.scaled_flag, distribution = new_distribution)

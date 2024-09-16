@@ -203,10 +203,9 @@ class FGW_protein:
         ii = np.ix_(indices,indices)
         ipdm = self.ipdm[ii]
 
-        new_distribution = self.distribution[indices]
 
         new_seq = ''.join([self.seq[i] for i in indices])
-        
+        new_distribution = self.distribution[indices]/np.sum(self.distribution[indices])
         return FGW_protein(seq = new_seq,  ipdm = ipdm, coords = coords, name = self.name+'_downsampled', scaled_flag = self.scaled_flag, distribution = new_distribution)
 
     def reset_ipdm(self) -> None:
