@@ -34,6 +34,8 @@ import FGW_protein
 
 
 
+
+
 # This module is for doing all vs all stress comparisons in a dataset
 
 class Stress_Comparison:
@@ -79,51 +81,75 @@ class Stress_Comparison:
 
         return T 
 
+
+
     def _GW_helper(self, pp):
         p1,p2 = pp 
         name1 = p1.name
         name2 = p2.name 
-        cell1 = cell_dict[name1]
-        cell2 = cell_dict[name2]
-        
-        
-        
-        c, T = FGW_protein.run_GW_from_cells(cell1, cell2, transport_plan = True)
-        
-        s1, s2 = FGW_protein.GW_stree(p1,p2, T)
-        
-        
+        cell1 = self.cell_dict[name1]
+        cell2 = self.cell_dict[name2]
+        c, T = FGW_protein.FGW_protein.run_GW_from_cells(cell1, cell2, transport_plan = True)
+        s1, s2 = FGW_protein.FGW_protein.GW_stress(p1,p2, T)     
+        print(name1, name2, c)
+        return name1, name2, c, s1, s2, T 
+
+    @staticmethod
+    def _GW_helper_multi(ppcc):
+        pp, cc = ppcc
+        p1,p2 = pp
+        cell1, cell2 = cc
+        name1 = p1.name
+        name2 = p2.name 
+        #cell1 = self.cell_dict[name1]
+        #cell2 = self.cell_dict[name2]
+        c, T = FGW_protein.FGW_protein.run_GW_from_cells(cell1, cell2, transport_plan = True)
+        s1, s2 = FGW_protein.FGW_protein.GW_stress(p1,p2, T)     
+        print(name1, name2, c)
         return name1, name2, c, s1, s2, T 
 
 
-
-    def GW_compute_stresses(self, cores = None):
+    def GW_compute_stresses(self, processes = None):
         #core None, 0, or 1 makes it not multiprocess
         #otherwise it gives the number of cores
         
-        #todo - add progress bar to verbose
+        #todo - add progress bar
         
         
-        if cores is not None and cores >1:
-            with multiprocessing.Pool(cores) as pool:
-                results = pool.imap(self._GW_helper, it.combinations(self.prot_list,2), chunksize = 20)
+        if processes is not None and processes >1:
+            with multiprocessing.Pool(processes = processes)  as pool:
+                cell_list = [self.cell_dict[n] for n in self.name_list]
+                results = pool.imap(Stress_Comparison._GW_helper_multi, zip( it.combinations(self.prot_list,2),  it.combinations(cell_list,2)), chunksize = 20)
+                for r in results:
+                    name1, name2, c,s1,s2,T = r  
+                    self.dist_dict[name1][name2] = c 
+                    self.dist_dict[name2][name1] = c
+                    self.raw_stress_dict[name1][name2] = s1
+                    self.raw_stress_dict[name2][name1] = s2
+                    if self.RAM_flag:
+                        self.transport_dict[name1][name2] = T
+                        self.transport_dict[name2][name1] = T.T
+                    else:
+                        np.save(file = os.path.join(self.transport_dir, f'{name1}_{name2}.npy' ), arr = T)
         else:
-            results = map(self._GW_helper, it.combinations(self.prot_list,2))
+            results = map(self._GW_helper,   it.combinations(self.prot_list,2))
         
-        for r in results:
-            name1, name2, c,s1,s2,T = r  
-            self.dist_dict[name1][name2] = c 
-            self.dist_dict[name2][name1] = c
-            self.raw_stress_dict[name1][name2] = s1
-            self.raw_stress_dict[name2][name1] = s2
-            if self.RAM_flag:
-                self.transport_dict[name1][name2] = T
-                self.transport_dict[name2][name1] = T.T
-            else:
-                np.save(file = os.path.join(self.transport_dir, f'{name1}_{name2}.npy' ), arr = T)
+            for r in results:
+                name1, name2, c,s1,s2,T = r  
+                self.dist_dict[name1][name2] = c 
+                self.dist_dict[name2][name1] = c
+                self.raw_stress_dict[name1][name2] = s1
+                self.raw_stress_dict[name2][name1] = s2
+                if self.RAM_flag:
+                    self.transport_dict[name1][name2] = T
+                    self.transport_dict[name2][name1] = T.T
+                else:
+                    np.save(file = os.path.join(self.transport_dir, f'{name1}_{name2}.npy' ), arr = T)
+
     
     def __del__(self):
-        if self.RAM:
+        print('__del__ called', self) #debugging
+        if not self.RAM_flag:
             shutil.rmtree(self.transport_dir)
 
 
