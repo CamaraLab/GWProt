@@ -1,7 +1,7 @@
 import os
 import math
 import numpy as np
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE, STDOUT, DEVNULL
 import pickle
 import time
 import sys
@@ -31,19 +31,9 @@ class my_pymolPy3:
     # https://github.com/carbonscott/pymolPy3
     def __init__(self):
 
-        #     self.pymolpy3 = Popen(['pymol' ,'-pc'], shell=True, 
-        #         stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-        #         stderr=subprocess.STDOUT, text = True, universal_newlines=True)
-        self.pymolpy3 = Popen(
-            ["pymol", "-pc"], # -p means get commands from stdin #  -K to continue going
-            shell=False,
-            stdin=PIPE,
-            stdout=PIPE,
-            stderr=PIPE,
-            universal_newlines=True,
-        )
 
-        # "pymol --version" gives the version
+
+        ### "pymol --version" gives the version
         V =  Popen(
             ["pymol", "--version"], 
             shell=False,
@@ -53,51 +43,52 @@ class my_pymolPy3:
             universal_newlines=True,
         )
         self.version = V.stdout.read().split()[1]
+        #print(self.version)
+        V.communicate()
+        V.terminate()
+
+        self.pymolpy3 = Popen('pymol -pc', shell=True, stdin=PIPE,stdout=DEVNULL, stderr = DEVNULL)
+        #print('made')
+        
+        # self.pymolpy3 = Popen(
+        #     ["pymol", "-pc"], # -p means get commands from stdin #  -K to continue going
+        #     shell=False,
+        #     stdin=PIPE,
+        #     stdout=PIPE,
+        #     stderr=PIPE,
+        #     universal_newlines=True,
+        # )
 
 
-    def __del__(self):
 
+
+    def __del__(self): 
         # Turn off stdin...
         self.pymolpy3.stdin.close()
+        
+        #print('closed')
         # Wait until program is over...
         self.pymolpy3.wait()
+        #self.pymolpy3.communicate() #for stdout = PIPE
+        #print('waited')
 
         # Terminate the subprcess...
         self.pymolpy3.terminate()
+        #print('terminated')
 
-    def __call__(self, s, pause=False):
+
+    def __call__(self, s):
         # Keep reading the new pymol command as a byte string...
-        self.pymolpy3.stdin.write( s + "\n")
+        #self.pymolpy3.stdin.write( s + "\n")
+        self.pymolpy3.stdin.write( bytes( (s + '\n').encode() ) )
 
         # Flush it asap...
-        self.pymolpy3.stdin.flush()
+        #self.pymolpy3.stdin.flush()
 
-        if pause:
-            self.pymolpy3.stdin.write(
-                "with open('lock.tmp', 'w') as f: f.writeline('lock') \n"
-            )
-            self.pymolpy3.stdin.flush()
-            while "lock.tmp" not in os.listdir("."):
-                time.sleep(0.1)
-            os.remove("lock.tmp")
+
         return 0
 
-    def cmd(self, *args):
-        command = 'cmd.' 
-        a0 = args[0].strip()
-        if "transform_selection" in a0 and "2." in self.version:
-            raise ValueError("Pymol 2 can segmentation fault when running transform_selection")
-        command+= a0 + '('
-        
-        for a in args[1:]:
-            a = a.strip()
-            command += "'" + a + "',"
-        
-        command = command.removesuffix(',')
-        command += ')'
-        self(command)
-        print(command)
-        
+
     def quit(self):
         self("quit")
 
@@ -232,25 +223,41 @@ def show_proteins_with_values(infiles: list[str], chain_ids : list[str],  data_l
     prots = [FGW_protein.FGW_protein.make_protein_from_pdb(infiles[i], chain_id = chain_ids[i]) for i in range(n)]
 
     pm = my_pymolPy3()
+    #print('pm created')
 
 
     for i in range(n):
-        if len(prot) != len(data[i]):
+        #print(i,' started')
+        if len(prots[i]) != len(data_lists[i]):
             raise ValueError(f'length of protein {i} does not match length of data {i}. This could be caused by missing data in a PDB file.')
-        pm(f"cmd.load('{file}', 'prot' + str({i}))")
-        pm(f"residue_numbers{i} = list(set(atom.resi_number for atom in cmd.get_model('/prot{str(i)}//{chain}').atom))")
+        pm(f"cmd.load('{infiles[i]}', 'prot' + str({i}))")
+        #print(i,' loaded')
+        pm(f"residue_numbers{i} = list(set(atom.resi_number for atom in cmd.get_model('/prot{str(i)}//{chain_ids[i]}').atom))")
+        #print(i, 'resnums set')
         pm(f"new_b{i} = {str(list(data_lists[i]))}")
-        pm(f"cmd.alter( selection='/prot' + str({i}) + '//{chain}', expression='b = new_b' + str({i}) + '[residue_numbers.index(int(resi))]')")
-        pm(f"cmd.spectrum(expression='b', selection='/prot' + str({i}) + '//{chain}', palette='yellow_red', byres=1)")
+        #print(i, 'b set')
+        pm(f"cmd.alter( selection='/prot' + str({i}) + '//{chain_ids[i]}', expression='b = new_b' + str({i}) + '[residue_numbers{i}.index(int(resi))]')")
+        #print(i, 'altered')
+        pm(f"cmd.spectrum(expression='b', selection='/prot' + str({i}) + '//{chain_ids[i]}', palette='yellow_red', byres=1)")
+        #print(i, 'colored')
         if i != 0:
-            pm(f"cmd.cealign( '/prot0//{chain_ids[0]}' , '/prot' + str({i}) + '//{chain}')")
+            pm(f"cmd.cealign( '/prot0//{chain_ids[0]}' , '/prot' + str({i}) + '//{chain_ids[i]}')")
         if hide:
-            pm(f"cmd.hide('cartoon','prot{str(i)} and not /prot{str(i)}//{chain}' )")
+            #pm(f"cmd.hide('cartoon','not chain {chain_ids[i]} and prot{str(i)}' )")
+            pm(f"cmd.hide('everything','prot{str(i)}')")
+            pm(f"cmd.show('cartoon','/prot{str(i)}//{chain_ids[i]} and polymer')")
+        #print(i, 'hidden') #hiding is not working
 
-    pm("cmd.zoom('all')")
-    pm("cmd.center('all')")
+    pm("cmd.zoom('visible')")
+    #print('zoomed')
+    pm("cmd.center('visible')")
+    #print('centered')
     pm("cmd.bg_color('grey80')")
-    pm(f"cmd.save({output_file})")
+    #print('colored')
+    pm(f"cmd.save('{output_file}')")
+    #print('saved',  f"cmd.save('{output_file}')")
+
+    #print('done?')
 
 
 

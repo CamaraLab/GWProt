@@ -13,6 +13,7 @@ from scipy.spatial.distance import *
 import multiprocessing
 import multiprocess
 import pandas as pd
+import sklearn
 import shutil
 import cajal
 
@@ -65,6 +66,7 @@ class Stress_Comparison:
         self.dist_dict = {n: {n: None for n in self.name_list}  for n in self.name_list} 
         for n in self.name_list:
             self.dist_dict[n][n] = 0
+            del self.raw_stress_dict[n][n]
         
         self.cell_dict= {p.name : p.make_GW_cell() for p in prot_list}
             #makes them with uniform distribution
@@ -91,7 +93,6 @@ class Stress_Comparison:
         cell2 = self.cell_dict[name2]
         c, T = FGW_protein.FGW_protein.run_GW_from_cells(cell1, cell2, transport_plan = True)
         s1, s2 = FGW_protein.FGW_protein.GW_stress(p1,p2, T)     
-        print(name1, name2, c)
         return name1, name2, c, s1, s2, T 
 
     @staticmethod
@@ -105,7 +106,6 @@ class Stress_Comparison:
         #cell2 = self.cell_dict[name2]
         c, T = FGW_protein.FGW_protein.run_GW_from_cells(cell1, cell2, transport_plan = True)
         s1, s2 = FGW_protein.FGW_protein.GW_stress(p1,p2, T)     
-        print(name1, name2, c)
         return name1, name2, c, s1, s2, T 
 
 
@@ -148,7 +148,7 @@ class Stress_Comparison:
 
     
     def __del__(self):
-        print('__del__ called', self) #debugging
+        #print('__del__ called', self) #debugging
         if not self.RAM_flag:
             shutil.rmtree(self.transport_dir)
 
@@ -189,19 +189,19 @@ class Stress_Comparison:
     def get_GW_dmat(self):
         #returns a np.array of the GW distances
         #ordering is that of the prot_list
-        n = len(name_list)
+        n = len(self.name_list)
         dmat = np.zeros((n,n))
         for i in range(n):
             for j in range(i):
-                name1 = name_list[i]
-                name2 = name_list[j]
-                assert dist_dict[name1][name2] == dist_dict[name2][name1]
-                if dist_dict[name1][name2] is None:
+                name1 = self.name_list[i]
+                name2 = self.name_list[j]
+                assert self.dist_dict[name1][name2] == self.dist_dict[name2][name1]
+                if self.dist_dict[name1][name2] is None:
                     raise RuntimeError('Stresses and distances must be computed with \
                         GW_compute_stresses before get_GW_dmat can be run')
                 else:
-                    dmat[i,j] = dist_dict[name1][name2]
-                    dmat[j,i] = dist_dict[name1][name2]
+                    dmat[i,j] = self.dist_dict[name1][name2]
+                    dmat[j,i] = self.dist_dict[name1][name2]
         return dmat
 
 
@@ -218,11 +218,11 @@ class Stress_Comparison:
 
 
 
-def normalize_stress_dict(raw_dict, code=(1, 0, 0, 0, 0)):
+def normalize_stress_dict(raw_dict, code=(1, 0, 0, 0, 0)): #This has a bug!!!!
     a, b, c, d, ecc = code
     norm_stresses_dict = {}
     for k in raw_dict.keys():
-        mat = np.array(raw_dict[k])
+        mat = np.stack(list(raw_dict[k].values())) #might have error
         out = np.sum(
             mat**a * (np.sum(mat**b, axis=1) ** c)[:, np.newaxis] * mat.shape[1] ** d,
             axis=0,

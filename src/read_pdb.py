@@ -119,12 +119,16 @@ def get_pdb_coords_pI(
         atoms = res.get_atoms()  #N, CA, C ,  CB and O order varies
         for atom in atoms:
             if atom.get_id() == "CA":
-                coords.append(np.array(atom.get_coord()))
+                
                 
                 if 'UNK' in res.get_resname():
                     res_list += 'X' #unknown
+                    coords.append(np.array(atom.get_coord()))
                 elif res.get_resname()  in res_3_to_1_dict.keys():
                     res_list += res_3_to_1_dict[res.get_resname() ] # adds the 
+                    coords.append(np.array(atom.get_coord()))
+                else:
+                    warnings.warn(f"Nonstandard amino acid encountered: '{res.get_resname()}'")
     
 
 
