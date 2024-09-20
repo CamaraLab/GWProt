@@ -103,7 +103,7 @@ class FGW_protein:
       
 
     def __len__(self):
-        return self.coords.shape[0]
+        return self.ipdm.shape[0]
         
     def __str__(self):
         return self.name
@@ -275,8 +275,8 @@ class FGW_protein:
         This calculates the fused Gromov-Wasserstein distance between two proteins. The computation is done with the Python 'ot' library. 
         :param p1: The first protein
         :param p2: The second protein
-        :param data1: The data used in the first protein, default is its isoelectric points.
-        :param data2: The data used in the second protein, default is its isoelectric points.
+        :param data1: The data used in the first protein
+        :param data2: The data used in the second protein
         :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. A higher value of 'alpha' means more geometric weight, 'alpha' = 1 is equivalent to regular GW.
         :param transport_plan: Whether to return the computed transport plan
         :return: Returns the FGW distance and transport plan if 'transport_plan'
@@ -301,7 +301,7 @@ class FGW_protein:
         M = abs(aa-bb)
         G0 = GW_scripts.id_initial_coupling(p1.distribution,p2.distribution)
 
-        T , log= ot.fused_gromov_wasserstein(M=M, C1=D1, C2=D2, alpha = alpha, p= p1.distribution ,q=p2.distribution, G0 = G0, loss_fun='square_loss')
+        T , log= ot.fused_gromov_wasserstein(M=M, C1=D1, C2=D2, alpha = alpha, p= p1.distribution ,q=p2.distribution, G0 = G0, loss_fun='square_loss', log = True)
         d = 0.5 * math.sqrt(log['fgw_dist'])
 
         if transport_plan:
@@ -309,7 +309,62 @@ class FGW_protein:
         else:
             return d
             
-  
+
+    def downsample_n(self,
+        n:int = np.inf, 
+        left_sample:bool = False,
+        mean_sample:bool = False) -> 'FGW_protein':
+        """
+        This method makes a new 'FGW_protein' object created by downsampling from 'self'. This is done by dividing 'self' into 'n' evenly sized segments, 
+        then creates an 'FGW_protein' object whose residues are formed by those segments. Depending on the parameters this can be done with regular downsampling 
+        (simply picking one residue from each segment and copying its data) or by combining the coordinate data and/or isoelectric values of the residues in a segment.
+
+        :param n: The maximum number of residues in the output protein. If this is larger than the size of 'self', then there is no downsampling.
+        :param left_sample: Whether to use the left-most (lowest index) or median residue from each segment. 'left_sample == True' uses the left-most, 
+            'left_sample== False' uses the median
+        :param mean_sample: Whether to average the coordinates of the residues in a segment. 'mean_sample == False' uses the coordinates of the residue determined by 'left_sample',
+            'mean_sample==True' uses the average of the coordinates in a segment.
+        :return: A new 'FGW_protein' object created by downsampling from 'self'.
+        """
+
+
+        n = min(n, len(self))
+        l,s = np.linspace(0, len(self), num=n, endpoint=False, dtype=int,retstep = True) 
+        if left_sample:
+            indices = np.array([int(i ) for i in l])
+        else:
+            indices = np.array([int(i + s//2) for i in l])
+
+
+        if self.coords is not None:
+            if not mean_sample:
+                coords = self.coords[indices, :] 
+    
+            else: 
+                split_coord_list = read_pdb.split_list(self.coords, n)
+                coords = [np.mean(seg, axis = 0) for seg in split_coord_list]  #unsure about axis
+                coords = np.stack(coords) 
+            ipdm = None
+        else:
+            coords = None
+
+        
+        ii = np.ix_(indices,indices)
+        ipdm = self.ipdm[ii]
+
+        
+
+
+        new_seq = ''.join([self.seq[i] for i in indices])
+
+        new_distribution = np.array([ np.sum(seg) for seg in  read_pdb.split_list(list(self.distribution), n) ])
+        
+        
+        return FGW_protein(seq = new_seq, ipdm = ipdm, coords = coords, name = self.name+'_downsampled', scaled_flag = self.scaled_flag, distribution = new_distribution)
+
+
+
+    
     def get_eccentricity(self, p: float =2):
         """
         This calculates the eccentricity of a protein with exponent p as defined in https://www.math.ucdavis.edu/~saito/data/acha.read.w12/memoli-gromov-dist.pdf, Definition 5.3.
@@ -434,7 +489,7 @@ class FGW_protein:
         
         G0 = GW_scripts.id_initial_coupling(p1.distribution,p2.distribution)
 
-        T , log= ot.fused_gromov_wasserstein(M=M, C1=D1, C2=D2, alpha = alpha, p= p1.distribution ,q=p2.distribution, G0 = G0, loss_fun='square_loss')
+        T , log= ot.fused_gromov_wasserstein(M=M, C1=D1, C2=D2, alpha = alpha, p= p1.distribution ,q=p2.distribution, G0 = G0, loss_fun='square_loss', log = True)
         d = 0.5 * math.sqrt(log['fgw_dist'])
 
         if transport_plan:
@@ -466,7 +521,7 @@ class FGW_protein:
         
         G0 = GW_scripts.id_initial_coupling(p1.distribution,p2.distribution)
 
-        T , log= ot.fused_gromov_wasserstein(M=M, C1=D1, C2=D2, alpha = alpha, p= p1.distribution ,q=p2.distribution, G0 = G0, loss_fun='square_loss')
+        T , log= ot.fused_gromov_wasserstein(M=M, C1=D1, C2=D2, alpha = alpha, p= p1.distribution ,q=p2.distribution, G0 = G0, loss_fun='square_loss', log = True)
         d = 0.5 * math.sqrt(log['fgw_dist'])
 
         if transport_plan:

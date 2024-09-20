@@ -195,9 +195,10 @@ class FGW_protein_pI(FGW_protein):
 
 
 
-    def __init__(self, name : str, seq, pI_list,  coords = None, ipdm = None, scaled_flag = False , distribution = None):
+    def __init__(self, name : str, seq :str, pI_list,  coords = None, ipdm = None, scaled_flag = False , distribution = None):
         #note - the seq is the sequence, not the file
-        #input validation
+
+        super().__init__(name = name, seq = seq, coords = coords, ipdm = ipdm, scaled_flag = scaled_flag, distribution = distribution)
         assert not (coords is None and ipdm is None)
         if not coords is None:
             coords = np.array(coords)
@@ -218,31 +219,31 @@ class FGW_protein_pI(FGW_protein):
 
         assert len(seq) ==len(pI_list)
         
-        self.name = name
-        self.seq = seq
+        # self.name = name
+        # self.seq = seq
         self.pI_list = pI_list
-        self.coords = coords
+        # self.coords = coords
         
-        self.scaled_flag = scaled_flag #whether the ipdm has been scaled
+        # self.scaled_flag = scaled_flag #whether the ipdm has been scaled
 
-        if ipdm is None:
-            self.ipdm = squareform(pdist(self.coords))
-        else:
+        # if ipdm is None:
+        #     self.ipdm = squareform(pdist(self.coords))
+        # else:
             
-            self.ipdm = ipdm
+        #     self.ipdm = ipdm
 
-        if distribution is None:
-            self.distribution = np.ones(self.ipdm.shape[0])/ self.ipdm.shape[0]
-        else:
-            assert distribution.shape[0] == self.ipdm.shape[0]
-            self.distribution = distribution
-        assert math.isclose(np.sum(self.distribution),1)
+        # if distribution is None:
+        #     self.distribution = np.ones(self.ipdm.shape[0])/ self.ipdm.shape[0]
+        # else:
+        #     assert distribution.shape[0] == self.ipdm.shape[0]
+        #     self.distribution = distribution
+        # assert math.isclose(np.sum(self.distribution),1)
 
             
     def __eq__(self, other):
         """
-        Compares the underlying seq sequences (not the full seq file), the pI_lists, the ipdms, and the coords if both are defined.
-        This does NOT compare the names, scaled_flags, or seq headers.
+        Compares the sequences, the pI_lists, the ipdms, and the coords if both are defined.
+        This does NOT compare the names or scaled_flags.
         """
         
         if self.coords is not None and other.coords is not None and ((self.coords.shape != other.coords.shape) or (self.coords != other.coords).any()):
@@ -255,6 +256,13 @@ class FGW_protein_pI(FGW_protein):
         
     def __str__(self):
         return self.name
+
+    def FGW_protein(self):
+        """
+        Casts to a FGW_protein object
+        """
+        return FGW_protein(coords = self.coords, ipdm = self.ipdm, seq = self.seq, scaled_flag = self.scaled_flag,name = self.name, 
+                           distribution = self.distribution)
  
             
     @staticmethod
@@ -353,7 +361,7 @@ class FGW_protein_pI(FGW_protein):
         pI_combination: bool = True,
         pI_alg: str = 'iter',
         left_sample:bool = False,
-        mean_sample:bool = False) -> 'FGW_protein':
+        mean_sample:bool = False) -> 'FGW_protein_pI':
         """
         This method makes a new 'FGW_protein' object created by downsampling from 'self'. This is done by dividing 'self' into 'n' evenly sized segments, 
         then creates an 'FGW_protein' object whose residues are formed by those segments. Depending on the parameters this can be done with regular downsampling 
@@ -411,7 +419,7 @@ class FGW_protein_pI(FGW_protein):
 
         new_seq = ''.join([self.seq[i] for i in indices])
 
-        new_distribution = np.array([ np.mean(seg) for seg in  read_pdb.split_list(list(self.distribution), n) ])
+        new_distribution = np.array([ np.sum(seg) for seg in  read_pdb.split_list(list(self.distribution), n) ])
         
         
         return FGW_protein_pI(seq = new_seq, pI_list = pI_list, ipdm = ipdm, coords = coords, name = self.name+'_downsampled', scaled_flag = self.scaled_flag, distribution = new_distribution)
@@ -453,7 +461,7 @@ class FGW_protein_pI(FGW_protein):
    
     
     @staticmethod
-    def run_FGW(p1: 'FGW_protein_pI', p2:'FGW_protein_pI', alpha: float = 1, transport_plan: bool = False) -> float:
+    def run_FGW(p1: 'FGW_protein_pI', p2:'FGW_protein_pI', alpha: float = 0.5, transport_plan: bool = False) -> float:
         """
         This calculates the fused Gromov-Wasserstein distance between two proteins. The computation is done with the Python 'ot' library. 
         :param p1: The first protein
@@ -483,7 +491,7 @@ class FGW_protein_pI(FGW_protein):
         M = abs(aa-bb)
         G0 = GW_scripts.id_initial_coupling(p1.distribution,p2.distribution)
 
-        T , log= ot.fused_gromov_wasserstein(M=M, C1=D1, C2=D2, alpha = alpha, p= p1.distribution ,q=p2.distribution, G0 = G0, loss_fun='square_loss')
+        T , log= ot.fused_gromov_wasserstein(M=M, C1=D1, C2=D2, alpha = alpha, p= p1.distribution ,q=p2.distribution, G0 = G0, loss_fun='square_loss',log = True)
         d = 0.5 * math.sqrt(log['fgw_dist'])
 
         if transport_plan:
@@ -493,11 +501,11 @@ class FGW_protein_pI(FGW_protein):
 
 
     @staticmethod
-    def FGW_stress(prot1, prot2, diff_mat = None, alpha, T):
+    def FGW_stress(prot1, prot2,  alpha, T,diff_mat = None):
     #now with FGW stress
         n1= len(prot1)
         n2 = len(prot2)
-        assert T.shape = (n1,n2)
+        assert T.shape == (n1,n2)
         assert 0 <= alpha <= 1
 
         if diff_mat is None:
