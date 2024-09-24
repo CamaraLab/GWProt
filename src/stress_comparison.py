@@ -169,15 +169,15 @@ class Stress_Comparison:
 
     def raw_transferred_stresses(self, stress_dict, cores = None):
         assert set(stress_dict.keys()) == set(self.name_list)
-        raw_transferred_stresses = {n: {n: None for n in name_list}  for n in name_list} 
+        raw_transferred_stresses = {n: {n: None for n in self.name_list}  for n in self.name_list} 
 
          
 
         if cores is not None and cores >1:
             with multiprocessing.Pool(cores) as pool:
-                results = pool.imap(helper, zip( it.repeat(stress_dict), it.combinations(prot_list)), chunksize = 20)
+                results = pool.imap(self._stress_transfer_helper, zip( it.repeat(stress_dict), it.combinations(self.prot_list,2)), chunksize = 20)
         else:
-            results = map(helper, zip( it.repeat(stress_dict), it.combinations(prot_list)))
+            results = map(self._stress_transfer_helper, zip( it.repeat(stress_dict), it.combinations(self.prot_list,2)))
 
         for r in results:
             n1,n2, s1,s2 = r

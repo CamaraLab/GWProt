@@ -34,9 +34,10 @@ how to :ref:`installation` the project.
    :maxdepth: 1
    :caption: Mathematical Background
 
-   gromov_wasserstein
-   isoelectric_points
-   distortion_scaling
+   Gromov Wasserstein
+   Transport Plans
+   Fused Gromov Wasserstein
+   Distortion Scaling
 
 
 
@@ -44,8 +45,9 @@ how to :ref:`installation` the project.
    :maxdepth: 1
    :caption: Examples
 
-   Example_1
-   FGW_protein Tester
+   Example 1 - Comparing KRAS Proteins
+   Example 2 - Clustering RdRps
+   Example 3 - Circular Permutations
 
 
 

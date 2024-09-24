@@ -164,7 +164,7 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, chain1:str
     pm(f"cmd.load('{file1}', 'prot1')")
     pm(f"cmd.load('{file2}', 'prot2')")
     pm(f"cmd.hide('cartoon','prot1 and not /prot1//{chain1}' )")
-    pm(f"cmd.hide('cartoon','prot1 and not /prot2//{chain2}' )")
+    pm(f"cmd.hide('cartoon','prot2 and not /prot2//{chain2}' )")
 
     pm(f"residue_numbers1 = list(set(atom.resi_number for atom in cmd.get_model('/prot1//{chain1}').atom))")
     #print(f"residue_numbers1 = list(set(atom.resi_number for atom in cmd.get_model('/prot1//{chain1}').atom))")
@@ -199,7 +199,7 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, chain1:str
     pm(f"cmd.center('/prot1//{chain1} and /prot2//{chain2}')")
     pm(f"cmd.zoom('/prot1//{chain1} and /prot2//{chain2}')")
     pm(f"cmd.save( '{output_file}') ")
-    return ps
+    #return ps
 
 
 def show_proteins_with_values(infiles: list[str], chain_ids : list[str],  data_lists: list[float], output_file: str, hide: bool = True):

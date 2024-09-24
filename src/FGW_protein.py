@@ -537,15 +537,17 @@ class FGW_protein:
     def get_switch_prob_sparse(T: np.array, prot_num: int = 0):
         """
         Calculates the probability that the order of two residues are switched or not when the transport plan is applied.
-        This can be used to detect circular permutations between two proteins. 
+        This can be used to detect circular permutations between two proteins. This uses sparse matrices so may cause problems if T has many non-zer entries.
         :param T: The transport plan to use
         :param prot_num: Which protein to use, 0 uses the 0th axis of 'T', 1 uses the 1st axis.
-        :return: A square np.array whose ijth entry is the probability that residues i and j are kept in the same order.
+        :return: A square np.array whose ijth entry is the probability that residues i and j are kept in the same order. 
         """
         
         if prot_num == 1:
-            return get_switch_prob_sparse(T.T, prot_num = 0)
-        
+            return FGW_protein.get_switch_prob_sparse(T.T, prot_num = 0)
+
+        if np.count_nonzero(np.sum(T, axis = 1) ==0) > 0:
+            raise ValueError('T has a zero row or column')
         T_mod = T/ (np.sum(T, axis = 1)[np.newaxis]).T
         TT_mod = T_mod.T 
         if np.count_nonzero(T) >= 5000:
