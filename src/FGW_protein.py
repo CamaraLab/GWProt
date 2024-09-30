@@ -533,46 +533,5 @@ class FGW_protein:
         
 
 
-    @staticmethod
-    def get_switch_prob_sparse(T: np.array, prot_num: int = 0):
-        """
-        Calculates the probability that the order of two residues are switched or not when the transport plan is applied.
-        This can be used to detect circular permutations between two proteins. This uses sparse matrices so may cause problems if T has many non-zer entries.
-        :param T: The transport plan to use
-        :param prot_num: Which protein to use, 0 uses the 0th axis of 'T', 1 uses the 1st axis.
-        :return: A square np.array whose ijth entry is the probability that residues i and j are kept in the same order. 
-        """
-        
-        if prot_num == 1:
-            return FGW_protein.get_switch_prob_sparse(T.T, prot_num = 0)
-
-        if np.count_nonzero(np.sum(T, axis = 1) ==0) > 0:
-            raise ValueError('T has a zero row or column')
-        T_mod = T/ (np.sum(T, axis = 1)[np.newaxis]).T
-        TT_mod = T_mod.T 
-        if np.count_nonzero(T) >= 5000:
-            warnings.warn('input has over 5,000 nonzero entries, may use too much RAM and crash')
-            
-        
-        T_sparse = sparse.COO.from_numpy(T_mod)
-        TT_sparse = sparse.COO.from_numpy(TT_mod)
-        #print(T_sparse.shape)
-        #print(TT_sparse.Ashape)
-        
-       # sparse_big_one= sparse.einsum( 'il,jk-> klij'  ,T_sparse, TT_sparse) #this one is probably wrong
-        sparse_big_one= sparse.einsum( 'il,kj-> ijkl'  ,T_sparse, TT_sparse)
-        
-        #  goal:
-        #  (i,j,k,l)th entry is the ijth entry of the matrix given by the kth colum and lth column transposed
-        L = sparse.tril(sparse_big_one, -1)
-        P1 = sparse.COO.todense(sparse.COO.sum(L, (2,3)))
-        
-        # U = sparse.triu(sparse_big_one, 1)
-        # P2 = sparse.COO.todense(sparse.COO.sum(U, (2,3))) #this is just the transpose of P1, up to floating point inaccuracies
-
-        return P1
-
-
-
 
     

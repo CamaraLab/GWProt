@@ -189,7 +189,7 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, chain1:str
     
 
     pm("cmd.set('dash_gap', '0')")
-    pm("cmd.set('dash_width', '1')")
+    pm("cmd.set('dash_width', '3')")
     pm("cmd.zoom('all')")
     pm("cmd.bg_color('grey80')")
     if "2." in pm.version:
