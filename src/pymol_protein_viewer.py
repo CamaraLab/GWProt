@@ -19,11 +19,6 @@ import FGW_protein
 import GW_stress
 import weighted_alignment
 
-"""
-This needs to be rewritten using my_pymolPy3 instead of pymol.cmd, so it can work with pymol 3
-and should also be compatible with pymol 2
-
-"""
 
 
 class my_pymolPy3:
@@ -174,8 +169,8 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, chain1:str
     pm(f"stress2 = {str(stress2)}")
     pm(f"cmd.alter( '/prot1//{chain1}',  'b = stress1[residue_numbers1.index(int(resi))]' )")
     pm(f"cmd.alter( '/prot2//{chain2}',  'b = stress2[residue_numbers2.index(int(resi))]' )")
-    pm(f"cmd.spectrum(expression='b', selection='/prot1//{chain1}', palette='yellow_red', byres=1)")
-    pm(f"cmd.spectrum(expression='b', selection='/prot2//{chain2}', palette='blue_red', byres=1)")
+    pm(f"cmd.spectrum(expression='b', selection='/prot1//{chain1}', palette='red_lime', byres=1)")
+    pm(f"cmd.spectrum(expression='b', selection='/prot2//{chain2}', palette='red_marine', byres=1)")
 
 
     pm(f"ps = {str(ps)}")

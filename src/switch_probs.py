@@ -62,28 +62,49 @@ def visualize_switch_probabibilities(A: np.array) -> None:
     ax.axis["left"].set_visible(False)
     ax.axis["top"].set_visible(True)
     ax.axis["right"].set_visible(True)
-
+    
     ax.axis["top"].major_ticks.set_tick_out(True)
+    ax.axis["right"].major_ticks.set_tick_out(True)
+    
+    
+    
+    
+    
+    ax.text(s = 'First Residue', x = N/(2*math.sqrt(2)) - 20, y = N/(2*math.sqrt(2)), rotation = 45, ha = 'center')
+    ax.text(s = 'Second Residue', x = N*math.sqrt(2) - N/(2*math.sqrt(2)) + 20 , y = N/(2*math.sqrt(2)), rotation = -45, ha = 'center')
+    
+    ax.text(s = 'Residue Indices', x = N/math.sqrt(2)  , y = -N/4, ha = 'center')
+    
+    
+    
+    
     ax.axis["right"].major_ticks.set_visible(False)
     ax.axis["top"].major_ticks.set_visible(False)
-    ax.axis["right"].major_ticks.set_tick_out(False)
     
     rect = patches.Rectangle((-2, 0), 2*N + 2, -1 * N, linewidth=1, edgecolor='black', facecolor="w" ) 
     ax.add_patch(rect)     
     
+    for  i in range(N//100 + 1):
+        ax.text(s = str(i*100), x = i*100*math.sqrt(2), y = -30, ha ='center', va = 'top')
+    
+    for i in range(N//10 +1):
+        ax.text(s = '|', x = i*10*math.sqrt(2), y = 0, ha = 'center', va= 'top', weight = 'extra bold', fontsize = 1000/N+3)
+        if i %10 ==0:
+            ax.text(s = '|', x = i*10*math.sqrt(2), y = 0, ha = 'center', va= 'top', weight = 'extra bold', fontsize = 2000/N+3)
+    
     plt.show()
 
-def get_switch_prob_sparse(T: np.array, prot_num: int = 0) -> np.array:
+def get_switch_prob(T: np.array, prot_num: int = 0) -> np.array:
     """
     Calculates the probability that the order of two residues are switched or not when the transport plan is applied.
-    This can be used to detect circular permutations between two proteins. This uses sparse matrices so may cause problems if T has many non-zer entries.
+    This can be used to detect circular permutations between two proteins. This uses sparse matrices so may cause problems if T has many non-zero entries.
     :param T: The transport plan to use
     :param prot_num: Which protein to use, 0 uses the 0th axis of 'T', 1 uses the 1st axis.
     :return: A square np.array whose ijth entry is the probability that residues i and j are kept in the same order. 
     """
     
     if prot_num == 1:
-        return FGW_protein.get_switch_prob_sparse(T.T, prot_num = 0)
+        return get_switch_prob(T.T, prot_num = 0)
 
     if np.count_nonzero(np.sum(T, axis = 1) ==0) > 0:
         raise ValueError('T has a zero row or column')
@@ -121,9 +142,8 @@ def preprocess(A: np.array) -> np.array:
     :return: A processed switch probability matrix
     """
     kernel = np.ones((5,5))
-	mat2 = oaconvolve(A, kernel, mode = 'same')/np.sum(kernel)
-    np.triu(1 - mat2)
-    return (mat2 + 0.5).astype(int)
+    mat2 = oaconvolve(A, kernel, mode = 'same')/np.sum(kernel)
+    return np.triu((1 - mat2 + 0.6)).astype(int)
 
 
 
