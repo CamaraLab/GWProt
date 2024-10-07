@@ -6,8 +6,7 @@ Welcome to GWProt's documentation!
 
 **GWProt**  is a Python library for applying Gromov-Wasserstein to protein morphology.
 
-Check out the :doc:`API` section for further information, including
-how to :ref:`installation` the project.
+
 
 .. note::
 
@@ -45,9 +44,9 @@ how to :ref:`installation` the project.
    :maxdepth: 1
    :caption: Examples
 
-   '../Examples/Example 1 - Comparing KRAS Proteins'
-   '../Examples/Example 2 - Clustering RdRps'
-   '../Examples/Example 3 - Circular Permutations'
+   Examples/Example_1_Comparing_KRAS_Proteins
+   Examples/Example_2_Clustering_RdRps
+   Examples/Example_3_Circular_Permutations
 
 
 

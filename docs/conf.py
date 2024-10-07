@@ -7,7 +7,7 @@
 import os
 import sys
 
-project = 'prOTein'
+project = 'GWProt'
 copyright = '2024, Camara Lab'
 author = 'Elijah Gunther'
 
@@ -17,6 +17,8 @@ version = '0.1.0'
 # -- General configuration
 
 extensions = [
+    "nbsphinx",
+    "sphinx_rtd_theme",
     'sphinx.ext.duration',
     'sphinx.ext.doctest',
     'sphinx.ext.autodoc',

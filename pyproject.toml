@@ -1,8 +1,44 @@
 [build-system]
-requires = ["flit_core >=3.2,<4"]
-build-backend = "flit_core.buildapi"
+# Minimum requirements for the build system to execute
+requires = [
+    "setuptools >= 70",
+	 "pip>=24",
+	 "wheel",
+	 "Cython>=3",
+	 "numpy",
+     "POT",
+	 ]
+# What should the build-backend be?
+build-backend = "setuptools.build_meta"
+
+
 
 [project]
-name = "lumache"
-authors = [{name = "Graziella", email = "graziella@lumache"}]
-dynamic = ["version", "description"]
+name = "GWProt"
+version = "0.0.1"
+authors = [{name = "Elijah Gunther", email = "elijah.gunther@pennmedicine.upenn.edu"}]
+classifiers=[
+    'Programming Language :: Python :: 3',
+    'Framework :: Jupyter',
+    'Topic :: Scientific/Engineering :: Bio-Informatics'
+    ]
+
+
+
+
+dependencies = [
+    "numpy",
+	"cython >= 3",
+    "scipy>=1.10",
+    "umap-learn>=0.5.3",
+    "sparse",
+    "Bio",
+    "POT",
+    "statistics",
+    "cajal",
+    "scikit-learn",
+    "multiprocess"
+	]
+
+[project.urls]
+git-repo="https://github.com/CamaraLab/GWProt"
