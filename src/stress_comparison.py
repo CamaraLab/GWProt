@@ -169,6 +169,83 @@ class Stress_Comparison:
                 else:
                     np.save(file = os.path.join(self.transport_dir, f'{name1}_{name2}.npy' ), arr = T)
         self.computed_flag = True
+
+
+
+
+
+    @staticmethod
+    def _FGW_helper_multi(ppdda): #todo 
+        pp, dd, alpha = ppdda
+        p1,p2, = pp
+        data_list1, data_list2 = dd
+        name1 = p1.name
+        name2 = p2.name 
+
+        a = np.array([np.array([x]) for x in data_list1])
+        b = np.array(data_list2)
+        aa = np.broadcast_to(a,(n1,n2))
+        bb = np.broadcast_to(b,(n1,n2))
+        M = abs(aa-bb)
+
+        c, T = FGW_protein.FGW_protein.run_FGW_data_list(p1=p1, p2=p2, alpha = alpha, data_list1 = , data_list2 = , transport_plan = True)
+        s1, s2 = FGW_protein.FGW_protein.FGW_stress(prot1= p1,prot2 = p2, alpha = alpha, diff_mat = M, transport_plan= T)     
+        return name1, name2, c, s1, s2, T 
+
+
+    def FGW_compute_stresses(self, data_list_dict : dict, alpha: float, processes: int = None): #todo
+        """
+        This method computes all pairwise FGW distances and stresses. This can be done in parallel with `processes` number of processes.
+        :param data_list_dict: A dictionary of {name: data_list} for FGW_protein.FGW_data_lists
+        :param processes: How many parallel processes to run, default is 1. 
+        :param alpha: The value of alpha to use for FGW
+        """
+        #core None, 0, or 1 makes it not multiprocess
+        #otherwise it gives the number of cores
+        
+
+        if set(data_list_dict.keys()) != set(self.name_list):
+            raise ValueError("keys of stress_list_dict must match name_list")
+        for prot in self.prot_list:
+            if len(prot) != len(data_list_dict[prot.name]):
+                raise ValueError("lengths of data_list_dict entries must match lengths of proteins")
+
+        data_list_list = [data_list_dict[p.name] for p in self.prot_list]
+        
+        if processes is not None and processes >1:
+            with multiprocessing.Pool(processes = processes)  as pool:
+                results = pool.imap(Stress_Comparison._FGW_helper_multi, zip( it.combinations(self.prot_list,2), it.combinations(data_list_list,2), it.repeat(alpha)), chunksize = 20)
+                for r in results:
+                    name1, name2, c,s1,s2,T = r  
+                    self.dist_dict[name1][name2] = c 
+                    self.dist_dict[name2][name1] = c
+                    self.raw_stress_dict[name1][name2] = s1
+                    self.raw_stress_dict[name2][name1] = s2
+                    if self.RAM_flag:
+                        self.transport_dict[name1][name2] = T
+                        self.transport_dict[name2][name1] = T.T
+                    else:
+                        np.save(file = os.path.join(self.transport_dir, f'{name1}_{name2}.npy' ), arr = T)
+        else:
+            results = map(Stress_Comparison._FGW_helper_multi, zip( it.combinations(self.prot_list,2), it.combinations(data_list_list,2), it.repeat(alpha)))
+        
+            for r in results:
+                name1, name2, c,s1,s2,T = r  
+                self.dist_dict[name1][name2] = c 
+                self.dist_dict[name2][name1] = c
+                self.raw_stress_dict[name1][name2] = s1
+                self.raw_stress_dict[name2][name1] = s2
+                if self.RAM_flag:
+                    self.transport_dict[name1][name2] = T
+                    self.transport_dict[name2][name1] = T.T
+                else:
+                    np.save(file = os.path.join(self.transport_dir, f'{name1}_{name2}.npy' ), arr = T)
+        self.computed_flag = True
+
+
+
+
+
     
     def __del__(self):
         #print('__del__ called', self) #debugging

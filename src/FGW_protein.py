@@ -56,8 +56,7 @@ class FGW_protein:
         if not coords is None:
             coords = np.array(coords)
 
-            # print('type(coords)' ,type(coords)) #debugging
-            # print('coords.shape' ,coords.shape)
+
             
             assert len(coords.shape) == 2
             assert coords.shape[1] == 3 

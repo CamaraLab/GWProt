@@ -6,7 +6,7 @@ Welcome to GWProt's documentation!
 
 **GWProt**  is a Python library for applying Gromov-Wasserstein to protein morphology.
 
-Check out the :doc:`usage` section for further information, including
+Check out the :doc:`API` section for further information, including
 how to :ref:`installation` the project.
 
 .. note::
@@ -19,25 +19,25 @@ how to :ref:`installation` the project.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Usage and API
+   :caption: API
 
-   usage
+   stress_comparison
+   switch_probs
+   pymol_protein_viewer
    FGW_protein
    FGW_protein_pI
-   Stresses 
-   docker
-
-
+   weighted_alignment
+   
 
 
 .. toctree::
    :maxdepth: 1
    :caption: Mathematical Background
 
-   Gromov Wasserstein
-   Transport Plans
-   Fused Gromov Wasserstein
-   Distortion Scaling
+   gromov_wasserstein
+   fused_gromov_wasserstein
+   stress
+   distortion_scaling
 
 
 
@@ -45,9 +45,9 @@ how to :ref:`installation` the project.
    :maxdepth: 1
    :caption: Examples
 
-   Example 1 - Comparing KRAS Proteins
-   Example 2 - Clustering RdRps
-   Example 3 - Circular Permutations
+   '../Examples/Example 1 - Comparing KRAS Proteins'
+   '../Examples/Example 2 - Clustering RdRps'
+   '../Examples/Example 3 - Circular Permutations'
 
 
 
