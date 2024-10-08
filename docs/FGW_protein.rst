@@ -7,8 +7,10 @@ This class has the core functionalities of GWProt
 .. autoclass:: GWProt.FGW_protein.FGW_protein
 
 
+A `FGW_protein` object contains all the the data used to compute the GW distance.
 
 
+The usual way to make a `FGW_protein` object is by loading it from a `.pdb` file (Protein Data Bank). 
 
 .. autofunction:: GWProt.FGW_protein.FGW_protein.make_protein_from_pdb
 .. autofunction:: GWProt.FGW_protein.FGW_protein.validate

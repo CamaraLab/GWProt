@@ -53,7 +53,6 @@ RUN apt install python3-pip -y
 # RUN conda install -c schrodinger -c conda-forge pymol 
 
 
-# RUN conda install -c speleo3 tmalign
 
 
 RUN wget  -v http://fasta.bioch.virginia.edu/wrpearson/fasta/CURRENT/fasta36-linux64.tar.gz
@@ -70,12 +69,21 @@ RUN /opt/conda/bin/python3 -m pip install pot `
  biopython==1.81 `
  umap-learn==0.5.3 `
  multiprocess `
- deprecated `
+cython `
+scipy`
+umap-learn`
+sparse `
+Bio `
+POT `
+statistics `
+cajal `
+scikit-learn `
+multiprocess `
+threadpoolctl `
   --upgrade setuptools
 
 
   
-# RUN /opt/conda/bin/python3 -m pip install  git+https://github.com/CamaraLab/CAJAL.git
 
 
 

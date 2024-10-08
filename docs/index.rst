@@ -12,7 +12,21 @@ Welcome to GWProt's documentation!
 
    This project is under active development. Documentation and code will be updated continuously
 
+Installation:
+`pip install GWProt@git+https://github.com/CamaraLab/GWProt`
 
+
+
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Mathematical Background
+
+   gromov_wasserstein
+   fused_gromov_wasserstein
+   stress
+   distortion_scaling
 
 
 
@@ -28,15 +42,6 @@ Welcome to GWProt's documentation!
    weighted_alignment
    
 
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Mathematical Background
-
-   gromov_wasserstein
-   fused_gromov_wasserstein
-   stress
-   distortion_scaling
 
 
 
@@ -54,5 +59,4 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
