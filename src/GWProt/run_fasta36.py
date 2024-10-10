@@ -108,10 +108,9 @@ def parse_ssearch_output(input, code_type, allow_mismatch = True):
 
 def run_ssearch_cigar(fasta1, #filepath
                       fasta2, #filepath
-                      ssearch_loc = '/home/elijah/v36.3.8/bin/ssearch36', #filepath for command
                       allow_mismatch = True):
     cigar_command =  '-s BP62 -p -T 1 -b 1 -f 0 -g 0 -z -1 -m 9C'
-    a = subprocess.run([ssearch_loc] + cigar_command.split(' ') + [fasta1, fasta2], text=True,  stdout = subprocess.PIPE)
+    a = subprocess.run(['ssearch36'] + cigar_command.split(' ') + [fasta1, fasta2], text=True,  stdout = subprocess.PIPE)
     cigar_result = a.stdout
 
     return parse_ssearch_output(input = cigar_result, code_type = 'CIGAR', allow_mismatch = allow_mismatch)
@@ -138,9 +137,8 @@ def parse_ssearch_outputv2(input,  allow_mismatch = True):
 
 def run_ssearch_cigar_Ram(fasta1, #string
                       fasta2, #string
-                        ssearch_loc = '/home/elijah/v36.3.8/bin/ssearch36', #filepath for command
                       allow_mismatch = True):
-    command2 = f'''''/bin/bash -c "{ssearch_loc} -s BP62 -p -T 1 -b 1 -f 0 -g 0 -z -1 -m 9C <(echo '{ fasta1 }') <(echo '{fasta2}')" '''
+    command2 = f'''''/bin/bash -c "ssearch36 -s BP62 -p -T 1 -b 1 -f 0 -g 0 -z -1 -m 9C <(echo '{ fasta1 }') <(echo '{fasta2}')" '''
     
     result = subprocess.run(command2, shell=True,stdout = subprocess.PIPE, text=True)
     

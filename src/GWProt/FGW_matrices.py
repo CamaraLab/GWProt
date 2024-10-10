@@ -31,6 +31,8 @@ import Bio.PDB
 from Bio import PDB, SeqIO
 import blosum
 import scipy.sparse.csgraph
+from typing import Mapping 
+from .GW_protein import GW_protein
 
 
 
@@ -121,19 +123,32 @@ def dict_to_mat(d):
             M[j,i] = d[keys[i]][keys[j]]
     return M
 
-def get_BLOSUM(n = 62, lamd = 1 , raw = False, default = 'med'):
+def get_BLOSUM_dict(int:n = 62)-> dict[str , dict[str ,float]]
+    """
+    This method calculates a difference dictionary derived from the BLOSUM matrices.
+    :param n: Which BLOSUM matrix to use, must be 45,50,62,80, or 90.
+    :return: dict 
+    """
+
+    if n not in [45,50,62,80,90]:
+        raise ValueError("n must be 45,50,62,80, or 90")
+    #lamd = 1 , raw = False, default = 'med'):
+    lamd = 1
     # n = 45,50,62,80,90
     B = blosum.BLOSUM(n)
-    BB_raw = add_extra_aa(rescale_dictionary(B, lambda x : math.exp( -1 * lamd * x)), default = default)
+    BB_raw = rescale_dictionary(B, lambda x : math.exp( -1 * lamd * x))
 
-    if raw:
-        return BB_raw
-    else:
-        return correct_dictionary(BB_raw)
 
-def get_Grantham(raw = False, default = 'med'):
+    return correct_dictionary(BB_raw)
+
+def get_Grantham_dict()-> dict[str , dict[str ,float]]:
+    """
+    This method retrieves the Grantham amino acid difference scores.
+    :return: dict
+    """
     
-
+    # raw = True,
+    # default = 'med'
     # Grantham 
     # https://www.jstor.org/stable/1739007?seq=1
     # https://github.com/maialab/grantham/blob/master/data-raw/grantham_distance_matrix.csv
@@ -173,16 +188,19 @@ def get_Grantham(raw = False, default = 'med'):
         
         Grantham_raw[three_to_one[k]] = k_dict
     
-    Grantham_raw = add_extra_aa(Grantham_raw, default = default)
-    if raw:
-        return Grantham_raw
-    else:
-        return correct_dictionary(Grantham_raw)
+    #Grantham_raw = add_extra_aa(Grantham_raw, default = default)
+    return Grantham_raw
+
 
 
  
 
-def get_pI():
+def get_pI_dict()->dict[str , dict[str ,float]]:
+    """
+    This method calculates a dictionary of difference between the Solomon isoelectric point values of different amino acids.
+    (It ignores the termini)
+    :return: A dictionary
+    """
 
     solomon = {"K" :  10.5,
     "R" :  12.5,
@@ -192,7 +210,7 @@ def get_pI():
     "C" :  8.3,
     "Y" :  10.1}
     
-    for c in canonical_aas + [missing_aa]:
+    for c in canonical_aas:
         if c not in solomon.keys():
             solomon[c] = 7
     
@@ -207,11 +225,40 @@ def get_pI():
     #N_term_pK =  9.6
     
 
-def get_hydrophobicity() -> dict:
+def get_pI_list(prot:GW_protein)->list[float]:
     """
-    :return: 
-    This method 
+    This method calculates a list of isoelectric point values of residues in a protein. 
+    It assumes both termini are included.
+    :return: A list of the Solomon isoelectric point values.
     """
+
+    solomon = {"K" :  10.5,
+    "R" :  12.5,
+    "H" :  6,
+    "D" :  3.9,
+    "E" :  4.3,
+    "C" :  8.3,
+    "Y" :  10.1}
+    
+    pI_list = []
+    for res in prot.seq:
+        if res in solomon.keys():
+            pI_list.append(solomon[res])
+        else:
+            pI_list.append(7)
+
+    if len(prot) >1:
+        pI_list[0] = np.median([9.6, pI_list[0]])
+        pI_list[1] = np.median([2.4, pI_list[-1]])
+    return pI_list
+
+
+def get_hydrophobicity_list(prot: GW_protein) -> list[float]:
+    """
+    This method calculates a list of hydrophobicity values of residues in a protein. 
+    :return: A list
+    """
+
     # Source: http://us.expasy.org/tools/pscale/Hphob.Eisenberg.html
 # Amino acid scale: Normalized consensus hydrophobicity scale
 # Author(s): Eisenberg D., Schwarz E., Komarony M., Wall R.
@@ -235,14 +282,57 @@ def get_hydrophobicity() -> dict:
  'V': 1.08,
  'E': -0.74,
  'Y': 0.26,
- 'M': 0.64,
- missing_aa: 0}
+ 'M': 0.64}
+    H_list = []
+    for res in prot.seq:
+        if res in HH.keys():
+            H_list.append(HH[res])
+        else:
+            H_list.append(0)
+    return H_list
+
+def get_hydrophobicity_dict() -> dict[str , dict[str ,float]]:
+    """
+    This method calculates a dictionary of differences in hydrophobicity values.
+    :return: A dictionary
+    
+    """
+
+    # Source: http://us.expasy.org/tools/pscale/Hphob.Eisenberg.html
+# Amino acid scale: Normalized consensus hydrophobicity scale
+# Author(s): Eisenberg D., Schwarz E., Komarony M., Wall R.
+# Reference: J. Mol. Biol. 179:125-142 (1984)
+    HH = {'C': 0.29,
+ 'D': -0.9,
+ 'S': -0.18,
+ 'Q': -0.85,
+ 'K': -1.5,
+ 'I': 1.38,
+ 'P': 0.12,
+ 'T': -0.05,
+ 'F': 1.19,
+ 'N': -0.78,
+ 'G': 0.48,
+ 'H': -0.4,
+ 'L': 1.06,
+ 'R': -2.53,
+ 'W': 0.81,
+ 'A': 0.62,
+ 'V': 1.08,
+ 'E': -0.74,
+ 'Y': 0.26,
+ 'M': 0.64}
+
+    for c in canonical_aas:
+        if c not in HH.keys():
+            HH[c] = 0
     HH_dict = {}
 
     for k in HH.keys():
         k_dict = {k2: abs(HH[k] -HH[k2]  ) for k2 in HH.keys()  }
         HH_dict[k] = k_dict
     return HH_dict
+
 
 
 # deleted bc not compatible with pymol 3

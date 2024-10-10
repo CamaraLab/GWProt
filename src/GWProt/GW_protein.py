@@ -86,7 +86,7 @@ class GW_protein:
     def __eq__(self, other):
         """
         Compares the underlying sequences, the ipdms, distributions, and the coords if both are defined.
-        This does *NOT* compare the names or ``scaled_flag``s.
+        This does *NOT* compare the names or ``scaled_flag``.
         """
         
         if self.coords is not None and other.coords is not None and ((self.coords.shape != other.coords.shape) or (self.coords != other.coords).any()):
@@ -309,9 +309,10 @@ class GW_protein:
         """
         This method makes a new ``GW_protein`` object created by downsampling from ``self``. This is done by dividing ``self`` into ``n`` evenly sized segments, 
         then creates an ``GW_protein`` object whose residues are formed by those segments.
-        :param n: The maximum number of residues in the output protein. If this is larger than ``len(self)``, then there is no downsampling.
+        :param n: The maximum number of residues in the output protein. If this is larger than ``len(self)``, 
+        then there is no downsampling.
         :param left_sample: Whether to use the left-most (lowest index) or median residue from each segment. ``left_sample == True`` uses the left-most, 
-            ``left_sample== False`` uses the median
+            ``left_sample== False`` uses the median.
         :param mean_sample: Whether to average the coordinates of the residues in a segment. ``mean_sample == False`` uses the coordinates of the residue determined by ``left_sample``,
             ``mean_sample==True`` uses the average of the coordinates in a segment.
         :return: A new ``GW_protein`` object created by downsampling from ``self``.
@@ -385,7 +386,7 @@ class GW_protein:
     def GW_stress(prot1: 'GW_protein', prot2: 'GW_protein', T: np.array) -> tuple[np.array,np.array]:
         """
         This calculates the stress, i.e. the contribution of each residue to the sum in the GW cost, using the transport plan ``T``.
-        This is output as two ``np.array``s, one for ``prot1``, the second for ``prot2``.
+        This is output as two ``np.array`` s, one for ``prot1`` , the second for ``prot2``.
 
         :param prot1: The first ``GW_protein``
         :param prot2: The second ``GW_protein``
@@ -456,6 +457,7 @@ class GW_protein:
     def run_FGW_dict(p1: 'GW_protein', p2:'GW_protein', d: dict[str , dict[str ,float]] ,alpha:float = 1, transport_plan: bool = False) -> Union[float, tuple[float, np.array]]:
         """
         This calculates the fused Gromov-Wasserstein distance between two proteins.  
+        
         :param p1: The first protein
         :param p2: The second protein
         :param d: The dictionary used for the fused distances based on the protein sequences. Of the form ``d['A']['B'] == float``
@@ -468,14 +470,29 @@ class GW_protein:
         assert 0 <= alpha <=1
         D1 = p1.ipdm
         D2 = p2.ipdm
-        n1 = len(p1)
+        n1 = len(p1)    
         n2 = len(p2)
         # M has shape (n1,n2)
         M = np.zeros((n1,n2))
         for i in range(n1):
             for j in range(n2):
-                M[i,j] = d[p1.seq[i]][p2.seq[j]]
-        
+                if p1.seq[i] in d.keys() and p2.seq[j] in d[p1.seq[i]].keys():
+                    M[i,j] = d[p1.seq[i]][p2.seq[j]]
+                else:
+                    M[i,j] = np.nan
+
+        #must be tested:
+        col_means = np.nanmean(M, axis = 0)
+        inds = np.where(np.isnan(M))
+        M[inds] = np.take(col_means, inds[1])
+        row_means = np.nanmean(M, axis = 1)
+        inds = np.where(np.isnan(M))
+        M[inds] = np.take(row_means, inds[0])
+        full_mean = np.nanmean(M)
+        inds = np.where(np.isnan(M))
+        M[inds] = full_mean
+
+
         G0 = id_initial_coupling(p1.distribution,p2.distribution)
 
         T , log= ot.fused_gromov_wasserstein(M=M, C1=D1, C2=D2, alpha = alpha, p= p1.distribution ,q=p2.distribution, G0 = G0, loss_fun='square_loss', log = True)

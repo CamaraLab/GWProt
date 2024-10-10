@@ -42,11 +42,11 @@ def weighted_RMSD(X:np.array ,Y:np.array, T:np.array) -> tuple[np.array, np.arra
     """
     This method uses the Kabsch algorithm to find a rigid, orientation-preserving transformation that minimizes weighted RMSD.
     
-    :pararm X: A np.array of shape (n,3) representing the n row vectors in R^3 defining ``X``
-    :pararm Y: A np.array of shape (m,3) representing the m row vectors in R^3 defining ``Y``
+    :param X: A np.array of shape (n,3) representing the n row vectors in R^3 defining ``X``
+    :param Y: A np.array of shape (m,3) representing the m row vectors in R^3 defining ``Y``
     :param T: A np.array of shape (n,m) representing the weights for the alignment. Its entries must be non-negative.
     So ``T[i,j]`` defines how strongly the distance between ``X[i,:]`` and ``Y[j,:]`` should be weighted in the minimization.
-    :return: ``-y_mean, rot, x_mean``, where rot is a 3x3 matrix.
+    :return: ``-y_mean, rot, x_mean``, where ``rot`` is a 3x3 matrix.
     """
     
     #return pretranslation, rotation, posttranslation
@@ -153,7 +153,7 @@ def get_RMSD_stresses(X,Y):
 
 
 
-def _pymol_transform( pretrans, rot, posttrans, Bio_format = True):
+def pymol_transform( pretrans, rot, posttrans, Bio_format = True):
     # helper that changes this into the matrix format specific to pymol
 
     #Bio_format: row vectors, right multiplication. This is how the RMSD alignments do it
@@ -162,7 +162,7 @@ def _pymol_transform( pretrans, rot, posttrans, Bio_format = True):
     if not Bio_format:
         ll = list(rot[0, 0:3]) + [posttrans[0]] + list(rot[1, 0:3]) + [posttrans[1]] + list(rot[2, 0:3]) + [posttrans[2]] + [pretrans[0],pretrans[1],pretrans[2],1]
     if Bio_format:
-        return(_pymol_transform(rot = rot.T, pretrans = pretrans, posttrans = posttrans, Bio_format = False))
+        return(pymol_transform(rot = rot.T, pretrans = pretrans, posttrans = posttrans, Bio_format = False))
     return(ll)
 
 

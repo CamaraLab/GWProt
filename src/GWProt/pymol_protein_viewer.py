@@ -99,7 +99,7 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, chain1:str
      transport_plan: np.array = None, threshold:float =0.5)->None:
     """
     This loads two pdb files and display them in Pymol and aligns them with a transport plan, then saves the scene to a .pse file.
-    A rigid alignment is created minimizing weighted RSMD. Note that if pymol 2 is used it uses ``cmd.cealign`` instead. 
+    A rigid alignment is created minimizing weighted RSMD. Note that if Pymol 2 is used it uses ``cmd.cealign`` instead. 
     For a pair of aligned residues, a line will connect them if over ``threshold`` of each of their mass is connected. The proteins are also colored by the stress levels.
     :param file1: Filepath to the first protein.
     :param file2: Filepath to the second protien.
@@ -109,7 +109,6 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, chain1:str
     :param transport_plan: A transport plan to align the two proteins. If none is provided one will be calculated with ``GW_protein.run_GW``.
     :param threshold: The threshold for displaying aligned residues. 
     """
-
     p1 = GW_protein.make_protein_from_pdb(file1,chain_id = chain1)
     p2 = GW_protein.make_protein_from_pdb(file2 ,chain_id = chain2)
 
@@ -125,7 +124,7 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, chain1:str
 
     pret, rot, trans = weighted_RMSD(p1.coords, p2.coords, transport_plan)
 
-    ll = _pymol_transform(pretrans=pret, rot=rot, posttrans=trans)
+    ll = pymol_transform(pretrans=pret, rot=rot, posttrans=trans)
 
     stress1, stress2 = GW_protein.GW_stress(p1,p2, transport_plan)
  

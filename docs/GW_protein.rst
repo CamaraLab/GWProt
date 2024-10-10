@@ -1,19 +1,20 @@
 The GW_protein Class
 ==========================
 
-This class has the core functionalities of GWProt
+This class has the core functionalities of GWProt.
+`GW_protein` object contains all the the data used to compute the GW distance.
+
 
 .. module:: GWProt.GW_protein
 .. autoclass:: GWProt.GW_protein.GW_protein
 
 
-A `GW_protein` object contains all the the data used to compute the GW distance.
 
 
 ------------------
 
 
-# Basic Methods
+**Basic Methods**
 We have basic ways to create and compare `GW_protein` objects.
 
 The usual way to make a `GW_protein` object is by loading it from a ``.pdb`` (Protein Data Bank) file. 
@@ -27,15 +28,15 @@ If data is missing in the form of missing residues or missing alpha-Carbons it w
 
 ------------------
 
-# Intra-Protein Distance Matrix Manipulation
-Next we have methods to manipulate the intra-protein distance matrix.
+**Intra-Protein Distance Matrix Manipulation**
+Next we have methods to manipulate the intra-protein distance matrix for distortion scaling.
 `distortion_scaling`_
 
 .. autofunction:: GWProt.GW_protein.GW_protein.scale_ipdm
 .. autofunction:: GWProt.GW_protein.GW_protein.reset_ipdm
 
 ------------------
-# Downsampling
+**Downsampling**
 Then we have two methods for downsampling. 
 Downsampling reduces the number of residues used so has the effect of speeding up computations, but can reduce accuracy.
 
@@ -45,7 +46,7 @@ Downsampling reduces the number of residues used so has the effect of speeding u
 
 
 -------------------
-# Computing GW
+**Computing GW**
 
  `gromov_wasserstein`_
 
@@ -60,7 +61,7 @@ The methods for computing the Gromov-Wasserstein distance use the [CAJAL library
 As this uses CAJAL, there is the ability to use other functionalities from CAJAL.
 
 --------------------
-# Computing FGW
+**Computing FGW**
 
 
 `fused_gromov_wasserstein`_
@@ -92,7 +93,7 @@ As CAJAL does not run fused GW, these computation are done with the Python ``ot`
 
 --------------------
 
-# Computing Stress 
+**Computing Stress**
 
 `stress`_
 
@@ -105,7 +106,7 @@ WARNING - ``np.sum(stress1) != c``, where ``c`` is the GW cost; rather ``math.sq
 
 ------------------
 
-# Miscellaneous Methods
+**Miscellaneous Methods**
 
 .. autofunction:: GWProt.GW_protein.GW_protein.get_eccentricity
 .. autofunction:: GWProt.GW_protein.GW_protein.run_ssearch_indices

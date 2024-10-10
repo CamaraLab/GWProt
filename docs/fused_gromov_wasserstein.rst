@@ -10,7 +10,7 @@ Fused GW now adds a penalty term for aligning dissimilar residues.
 Formally, we write :math: `\delta(x,y)` to denote the difference in the data associated to residues :math:`x` and :math:`y`. Then the fused Gromov Wasserstein distance between proteins  :math:`X` and :math:`Y` is defined as
 
 
-.. math::  FGW(X,Y) = \frac{1}{2} \sqrt{ \sum_{i,j,k,l} (\alpha |d_X(x_i,x_j) - d_Y(y_k,y_l)|^2  + (1 - \alpha) \delta(x_i,y_j))T_{i,k}T_{j,l}}.
+.. math::  FGW(X,Y) = \min_T \frac{1}{2} \sqrt{ \sum_{i,j,k,l} (\alpha |d_X(x_i,x_j) - d_Y(y_k,y_l)|^2  + (1 - \alpha) \delta(x_i,y_j))T_{i,k}T_{j,l}}.
 
 
 where :math:`\alpha` in the interval [0,1] determines the weight of the penalty relative to the usual geometric cost. We found 0.05 to work well for isoelectic points though good values will vary depending on the type of biochemical data used.

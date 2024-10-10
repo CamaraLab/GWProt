@@ -5,6 +5,7 @@ Welcome to GWProt's documentation!
 ===================================
 
 **GWProt**  is a Python library for applying Gromov-Wasserstein to protein morphology.
+`Cámara Lab <https://camara-lab.org/>`_
 
 
 
