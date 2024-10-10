@@ -1,11 +1,11 @@
 Pymol Protein Viewer
 =====================================
 
-This generates pymol scene files files which require the pymol application to be viewed.
+This module generates Pymol scene files files (.pse) which require the Pymol GUI application to be viewed. This can be downloaded from the [Pymol website](https://www.pymol.org).
+
 
 .. module:: GWProt.pymol_protein_viewer
 
-It can be downloaded from the `Pymol website <https://www.pymol.org>_`
 
 .. autofunction:: GWProt.pymol_protein_viewer.compare_proteins_in_pymol
 

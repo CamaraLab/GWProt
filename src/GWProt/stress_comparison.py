@@ -15,39 +15,29 @@ import multiprocess
 import sklearn
 import shutil
 
-from typing import Iterator, Iterable, Optional, TypeVar, Generic
+from typing import Iterator, Iterable, Optional, TypeVar, Generic, Mapping
 
 
 import sys
 
 
 
-from .FGW_protein import *
+from .GW_protein import *
 
 
-
-
-
-# This module is for doing all vs all stress comparisons in a dataset
 
 class Stress_Comparison:
-
     """
-    This class streamlines computing stresses for a dataset of proteins.
-
-
-
-    The key computed 
+    This class streamlines computing stresses for a dataset of proteins and analyzing transport plans. 
     
-    :param prot_list: A list of FGW_protein.FGW_protein objects
+    :param prot_list: A list of ``GW_protein.GW_protein`` objects
     :param RAM: Whether to store the computed transport plans in RAM versus saving to files. Default is in RAM.
-    :param transport_dir: If RAM == False, a filepath to save the transport plans in.
-
-    self.raw_stress_dict
+    :param transport_dir: If ``RAM == False``, a filepath to save the transport plans in.
+    :ivar raw_stress_dict: TESTING
     """
     
     def __init__(self,
-                 prot_list : list[FGW_protein],
+                 prot_list : list[GW_protein],
                  RAM: bool = True,
                  transport_dir: str = None):
 
@@ -101,8 +91,8 @@ class Stress_Comparison:
         name2 = p2.name 
         cell1 = self.cell_dict[name1]
         cell2 = self.cell_dict[name2]
-        c, T = FGW_protein.run_GW_from_cells(cell1, cell2, transport_plan = True)
-        s1, s2 = FGW_protein.GW_stress(p1,p2, T)     
+        c, T = GW_protein.run_GW_from_cells(cell1, cell2, transport_plan = True)
+        s1, s2 = GW_protein.GW_stress(p1,p2, T)     
         return name1, name2, c, s1, s2, T 
 
     @controller.wrap(limits=1, user_api=controller.info()[-1]['user_api'])
@@ -115,20 +105,18 @@ class Stress_Comparison:
         name2 = p2.name 
         #cell1 = self.cell_dict[name1]
         #cell2 = self.cell_dict[name2]
-        c, T = FGW_protein.run_GW_from_cells(cell1, cell2, transport_plan = True)
-        s1, s2 = FGW_protein.GW_stress(p1,p2, T)     
+        c, T = GW_protein.run_GW_from_cells(cell1, cell2, transport_plan = True)
+        s1, s2 = GW_protein.GW_stress(p1,p2, T)     
         return name1, name2, c, s1, s2, T 
 
 
-    def GW_compute_stresses(self, processes: int = None):
+    def GW_compute_stresses(self, processes: int = None) -> None:
         """
-        This method computes all pairwise GW distances and stresses. This can be done in parallel with `processes` number of processes.
+        This method runs all pairwise GW computations. This can be done in parallel with `processes` number of processes.
         :param processes: How many parallel processes to run, default is 1. 
         """
-        #core None, 0, or 1 makes it not multiprocess
-        #otherwise it gives the number of cores
+
         
-        #todo - add progress bar
         
         
         if processes is not None and processes >1:
@@ -167,12 +155,14 @@ class Stress_Comparison:
 
     @controller.wrap(limits=1, user_api=controller.info()[-1]['user_api'])
     @staticmethod
-    def _FGW_helper_multi(ppdda): #todo 
+    def _FGW_lists_helper_multi(ppdda): 
         pp, dd, alpha = ppdda
         p1,p2, = pp
         data_list1, data_list2 = dd
         name1 = p1.name
         name2 = p2.name 
+        n1 = len(data_list1)
+        n2 = len(data_list2)
 
         a = np.array([np.array([x]) for x in data_list1])
         b = np.array(data_list2)
@@ -180,21 +170,18 @@ class Stress_Comparison:
         bb = np.broadcast_to(b,(n1,n2))
         M = abs(aa-bb)
 
-        c, T = FGW_protein.run_FGW_data_list(p1=p1, p2=p2, alpha = alpha, data_list1 = data_list1, data_list2 = data_list2 , transport_plan = True)
-        s1, s2 = FGW_protein.FGW_stress(prot1= p1,prot2 = p2, alpha = alpha, diff_mat = M, transport_plan= T)     
+        c, T = GW_protein.run_FGW_diff_mat(p1=p1, p2=p2, alpha = alpha, diff_mat = M , transport_plan = True)
+        s1, s2 = GW_protein.FGW_stress(prot1= p1,prot2 = p2, alpha = alpha, diff_mat = M, T= T)     
         return name1, name2, c, s1, s2, T 
 
 
-    def FGW_compute_stresses(self, data_list_dict : dict, alpha: float, processes: int = None): #todo
+    def FGW_compute_stresses_data_lists(self, data_list_dict : dict, alpha: float, processes: int = None) -> None: 
         """
-        This method computes all pairwise FGW distances and stresses. This can be done in parallel with `processes` number of processes.
-        :param data_list_dict: A dictionary of {name: data_list} for FGW_protein.FGW_data_lists
+        This method runs all pairwise FGW computations with ``GW_protein.run_FGW_data_lists``. This can be done in parallel with ``processes`` number of processes.
+        :param data_list_dict: A dictionary of {name: data_list} for ``GW_protein.run_FGW_data_lists``
         :param processes: How many parallel processes to run, default is 1. 
-        :param alpha: The value of alpha to use for FGW
+        :param alpha: The value of alpha to use for FGW.
         """
-        #core None, 0, or 1 makes it not multiprocess
-        #otherwise it gives the number of cores
-        
 
         if set(data_list_dict.keys()) != set(self.name_list):
             raise ValueError("keys of stress_list_dict must match name_list")
@@ -206,7 +193,7 @@ class Stress_Comparison:
         
         if processes is not None and processes >1:
             with multiprocess.Pool(processes = processes)  as pool:
-                results = pool.imap(Stress_Comparison._FGW_helper_multi, zip( it.combinations(self.prot_list,2), it.combinations(data_list_list,2), it.repeat(alpha)), chunksize = 20)
+                results = pool.imap(Stress_Comparison._FGW_lists_helper_multi, zip( it.combinations(self.prot_list,2), it.combinations(data_list_list,2), it.repeat(alpha)), chunksize = 20)
                 for r in results:
                     name1, name2, c,s1,s2,T = r  
                     self.dist_dict[name1][name2] = c 
@@ -219,7 +206,7 @@ class Stress_Comparison:
                     else:
                         np.save(file = os.path.join(self.transport_dir, f'{name1}_{name2}.npy' ), arr = T)
         else:
-            results = map(Stress_Comparison._FGW_helper_multi, zip( it.combinations(self.prot_list,2), it.combinations(data_list_list,2), it.repeat(alpha)))
+            results = map(Stress_Comparison._FGW_lists_helper_multi, zip( it.combinations(self.prot_list,2), it.combinations(data_list_list,2), it.repeat(alpha)))
         
             for r in results:
                 name1, name2, c,s1,s2,T = r  
@@ -235,7 +222,59 @@ class Stress_Comparison:
         self.computed_flag = True
 
 
+    @controller.wrap(limits=1, user_api=controller.info()[-1]['user_api'])
+    @staticmethod
+    def _FGW_dict_helper_multi(ppda): 
+        pp, ddict, alpha = ppdda
+        p1,p2, = pp
+        name1 = p1.name
+        name2 = p2.name 
+        M = np.zeros((n1,n2))
+        for i in range(n1):
+            for j in range(n2):
+                M[i,j] = d[p1.seq[i]][p2.seq[j]]
 
+        c, T = GW_protein.run_FGW_diff_mat(p1=p1, p2=p2, alpha = alpha, diff_mat = M, transport_plan = True)
+        s1, s2 = GW_protein.FGW_stress(prot1= p1,prot2 = p2, alpha = alpha, diff_mat = M, T= T)     
+        return name1, name2, c, s1, s2, T 
+    def FGW_compute_stresses_dict(self, diff_dict : dict, alpha: float, processes: int = None) -> None: 
+        """
+        This method runs all pairwise FGW computations with ``GW_protein.run_FGW_dict``. This can be done in parallel with ``processes`` number of processes.
+        :param data_list_dict: A dictionary for ``GW_protein.run_FGW_dict``
+        :param processes: How many parallel processes to run, default is 1. 
+        :param alpha: The value of alpha to use for FGW.
+        """
+
+
+        if processes is not None and processes >1:
+            with multiprocess.Pool(processes = processes)  as pool:
+                results = pool.imap(Stress_Comparison._FGW_lists_helper_multi, zip( it.combinations(self.prot_list,2), it.repeat(diff_dict), it.repeat(alpha)), chunksize = 20)
+                for r in results:
+                    name1, name2, c,s1,s2,T = r  
+                    self.dist_dict[name1][name2] = c 
+                    self.dist_dict[name2][name1] = c
+                    self.raw_stress_dict[name1][name2] = s1
+                    self.raw_stress_dict[name2][name1] = s2
+                    if self.RAM_flag:
+                        self.transport_dict[name1][name2] = T
+                        self.transport_dict[name2][name1] = T.T
+                    else:
+                        np.save(file = os.path.join(self.transport_dir, f'{name1}_{name2}.npy' ), arr = T)
+        else:
+            results = map(Stress_Comparison._FGW_lists_helper_multi, zip( it.combinations(self.prot_list,2), it.repeat(diff_dict), it.repeat(alpha)))
+        
+            for r in results:
+                name1, name2, c,s1,s2,T = r  
+                self.dist_dict[name1][name2] = c 
+                self.dist_dict[name2][name1] = c
+                self.raw_stress_dict[name1][name2] = s1
+                self.raw_stress_dict[name2][name1] = s2
+                if self.RAM_flag:
+                    self.transport_dict[name1][name2] = T
+                    self.transport_dict[name2][name1] = T.T
+                else:
+                    np.save(file = os.path.join(self.transport_dir, f'{name1}_{name2}.npy' ), arr = T)
+        self.computed_flag = True
 
 
     
@@ -247,13 +286,11 @@ class Stress_Comparison:
 
 
 
-    def raw_transferred_stresses(self, stress_dict):
+    def raw_transferred_stresses(self, stress_dict: dict) ->dict:
         """
-        This method computes all of the transferred stresses. For proteins i and j, it uses the transport plan between proteins i and j 
-        
-        :param stress_dict: 
-        :param cores:
-        :return: 
+        This method computes all of the transferred stresses. 
+        :param stress_dict: A dictionary of the form ``{name: np.array}`` with keys the protein names in `self.name_list', where the arrays represent the stresses of each residue.
+        :return dict: 
         """
         assert set(stress_dict.keys()) == set(self.name_list)
         assert self.computed_flag
@@ -280,12 +317,10 @@ class Stress_Comparison:
 
     def get_GW_dmat(self) -> np.array:
         """
-        This method returns the distance matrix computed with `GW_compute_stresses`. It must be run after `GW_compute_stresses`. 
-        The (ij)th entry is the GW distance between the ith and jth entries in self.prot_list.
+        This method returns the GW distances of ``self`` in the form of a distance matrix.
         :return: np.array
         """
-        #returns a np.array of the GW distances
-        #ordering is that of the prot_list
+
         assert self.computed_flag
 
         n = len(self.name_list)
@@ -312,9 +347,7 @@ def normalize_stress_dict(raw_dict, code: tuple[float,float,float,float] =(1, 0,
 
     :param raw_dict:
     :param code: The default is (1,0,0,0) which corresponds to the simple average
-    :return:
-
-
+    :return dict:
     """
     a, b, c, d = code
     norm_stresses_dict = {}

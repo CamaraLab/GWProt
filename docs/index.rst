@@ -1,4 +1,4 @@
-.. CAJAL documentation master file
+.. GWProt documentation master file
 
 
 Welcome to GWProt's documentation!
@@ -13,7 +13,7 @@ Welcome to GWProt's documentation!
    This project is under active development. Documentation and code will be updated continuously
 
 Installation:
-`pip install GWProt@git+https://github.com/CamaraLab/GWProt`
+``pip install GWProt@git+https://github.com/CamaraLab/GWProt``
 
 
 
@@ -21,7 +21,7 @@ Installation:
 
 .. toctree::
    :maxdepth: 1
-   :caption: Mathematical Background
+   :caption: Background
 
    gromov_wasserstein
    fused_gromov_wasserstein
@@ -34,12 +34,13 @@ Installation:
    :maxdepth: 2
    :caption: API
 
+   GW_protein
+   GW_protein_pI
    stress_comparison
    switch_probs
    pymol_protein_viewer
-   FGW_protein
-   FGW_protein_pI
    weighted_alignment
+   FGW_matrices
    
 
 
@@ -55,7 +56,7 @@ Installation:
 
 
 
-Indices and tables
+Indices
 ==================
 
 * :ref:`genindex`

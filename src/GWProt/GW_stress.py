@@ -11,12 +11,12 @@ from typing import Iterator, Iterable, Optional, TypeVar, Generic
 
 
 from .GW_scripts import *
-from .FGW_protein import *
+from .GW_protein import *
 
 
 
 
-def GW_stress(prot1:FGW_protein.FGW_protein, prot2:FGW_protein.FGW_protein, T: np.array):
+def GW_stress(prot1:GW_protein, prot2:GW_protein, T: np.array):
     """
     :param prot1:
     

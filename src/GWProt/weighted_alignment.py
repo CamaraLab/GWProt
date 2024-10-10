@@ -38,28 +38,15 @@ def Bio_RMSD(X,Y):
 #THIS NEEDS more TESTING
 #no currently known bugs though
 
-def weighted_RMSD(X:np.array ,Y:np.array, T:np.array):
+def weighted_RMSD(X:np.array ,Y:np.array, T:np.array) -> tuple[np.array, np.array, np.array]:
     """
     This method uses the Kabsch algorithm to find a rigid, orientation-preserving transformation that minimizes weighted RMSD.
-
-    Explicitly it finds a special orthogonal matrix S which minimizes
-
-    sum_{i,j} |(x_i - x')- S(y_j - y')|^2 * T_{i,j} 
-
-    where x' is the weighted mean of the x_i and y' is the weighted mean of the y'.
-
-    Note - in general there may not be a unique solution matrix S which minimizes this. 
-
-    :pararm X: A np.array with of (n,3) representing the n row vectors in R^3 defining X
-    :pararm Y: A np.array with of (m,3) representing the m row vectors in R^3 defining Y
+    
+    :pararm X: A np.array of shape (n,3) representing the n row vectors in R^3 defining ``X``
+    :pararm Y: A np.array of shape (m,3) representing the m row vectors in R^3 defining ``Y``
     :param T: A np.array of shape (n,m) representing the weights for the alignment. Its entries must be non-negative.
-    So T[i,j] defines how strongly the distance between X[i,:] and Y[j,:] should be weighted in the minimization.
-    :return: -y_mean, rot, x_mean ; where rot is a 3x3 matrix.
-
-
-    Thus (Y - y_mean) @ rot + x_mean and X should be superimposed.
-    Note that if n == m and T is the identity matrix, this is just the usual Kabsch algorithm for minimizing RMSD between X and Y.
-
+    So ``T[i,j]`` defines how strongly the distance between ``X[i,:]`` and ``Y[j,:]`` should be weighted in the minimization.
+    :return: ``-y_mean, rot, x_mean``, where rot is a 3x3 matrix.
     """
     
     #return pretranslation, rotation, posttranslation

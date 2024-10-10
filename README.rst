@@ -9,7 +9,7 @@ Currently it requires PDB (Protein Data Bank) files of proteins.
 Installation
 =======================================
 
-`pip install GWProt@git+https://github.com/CamaraLab/GWProt`
+``pip install GWProt@git+https://github.com/CamaraLab/GWProt``
 
 
 Documentation

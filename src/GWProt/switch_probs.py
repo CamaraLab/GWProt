@@ -11,8 +11,6 @@ import warnings
 
 
 
-
-
 import sparse
 
 import numpy as np
@@ -25,11 +23,8 @@ import mpl_toolkits.axisartist.floating_axes as floating_axes
 
 def visualize_switch_probabibilities(A: np.array) -> None:
     """
-    Displays a switch probability matrix with matplotlib.
+    This method displays a switch probability matrix with matplotlib.
     :param A: The switch probability matrix to display; only the upper triangular part of it is used.
-    :return: None
-
-
     """
     N = A.shape[0]    
     fig = plt.figure()
@@ -82,10 +77,10 @@ def visualize_switch_probabibilities(A: np.array) -> None:
 def get_switch_prob(T: np.array, prot_num: int = 0) -> np.array:
     """
     Calculates the probability that the order of two residues are switched or not when the transport plan is applied.
-    This can be used to detect circular permutations between two proteins. This uses sparse matrices so may cause problems if T has many non-zero entries.
+    This can be used to detect circular permutations between two proteins. 
     :param T: The transport plan to use
-    :param prot_num: Which protein to use, 0 uses the 0th axis of 'T', 1 uses the 1st axis.
-    :return: A square np.array whose ijth entry is the probability that residues i and j are kept in the same order. 
+    :param prot_num: Which protein to use, 0 uses the 0th axis of ``T``, 1 uses the 1st axis.
+    :return: A square np.array whose *ij*th entry is the probability that residues *i* and *j* are kept in the same order. 
     """
     
     if prot_num == 1:
@@ -122,7 +117,7 @@ def get_switch_prob(T: np.array, prot_num: int = 0) -> np.array:
 
 def preprocess(A: np.array) -> np.array:
     """
-    Processes a switch probability matrix for applying `max_rectangle_diagonal`
+    Processes a switch probability matrix for applying ``max_rectangle_diagonal``
     :param A: A switch probability matrix
     :return: A processed switch probability matrix
     """
@@ -163,7 +158,7 @@ def _histogram_area_helper_diag(histogram,j, min = 0):
             #print('T1,',   (stack[-1] +1) if stack else 0,index -1, area, stack)
             
             # update max area, if needed 
-            if area >= max_area and ((index -1  +histogram[top_of_stack] -1 ==j) or (((stack[-1] +1) if stack else 0) -histogram[top_of_stack] +1 ==j)) and histogram[top_of_stack] > min  and ((index - stack[-1] - 1) if stack else index) > min:
+            if area >= max_area and ((index -1  +histogram[top_of_stack] -1 ==j) or (((stack[-1] +1) if stack else 0) -histogram[top_of_stack] +1 ==j)) and histogram[top_of_stack] >= min  and ((index - stack[-1] - 1) if stack else index) >= min:
                 max_area = area
                 #print(j, area, index, (stack[-1] +1) if stack else 0, top_of_stack) #debugging
                 left, right  =   (stack[-1] +1) if stack else 0,index -1
@@ -179,7 +174,7 @@ def _histogram_area_helper_diag(histogram,j, min = 0):
                 ((index - stack[-1] - 1) 
                 if stack else index)) 
         # update max area, if needed 
-        if area >= max_area and ((index -1  +histogram[top_of_stack] -1 ==j) or (((stack[-1] +1) if stack else 0) -histogram[top_of_stack] +1 ==j)) and histogram[top_of_stack] > min  and ((index - stack[-1] - 1) if stack else index) > min:
+        if area >= max_area and ((index -1  +histogram[top_of_stack] -1 ==j) or (((stack[-1] +1) if stack else 0) -histogram[top_of_stack] +1 ==j)) and histogram[top_of_stack] >= min  and ((index - stack[-1] - 1) if stack else index) >= min:
             max_area = area
             #print(j, area, index, (stack[-1] +1) if stack else 0, top_of_stack) #debugging
             left, right  =   (stack[-1] +1) if stack else 0,index -1
@@ -190,15 +185,12 @@ def _histogram_area_helper_diag(histogram,j, min = 0):
     return max_area ,left , right, height
 
 
-def max_rectangle_diagonal(A : np.array, min: int = 0): 
+def max_rectangle_diagonal(A : np.array, min: int = 0) -> tuple[int, tuple[int,int,int,int]]: 
     """
-    Finds the area and coordinates of the largest rectange in an array containing only nonzero entries, with a corner on the main diagonal.
-    This algorithm is based on the solution to the classical maximal rectangle problem as in https://drdobbs.com/database/the-maximal-rectangle-problem/184410529
-
+    This method finds the area and coordinates of the largest rectange in an array containing only nonzero entries, with a corner on the main diagonal.
     :param A: The array
-    :param min: 
-    :return: (max_area, (left,  right, bottom, top )) 
-
+    :param min: Rectangles whose width or height are below ``min`` are not considered
+    :return: This returns the maximal area and the coordinates of the rectangle in the tuple ``(max_area, (left,  right, bottom, top ))`` 
     """
     
     mat = (A).astype(int)
@@ -232,16 +224,16 @@ def max_rectangle_diagonal(A : np.array, min: int = 0):
         #print(l)
         area , bottom, top, height = _histogram_area_helper_diag(histogram = l,j = j, min = min)
         # if area > best_area and (top +height -1 ==j) or (bottom -height +1 ==j):
-        if area > best_area and (top-bottom + 1) > min and height > min:
+        if area > best_area and (top-bottom + 1) >= min and height >= min:
             #print(j, bottom, top, height)
 
 
             best_area = area
             if j >= bottom: #top half
-                best_coords = (  j - height+1, j, bottom, top ) 
+                best_coords = (  int(j - height+1), int(j), int(bottom), int(top) ) 
                 #print('top', best_coords)
             elif top >= j: #bottom half
-                best_coords = ( j , j + height-1, bottom, top ) 
+                best_coords = ( int(j) , int(j + height-1), int(bottom), int(top) ) 
                 #print('bot', best_coords)
     return best_area , best_coords
 

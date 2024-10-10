@@ -7,6 +7,7 @@ requires = [
 	 "Cython>=3",
 	 "numpy",
      "POT",
+     "typing"
 	 ]
 # What should the build-backend be?
 build-backend = "setuptools.build_meta"
@@ -38,7 +39,8 @@ dependencies = [
     "cajal",
     "scikit-learn",
     "multiprocess",
-    "threadpoolctl"
+    "threadpoolctl",
+    "typing"
 	]
 
 [project.urls]

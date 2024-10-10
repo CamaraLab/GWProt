@@ -207,7 +207,11 @@ def get_pI():
     #N_term_pK =  9.6
     
 
-def get_hydrophobicity():
+def get_hydrophobicity() -> dict:
+    """
+    :return: 
+    This method 
+    """
     # Source: http://us.expasy.org/tools/pscale/Hphob.Eisenberg.html
 # Amino acid scale: Normalized consensus hydrophobicity scale
 # Author(s): Eisenberg D., Schwarz E., Komarony M., Wall R.

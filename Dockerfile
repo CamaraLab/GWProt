@@ -32,7 +32,8 @@ WORKDIR pymol-open-source
 
 RUN python3 setup.py build install
 
-RUN apt install python3-pip -y 
+RUN apt-get install python3-pip --fix-missing  -y
+#RUN apt-get install pip --fix-missing -y
 
 #check these, might be the wrong ones - we want version 3, version 2 causes seg faults
 
@@ -64,7 +65,7 @@ RUN cd fasta-36.3.8i/src; `
 
 # this still has issues
 USER jovyan
-RUN /opt/conda/bin/python3 -m pip install pot `
+RUN /opt/conda/bin/python3 -m python3-pip install pot `
  cajal `
  biopython==1.81 `
  umap-learn==0.5.3 `
