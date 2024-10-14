@@ -175,16 +175,16 @@ def partial_charge(first, second):
 class GW_protein_pI(GW_protein):
 
     """
-    This class contains everything needed to run GW and fused GW on proteins, as well as versions with distortion scaling and sequence alignment
+    This subclass of ``GW_protein`` contains everything needed to run fused GW on proteins using isoelectric points, as well as versions with downsampling, distortion scaling and sequence alignment.
 
     :param name: Simply for ease of use
-    :param coords: The coordinates of the CA atoms of the protein, ordered sequentially
+    :param coords: The coordinates of the alpha-Carbons of the protein, ordered sequentially
     :param seq: A string giving the sequence of the protein
     :param ipdm: The intra-protein distance matrix of a protein. 
         The (i,j)th entry is the (possibly scaled) distance between residues i and j. This is mutable can can change if distortion scaling is used.
     :param scaled_flag: Records whether the ipdm is the exact distance between residues or if it has been scaled.
     :param distribution: Numpy array of the weighting of the residues, must sum to 1. Default is a uniform distribution.
-
+    :ivar pI_list: Estimated isoelectric point of each residue based on Solomon values. 
 
     """
 
@@ -192,7 +192,6 @@ class GW_protein_pI(GW_protein):
 
 
     def __init__(self, name : str, seq :str, pI_list,  coords = None, ipdm = None, scaled_flag = False , distribution = None):
-        #note - the seq is the sequence, not the file
 
         super().__init__(name = name, seq = seq, coords = coords, ipdm = ipdm, scaled_flag = scaled_flag, distribution = distribution)
         assert not (coords is None and ipdm is None)
@@ -238,8 +237,8 @@ class GW_protein_pI(GW_protein):
             
     def __eq__(self, other):
         """
-        Compares the sequences, the pI_lists, the ipdms, and the coords if both are defined.
-        This does NOT compare the names or scaled_flags.
+        Compares the ``seq``, the ``pI_list``, the ``ipdm``, and the ``coords`` if both are defined.
+        This does NOT compare the ``name`` or ``scaled_flag``.
         """
         
         if self.coords is not None and other.coords is not None and ((self.coords.shape != other.coords.shape) or (self.coords != other.coords).any()):
@@ -262,27 +261,31 @@ class GW_protein_pI(GW_protein):
  
             
     @staticmethod
-    def run_ssearch_indices(p1: 'GW_protein',
-    p2: 'GW_protein',
+    def run_ssearch_indices(prot1: 'GW_protein',
+    prot2: 'GW_protein',
     allow_mismatch: bool = True): 
         """
         Runs the ssearch36 program from the seq36 packages and returns the indices of the two proteins which are aligned.
-        :param p1: First protein
-        :param p2: Fecond protein
+        
+        :param prot1: First protein
+        :param prot2: Fecond protein
         :param allow_mismatch: Whether to include residues which are aligned but not the same type of amino acid
-        :return: Two lists of indices, those of 'p1' and 'p2' which are aligned
+        :return: Two lists of indices, those of ``prot1`` and ``prot2`` which are aligned
+        
         """ 
-        fasta1 = ">" + p1.name + '\n' + p1.seq
-        fasta2 = ">" + p2.name + '\n' + p2.seq
+        fasta1 = ">" + prot1.name + '\n' + prot1.seq
+        fasta2 = ">" + prot2.name + '\n' + prot2.seq
         return run_ssearch_cigar_Ram(fasta1 = fasta1, fasta2 = fasta2, allow_mismatch = allow_mismatch)
 
     def scale_ipdm(self,
         scaler: Callable[[float],float] = lambda x :x, 
         inplace: bool = False):
         """
+
         :param scaler: A function with which to scale the intraprotein distance matrix. It must send 0 to 0, be strictly monotonic increasing, and concave down.
-        :param inplace: Whether to modify 'self.ipdm' or output the scaled ipdm.
-        :return: The scaled ipdm if 'inplace == False', and 'None' if 'inplace == True'.
+        :param inplace: Whether to modify ``self.ipdm`` or output the scaled ipdm.
+        :return: The scaled ipdm if ``inplace == False``, and ``None`` if ``inplace == True``.
+
         """
 
         m= np.vectorize(scaler)(self.ipdm)
@@ -298,9 +301,11 @@ class GW_protein_pI(GW_protein):
     def downsample_by_indices(self, 
         indices: list[int]) -> 'GW_protein':
         """
-        This creates a new 'GW_protein' object consisting of the residues of 'self' in the input indices
+        This creates a new ``GW_protein`` object consisting of the residues of ``self`` in the input indices.
+
         :param indices: The indices to keep.
-        :return: A new 'GW_protein' object
+        :return: A new ``GW_protein`` object
+
         """
         assert set(indices).issubset(set(range(len(self.pI_list))))
         if self.coords is not None:
@@ -322,8 +327,10 @@ class GW_protein_pI(GW_protein):
 
     def validate(self) -> bool:
         """
-        Checks if a 'GW_protein_pI' object passes basic tests.
-        :return: 'True' is it passes, raises assertion error otherwise.
+        Checks if a ``GW_protein_pI`` object passes basic tests.
+
+        :return: ``True`` is it passes, raises assertion error otherwise.
+
         """
         if not self.coords is None:
             
@@ -347,7 +354,7 @@ class GW_protein_pI(GW_protein):
 
 
 
-        if  len(self.pI_list)>=1 and ( self.pI_list[1:-1] != [writeProtIepMedian(r) for r in self.seq[1:-1]]):
+        if  len(self.pI_list)>=1 and ( self.pI_list[1:-1] != [writeProtIep(r) for r in self.seq[1:-1]]):
             print('pI_list is wrong, could be caused by convolution')
         
         return True
@@ -355,24 +362,23 @@ class GW_protein_pI(GW_protein):
     def downsample_n(self,
         n:int = np.inf, 
         pI_combination: bool = True,
-        pI_alg: str = 'iter',
         left_sample:bool = False,
         mean_sample:bool = False) -> 'GW_protein_pI':
         """
-        This method makes a new 'GW_protein' object created by downsampling from 'self'. This is done by dividing 'self' into 'n' evenly sized segments, 
-        then creates an 'GW_protein' object whose residues are formed by those segments. Depending on the parameters this can be done with regular downsampling 
+        This method makes a new ``GW_protein`` object created by downsampling from ``self``. This is done by dividing ``self`` into ``n`` evenly sized segments, 
+        then creates an ``GW_protein`` object whose residues are formed by those segments. Depending on the parameters this can be done with regular downsampling 
         (simply picking one residue from each segment and copying its data) or by combining the coordinate data and/or isoelectric values of the residues in a segment.
 
-        :param n: The maximum number of residues in the output protein. If this is larger than the size of 'self', then there is no downsampling.
-        :param pI_combination: Whether to combine the isoelectric points of nearby residues when downsampling. If "False" then the values in 'pI_list' 
-            of the returned 'GW_protein' are a subset of those of 'self.pI_list'. If "True" then 'pI_alg' is used to estimate the isoelectric point of
+        :param n: The maximum number of residues in the output protein. If this is larger than the size of ``self``, then there is no downsampling.
+        :param pI_combination: Whether to combine the isoelectric points of nearby residues when downsampling. If ``False`` then the values in ``pI_list`` 
+            of the returned ``GW_protein`` are a subset of those of ``self.pI_list``. If ``True`` then ``pI_alg`` is used to estimate the isoelectric point of
             nearby residues
-        :param pI_alg: Which algorithm to use to estimate isoelectric points. 'pI_alg == "iter"' uses 'pI_iter_alg()' and 'pI_alg == "median"' uses 'pH_median'
-        :param left_sample: Whether to use the left-most (lowest index) or median residue from each segment. 'left_sample == True' uses the left-most, 
-            'left_sample== False' uses the median
-        :param mean_sample: Whether to average the coordinates of the residues in a segment. 'mean_sample == False' uses the coordinates of the residue determined by 'left_sample',
-            'mean_sample==True' uses the average of the coordinates in a segment.
-        :return: A new 'GW_protein' object created by downsampling from 'self'.
+        :param left_sample: Whether to use the left-most (lowest index) or median residue from each segment. ``left_sample == True`` uses the left-most, 
+            ``left_sample== False`` uses the median
+        :param mean_sample: Whether to average the coordinates of the residues in a segment. ``mean_sample == False`` uses the coordinates of the residue determined by ``left_sample`,
+            ``mean_sample==True`` uses the average of the coordinates in a segment.
+        :return: A new ``GW_protein` object created by downsampling from ``self``.
+
         """
 
 
@@ -402,13 +408,10 @@ class GW_protein_pI(GW_protein):
 
         if pI_combination: 
             split_pI_list = split_list(self.pI_list, n)
-            if pI_alg == 'median':
-                pI_list = [pH_median(seg) for seg in split_pI_list]
-            elif pI_alg == 'iter':
-                split_res_list = split_list(self.seq, n)
-                pI_list = [pI_iter_alg(split_res_list[0], N_term_count= 1)]  + [pI_iter_alg(seg) for seg in split_res_list[1:-1]] + [pI_iter_alg(split_res_list[-1], C_term_count= 1)]
-            else:
-                raise Exception("Invalid parameter for pI_alg, must be 'median' or 'iter'" )
+
+            split_res_list = split_list(self.seq, n)
+            pI_list = [pI_iter_alg(split_res_list[0], N_term_count= 1)]  + [pI_iter_alg(seg) for seg in split_res_list[1:-1]] + [pI_iter_alg(split_res_list[-1], C_term_count= 1)]
+
         else:
             pI_list = [self.pI_list[i] for i in indices]
 
@@ -423,50 +426,43 @@ class GW_protein_pI(GW_protein):
     @staticmethod
     def make_protein_from_pdb(pdb_file:str, chain_id:str = None) ->'GW_protein_pI':
         """
-        Creates a GW_protein_pI object with the coordinate and sequence data from the 'pdb_file'
+        Creates a ``GW_protein_pI`` object with the coordinate and sequence data from the ``pdb_file``.
+
         :param pdb_file: Filepath to the .pdb file
         :param chain_id: Which chain(s) to use, None uses all chains
-        :return: A new 'GW_protein_pI' object
+        :return: A new ``GW_protein_pI`` object
+
         """
 
-        coords, pI_list ,seq = get_pdb_coords_pI(filepath = pdb_file, n = np.inf, median = True, chain_id = chain_id)
+        coords, pI_list ,seq = get_pdb_coords_pI(filepath = pdb_file, n = np.inf, median = False, chain_id = chain_id)
         name = re.findall(string = pdb_file, pattern = r'([^\/]+)\.pdb$')[0]
         if chain_id is not None:
             name += '_'+chain_id
-        # parser = PDB.PDBParser(QUIET=True)
-        # structure = parser.get_structure('protein', pdb_file)
-    
-        # # Extract sequence from structure
-        # sequence = ""
-        # for model in structure:
-        #     for chain in model:
-        #         if chain_id is not None and chain._id not in chain_id:
-        #             continue
-        #         for residue in chain:
-        #             if residue.get_id()[0] == ' ': 
-        #                 sequence += PDB.Polypeptide.protein_letters_3to1[residue.get_resname()]
-        #             elif 'UNK' in residue.get_resname():
-        #                 sequence += '*' #unkown
-        # assert len(sequence) == len(pI_list)
-        
+
         return GW_protein_pI(name = name, coords = coords, pI_list = pI_list,seq=seq)
 
 
 
         
+
    
     
     @controller.wrap(limits=1, user_api=controller.info()[-1]['user_api'])
     @staticmethod
-    def run_FGW(p1: 'GW_protein_pI', p2:'GW_protein_pI', alpha: float = 0.5, transport_plan: bool = False) -> Union[float, tuple[float, np.array]]:
+    def run_FGW(prot1: 'GW_protein_pI', prot2:'GW_protein_pI', alpha: float = 0.5, transport_plan: bool = False) -> Union[float, tuple[float, np.array]]:
         """
-        This calculates the fused Gromov-Wasserstein distance between two proteins. The computation is done with the Python 'ot' library. 
+        This calculates the fused Gromov-Wasserstein distance between two proteins. The computation is done with the Python ``ot`` library. 
+        
         :param p1: The first protein
         :param p2: The second protein
-        :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. A higher value of 'alpha' means more geometric weight, 'alpha' = 1 is equivalent to regular GW.
+        :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. A higher value of ``alpha`` means more geometric weight, ``alpha`` = 1 is equivalent to regular GW.
         :param transport_plan: Whether to return the computed transport plan
-        :return: Returns the FGW distance and transport plan if 'transport_plan'
+        :return: Returns the FGW distance and the optimal transport plan if ``transport_plan``
+
         """
+
+        p1, p2 = prot1,prot2
+
         assert 0 <= alpha <=1
         D1 = p1.ipdm
         D2 = p2.ipdm
@@ -539,25 +535,25 @@ class GW_protein_pI(GW_protein):
         
     @controller.wrap(limits=1, user_api=controller.info()[-1]['user_api'])
     @staticmethod
-    def run_FGW_seq_aln(p1:'GW_protein_pI', p2:'GW_protein_pI', alpha:float, n: int = np.inf,allow_mismatch:bool = True, transport_plan: bool = False) -> Union[float, tuple[float, np.array]]:
+    def run_FGW_seq_aln(prot1:'GW_protein_pI', prot2:'GW_protein_pI', alpha:float,allow_mismatch:bool = True) -> float:
         """
         This calculates the fused Gromov-Wasserstein distance between two proteins when applied just to aligned residues. 
-        It first applies sequence alignment, downsamples up to 'n' of the aligned residues, then applies FGW. 
-        :param p1: The first protein
-        :param p2: The second protein
-        :param n: The maximum number of residues to use (to reduce runtime).
-        :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. A higher value of 'alpha' means more geometric weight, 'alpha' = 1 is equivalent to regular GW.
-        :param transport_plan: Whether to return the computed transport plan
+        It first applies sequence alignment, downsamples up to the aligned residues, then applies FGW. 
+
+        :param prot1: The first protein
+        :param prot2: The second protein
+        :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. A higher value of ``alpha`` means more geometric weight, ``alpha = 1`` is equivalent to regular GW.
         :return: The FGW distance
+
         """
-        inds1, inds2 = GW_protein.run_ssearch_indices(p1 =p1, p2 = p2, allow_mismatch = allow_mismatch)
 
-        if n < len(inds1):
-            l,s = np.linspace(0, len(inds1), num=n, endpoint=False, dtype=int,retstep = True) #new method I'm trying
-            subindices = np.array([int(i + s//2) for i in l])
+        n = np.inf
 
-            inds1 = [inds1[i] for i in subindices]
-            inds2 = [inds2[i] for i in subindices]
+        p1, p2 = prot1 , prot2
+
+        inds1, inds2 = GW_protein.run_ssearch_indices(prot1 =p1, prot2 = p2, allow_mismatch = allow_mismatch)
+
+ 
             
         p3 = p1.downsample_by_indices(inds1)
         p4 = p2.downsample_by_indices(inds2)
@@ -565,32 +561,34 @@ class GW_protein_pI(GW_protein):
         return GW_protein_pI.run_FGW(p3,p4, alpha = alpha, transport_plan = transport_plan)
 
     def convolve_pIs(self, 
-        kernel_list :list[int], 
-        origin: int, 
+        kernel_list :list[int] = [1,2,3,2,1], 
+        origin: int = 2, 
         inplace :bool = False) -> list[float]:
         """
-        This method applies a convolution process to the 'GW_protein_pI' object which smoothes out the isoelectic points associated
+
+        This method applies a convolution process to the ``GW_protein_pI`` object which smoothes out the isoelectic points associated
         to each residue by combining them with those of nearby residues. The intended use is that this could be applied before downsampling
-        so that the isoelectric points of discarded residues is still preserved. That is done automatically with downsample_n(pI_combination = True),
-        so this is most useful when applied before run_FGW_seq_aln() as that method discards unaligned residues.
+        so that the isoelectric points of discarded residues is still preserved. That is done automatically with ``downsample_n(pI_combination = True)``,
+        so this is most useful when applied before ``run_FGW_seq_aln()`` as that method discards unaligned residues.
 
 
         The convolution works as follows: for each residue we make a virtual oligopeptide of copies of that residue and its neighbors, 
-        then use 'pI_iter_alg' to estimate the oligopeptide's isoelectric point. The number of copies is the entry of 'kernel_list', where the current residue is at position 'origin',
+        then use the Henderson–Hasselbalch-based algorithm to estimate the oligopeptide's isoelectric point. The number of copies is the entry of ``kernel_list``, where the current residue is at position ``origin``,
         The isoelectric contributions of the protein's N- and C-termini are accounted for similarly. 
 
 
 
 
 
-        We recommend that the 'kernel_list' is symmetric about index 'origin' and unimodal. 
-        For instance '[1,2,3,2,1]' and '2'.
+        We recommend that the ``kernel_list`` is symmetric about index ``origin`` and unimodal. 
+        For instance ``[1,2,3,2,1]`` with ``2``.
 
 
         :param kernel_list: The list of how many copies of nearby residues we use when smoothing the isoelectric points
-        :param origin: The index in the 'kernel_list' of the current residue
-        :param inplace: Whether this modifies 'self.pI_list' or returns a new list
-        :return: For 'inplace==False' the new, smoothed list of isoelectric point values. For 'inplace==True' nothing is returned.
+        :param origin: The index in the ``kernel_list`` of the current residue
+        :param inplace: Whether this modifies ``self.pI_list`` or returns a new list
+        :return: For ``inplace==False`` the new, smoothed list of isoelectric point values. For ``inplace==True`` nothing is returned.
+        
         """
 
 

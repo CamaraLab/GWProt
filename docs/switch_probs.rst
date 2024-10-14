@@ -14,4 +14,4 @@ This uses sparse matrices so may cause problems if ``T`` has many non-zero entri
 
 .. autofunction:: GWProt.switch_probs.max_rectangle_diagonal
 
- This algorithm is based on the solution to the classical maximal rectangle problem (as written up by David Vandevoorde)[https://drdobbs.com/database/the-maximal-rectangle-problem/184410529]
+ This algorithm is based on the solution to the classic maximal rectangle problem `as written up by David Vandevoorde <https://drdobbs.com/database/the-maximal-rectangle-problem/184410529>`_.

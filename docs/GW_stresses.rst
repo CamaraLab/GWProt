@@ -1,2 +1,0 @@
-Gromov Wasserstein Stresses
-============================

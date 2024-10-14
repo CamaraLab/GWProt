@@ -101,6 +101,7 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, chain1:str
     This loads two pdb files and display them in Pymol and aligns them with a transport plan, then saves the scene to a .pse file.
     A rigid alignment is created minimizing weighted RSMD. Note that if Pymol 2 is used it uses ``cmd.cealign`` instead. 
     For a pair of aligned residues, a line will connect them if over ``threshold`` of each of their mass is connected. The proteins are also colored by the stress levels.
+    
     :param file1: Filepath to the first protein.
     :param file2: Filepath to the second protien.
     :param output_file: Filepath where the resulting file should be saved to.
@@ -108,6 +109,7 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, chain1:str
     :param chain2: Which chain of the second protein to use, default is ``A``.
     :param transport_plan: A transport plan to align the two proteins. If none is provided one will be calculated with ``GW_protein.run_GW``.
     :param threshold: The threshold for displaying aligned residues. 
+
     """
     p1 = GW_protein.make_protein_from_pdb(file1,chain_id = chain1)
     p2 = GW_protein.make_protein_from_pdb(file2 ,chain_id = chain2)
@@ -175,10 +177,12 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, chain1:str
 def show_proteins_with_values(infiles: list[str], chain_ids : list[str],  data_lists: list[float], output_file: str, hide: bool = True)->None:
     """    
     This loads pdb files and display them in Pymol with colors based on the ``data_lists``, then saves the scene to a .pse file.
+    
     :param infiles: Filepaths to the first protein.
     :param chain_ids: Which chains of the proteins to use, a value must be entered for each.
     :param output_file: Filepath where the resulting file should be saved to.
     :param hide: Whether to hide the chains that aren't selected.
+    
     """
     if len(infiles) != len(chain_ids):
         raise ValueError('The number of input files must match the number of chain_ids given. The latter can contain None')

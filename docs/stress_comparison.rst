@@ -10,7 +10,10 @@ This module stores the transport plans between all pairs of proteins, thus is ve
 Setting ``RAM = False`` saves these to files, but significantly slows down computations due to file I/O. 
 
 
-These two methods run all pairwise computations. For each pair of proteins they run GW/FGW, store the distance, transport plan, and associated stresses. One of these must be run before any of the latter methods are called. 
+**Calculating Stresses and Distances**
+-----------------------------
+
+These three methods run all pairwise computations. For each pair of proteins they run GW/FGW, store the distance, transport plan, and associated stresses. One of these must be run before any of the latter methods are called. 
 
 As these involve a large number of computations, they have the potential to be time consuming on large datasets.
 
@@ -21,34 +24,50 @@ As these involve a large number of computations, they have the potential to be t
 .. autofunction:: GWProt.stress_comparison.Stress_Comparison.FGW_compute_stresses_dict
 
 
-
+These two method must be run after computing the stresses:
 
 .. autofunction:: GWProt.stress_comparison.Stress_Comparison.get_GW_dmat
 
-This method returns the distance matrix computed with ``GW_compute_stresses`` or ``FGW_compute_stresses``, so must be run after one of them. The ijth entry is the (F)GW distance between the ith and jth entries in ``self.prot_list``.
+
+
+.. autofunction:: GWProt.stress_comparison.normalize_stress_dict
+
+This method combines the raw stresses which have multiple stress array for each protein to a single stress array for each protein.
+
+For each protein it return the ``normalized_stress`` calculated below, where the rows of ``mat`` are its different stresses in the raw stress dict:
+
+.. code-block:: python
+
+	a, b, c, d = code
+	normalized_stress = np.sum(mat**a * (np.sum(mat**b, axis=1) ** c)[:, np.newaxis] * mat.shape[1] ** d,axis=0)
+
+
+**Transferring Stresses**
+------------------------
+
 
 
 .. autofunction:: GWProt.stress_comparison.Stress_Comparison.raw_transferred_stresses
 
+This is in the same format as ``self.raw_stress_dict`` so must be normalized before further use. 
 
 
 
+**Analysis Helper Methods**
+-----------------------------
 
-We also have several helper methods not part of the ``Stress_Comparison`` class but can be useful for analyzing stresses:
+We also havehelper methods not part of the ``Stress_Comparison`` class but can be useful for analyzing stresses.
 
-.. autofunction:: GWProt.stress_comparison.normalize_stress_dict
-
-.. autofunction:: GWProt.stress_comparison.get_AP_scores
-
-.. autofunction:: GWProt.stress_comparison.mean_AP_scores
-
-
-.. autofunction:: GWProt.stress_comparison.single_threshold_AP_score
-
-.. autofunction:: GWProt.stress_comparison.avgd_single_threshold_AP_score
-
-.. autofunction:: GWProt.stress_comparison.z_single_threshold_AP_score
 
 
 .. autofunction:: GWProt.stress_comparison.get_percentile_of_dict
+
+
+.. autofunction:: GWProt.stress_comparison.get_AP_scores
+
+
+
+
+
+
 

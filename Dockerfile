@@ -56,6 +56,7 @@ RUN  pip install pot `
  umap-learn==0.5.3 `
  multiprocess `
 cython `
+blosum `
 sparse `
 Bio `
 statistics `

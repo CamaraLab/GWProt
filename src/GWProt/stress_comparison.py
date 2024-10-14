@@ -33,7 +33,17 @@ class Stress_Comparison:
     :param prot_list: A list of ``GW_protein.GW_protein`` objects
     :param RAM: Whether to store the computed transport plans in RAM versus saving to files. Default is in RAM.
     :param transport_dir: If ``RAM == False``, a filepath to save the transport plans in.
-    :ivar raw_stress_dict: TESTING
+    :ivar name_list: A list of the names of the ``GW_protein``s in ``prot_list``, equivalent to ``[p.name for p in prot_list]``.   
+        This serves as the keys for the dicts.
+    :ivar raw_stress_dict: A dict storing all computed stresses. 
+        Where ``raw_stress_dict[prot1.name][prot1.name]`` is the stress of the residues in ``prot1`` when aligning it to ``prot2``.
+    :ivar dist_dict: A dict storing all computed GW or FGW distances. 
+        Where ``dist_dict[prot1.name][prot1.name]`` is the GW or FGW distance between ``prot1`` and ``prot2``.
+    :ivar transport_dict: A dict storing all computed transport plans; only used if ``RAM ==True``. 
+        Where ``transport_dict[prot1.name][prot1.name]`` is the transport plan aligning ``prot1`` to ``prot2``.
+    :ivar transport_dir: A filepath to the directory where transport plans are stored if ``RAM ==False``.
+    
+
     """
     
     def __init__(self,
@@ -110,10 +120,14 @@ class Stress_Comparison:
         return name1, name2, c, s1, s2, T 
 
 
+
     def GW_compute_stresses(self, processes: int = None) -> None:
         """
-        This method runs all pairwise GW computations. This can be done in parallel with `processes` number of processes.
+
+        This method runs all pairwise GW computations. This can be done in parallel with ``processes`` number of processes.
+        
         :param processes: How many parallel processes to run, default is 1. 
+
         """
 
         
@@ -178,9 +192,11 @@ class Stress_Comparison:
     def FGW_compute_stresses_data_lists(self, data_list_dict : dict, alpha: float, processes: int = None) -> None: 
         """
         This method runs all pairwise FGW computations with ``GW_protein.run_FGW_data_lists``. This can be done in parallel with ``processes`` number of processes.
+        
         :param data_list_dict: A dictionary of {name: data_list} for ``GW_protein.run_FGW_data_lists``
         :param processes: How many parallel processes to run, default is 1. 
         :param alpha: The value of alpha to use for FGW.
+
         """
 
         if set(data_list_dict.keys()) != set(self.name_list):
@@ -237,12 +253,16 @@ class Stress_Comparison:
         c, T = GW_protein.run_FGW_diff_mat(p1=p1, p2=p2, alpha = alpha, diff_mat = M, transport_plan = True)
         s1, s2 = GW_protein.FGW_stress(prot1= p1,prot2 = p2, alpha = alpha, diff_mat = M, T= T)     
         return name1, name2, c, s1, s2, T 
+        
     def FGW_compute_stresses_dict(self, diff_dict : dict, alpha: float, processes: int = None) -> None: 
         """
+
         This method runs all pairwise FGW computations with ``GW_protein.run_FGW_dict``. This can be done in parallel with ``processes`` number of processes.
+        
         :param data_list_dict: A dictionary for ``GW_protein.run_FGW_dict``
         :param processes: How many parallel processes to run, default is 1. 
         :param alpha: The value of alpha to use for FGW.
+
         """
 
 
@@ -286,11 +306,16 @@ class Stress_Comparison:
 
 
 
-    def raw_transferred_stresses(self, stress_dict: dict) ->dict:
+    def raw_transferred_stresses(self, stress_dict: dict[str,np.array]) ->dict[str,dict[str,np.array]]:
         """
+
         This method computes all of the transferred stresses. 
-        :param stress_dict: A dictionary of the form ``{name: np.array}`` with keys the protein names in `self.name_list', where the arrays represent the stresses of each residue.
-        :return dict: 
+        
+        :param stress_dict: A dictionary of the form ``{name: np.array}`` with keys the protein names in ``self.name_list``, where the arrays represent the stresses of each residue.
+        :return dict: A dictionary of all transferred stresses where
+                Where ``raw_transferred_stress[prot1.name][prot1.name]`` is the stress of the residues in ``prot1`` based on the transferred stress from ``prot2``.
+
+
         """
         assert set(stress_dict.keys()) == set(self.name_list)
         assert self.computed_flag
@@ -317,8 +342,12 @@ class Stress_Comparison:
 
     def get_GW_dmat(self) -> np.array:
         """
-        This method returns the GW distances of ``self`` in the form of a distance matrix.
+
+        This method returns the GW or FGW distances of ``self`` in the form of a distance matrix. 
+        The indexing is that of ``self.prot_list``
+        
         :return: np.array
+        
         """
 
         assert self.computed_flag
@@ -341,13 +370,19 @@ class Stress_Comparison:
 
 
 
-def normalize_stress_dict(raw_dict, code: tuple[float,float,float,float] =(1, 0, 0, 0)): 
+def normalize_stress_dict(raw_dict: dict[str,dict[str,np.array]], code: tuple[float,float,float,float] =(1, 0, 0, 0)) -> dict[str,np.array]: 
     """
-    This method takes in a dictionary of raw stress and outputs a weighted average.
+    This method takes in a dictionary of raw stress and outputs a dictionary of weighted averages.
 
-    :param raw_dict:
-    :param code: The default is (1,0,0,0) which corresponds to the simple average
-    :return dict:
+    :param raw_dict: A dictionary of raw stresses of the format ``raw_dict[name1][name2] == stress``.
+    :param code: This is a tuple of exponents to be used for weighting.
+        ``code[0]`` is the exponent for each stress value, 
+        ``code[1]`` is the exponent for each stress value to be summed, 
+        ``code[2]`` is the exponent of the total stress in a row,
+        ``code[3]`` is the exponent for the number of other proteins.
+        The default is (1,0,0,0) which corresponds to the simple sum.
+    :return dict: A dictionary of stresses of the format ``stress_dict[name]== stress``
+    
     """
     a, b, c, d = code
     norm_stresses_dict = {}
@@ -361,14 +396,32 @@ def normalize_stress_dict(raw_dict, code: tuple[float,float,float,float] =(1, 0,
     return norm_stresses_dict
 
 
-def get_percentile_of_dict(stress_dict):
+def get_percentile_of_dict(stress_dict: dict[str,np.array]) ->dict[str,np.array]:
+    """
+    This method replaces each stress array with the percentile values of the stresses for that protein.
+
+    :param stress_dict: A dict of the stress levels for each protein.
+    :return: A dict of the percentiles of the stress levels at each residue for each protein.
+
+    """
     return {
         k: scipy.stats.percentileofscore(stress_dict[k], stress_dict[k])
         for k in stress_dict.keys()
     }
 
 
-def get_AP_scores(stress_dict, true_region_dict, upper = False ):
+def get_AP_scores(stress_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]], upper = False ) ->dict[str, float]:
+    """
+    This method takes a stress dict and calculates the average precision for each protein
+     of using the stresses to predict user-inputted regions in the proteins
+
+    :param stress_dict: A dict of the stress levels for each protein.
+    :param true_region_dict: A dict of the true regions to be predicted.
+    :param upper: Whether to predict the regions based on high stress (``True``) or low stress (``False``)
+    :return: A dict of the average precision scores for each protein.
+
+    """
+
     if upper:
             AP_dict = {
             name: sklearn.metrics.average_precision_score(
@@ -386,87 +439,87 @@ def get_AP_scores(stress_dict, true_region_dict, upper = False ):
     return AP_dict
 
 
-def mean_AP_scores(stress_dict, true_region_dict,upper = False ):
-    if upper:
-        return np.mean(
-            [
-                metrics.average_precision_score(
-                    y_true=true_region_dict[name],
-                    y_score=[ s for s in stress_dict[name]],
-                )
-                for name in stress_dict.keys()
-            ]
-        )
+# def mean_AP_scores(stress_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]],upper = False ):
+#     if upper:
+#         return np.mean(
+#             [
+#                 metrics.average_precision_score(
+#                     y_true=true_region_dict[name],
+#                     y_score=[ s for s in stress_dict[name]],
+#                 )
+#                 for name in stress_dict.keys()
+#             ]
+#         )
         
-    else:
-        return np.mean(
-            [
-                metrics.average_precision_score(
-                    y_true=true_region_dict[name],
-                    y_score=[1 - s for s in stress_dict[name]],
-                )
-                for name in stress_dict.keys()
-            ]
-        )
+#     else:
+#         return np.mean(
+#             [
+#                 metrics.average_precision_score(
+#                     y_true=true_region_dict[name],
+#                     y_score=[1 - s for s in stress_dict[name]],
+#                 )
+#                 for name in stress_dict.keys()
+#             ]
+#         )
 
 
-def single_threshold_AP_score(normalized_stress_dict, true_region_dict, upper = False ):
-    full_stresses = []
-    full_true_regions = []
-    for name in list(stress_dict.keys()):
-        full_stresses += list(normalized_stress_dict[name])
-        full_true_regions += list(true_region_dict[name])
+# def single_threshold_AP_score(stress_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]],  upper = False ):
+#     full_stresses = []
+#     full_true_regions = []
+#     for name in list(stress_dict.keys()):
+#         full_stresses += list(stress_dict[name])
+#         full_true_regions += list(true_region_dict[name])
 
-    if upper:
-        return metrics.average_precision_score(
-        y_true=np.array(full_true_regions),
-        y_score=np.array([ s for s in full_stresses]),
-        )
-    else:
-        return metrics.average_precision_score(
-            y_true=np.array(full_true_regions),
-            y_score=np.array([1 - s for s in full_stresses]),
-        )
-
-
-def avgd_single_threshold_AP_score(normalized_stress_dict, true_region_dict, upper = False ):
-    avgd_full_stresses = []
-    full_true_regions = []
-    for name in list(stress_dict.keys()):
-        avgd_full_stresses += list(
-            normalized_stress_dict[name] / np.mean(normalized_stress_dict[name])
-        )
-        full_true_regions += list(true_regions_dict[name])
-
-    if upper:
-        return metrics.average_precision_score(
-            y_true=np.array(full_true_regions),
-            y_score=np.array([s for s in avgd_full_stresses]),
-        )
-    else:
-        return metrics.average_precision_score(
-            y_true=np.array(full_true_regions),
-            y_score=np.array([1 - s for s in avgd_full_stresses]),
-        )
+#     if upper:
+#         return metrics.average_precision_score(
+#         y_true=np.array(full_true_regions),
+#         y_score=np.array([ s for s in full_stresses]),
+#         )
+#     else:
+#         return metrics.average_precision_score(
+#             y_true=np.array(full_true_regions),
+#             y_score=np.array([1 - s for s in full_stresses]),
+#         )
 
 
-def z_single_threshold_AP_score(normalized_stress_dict, true_region_dict , upper = False):
-    z_full_stresses = []
-    full_true_regions = []
-    for name in list(stress_dict.keys()):
-        z_full_stresses += list(scipy.stats.zscore(normalized_stress_dict[name]))
-        full_true_regions += list(true_region_dict[name])
+# def avgd_single_threshold_AP_score(stress_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]],  upper = False ):
+#     avgd_full_stresses = []
+#     full_true_regions = []
+#     for name in list(stress_dict.keys()):
+#         avgd_full_stresses += list(
+#             stress_dict[name] / np.mean(stress_dict[name])
+#         )
+#         full_true_regions += list(true_regions_dict[name])
 
-    if upper:
-        return metrics.average_precision_score(
-            y_true=np.array(full_true_regions),
-            y_score=np.array([s for s in z_full_stresses]),
-        )
-    else:
-        return metrics.average_precision_score(
-            y_true=np.array(full_true_regions),
-            y_score=np.array([1 - s for s in z_full_stresses]),
-        )
+#     if upper:
+#         return metrics.average_precision_score(
+#             y_true=np.array(full_true_regions),
+#             y_score=np.array([s for s in avgd_full_stresses]),
+#         )
+#     else:
+#         return metrics.average_precision_score(
+#             y_true=np.array(full_true_regions),
+#             y_score=np.array([1 - s for s in avgd_full_stresses]),
+#         )
+
+
+# def z_single_threshold_AP_score(stress_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]],  upper = False) ->float:
+#     z_full_stresses = []
+#     full_true_regions = []
+#     for name in list(stress_dict.keys()):
+#         z_full_stresses += list(scipy.stats.zscore(stress_dict[name]))
+#         full_true_regions += list(true_region_dict[name])
+
+#     if upper:
+#         return metrics.average_precision_score(
+#             y_true=np.array(full_true_regions),
+#             y_score=np.array([s for s in z_full_stresses]),
+#         )
+#     else:
+#         return metrics.average_precision_score(
+#             y_true=np.array(full_true_regions),
+#             y_score=np.array([1 - s for s in z_full_stresses]),
+#         )
 
 
 

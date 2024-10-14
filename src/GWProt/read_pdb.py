@@ -150,7 +150,7 @@ def get_pdb_coords_pI(
     pI_segment_list = []
     #print('test2')
     #figure out how to deal with N, C terminii
-    #assumes first is N, last is C
+    #assumes first is N, last is 
     
     
     for i in range(len(coord_segments)):

@@ -4,8 +4,7 @@
 Welcome to GWProt's documentation!
 ===================================
 
-**GWProt**  is a Python library for applying Gromov-Wasserstein to protein morphology.
-`Cámara Lab <https://camara-lab.org/>`_
+**GWProt**  is a Python library for applying Gromov-Wasserstein to protein morphology developed by the `Cámara Lab <https://camara-lab.org/>`_
 
 
 
@@ -13,10 +12,12 @@ Welcome to GWProt's documentation!
 
    This project is under active development. Documentation and code will be updated continuously
 
-Installation:
+**Installation:**
+GWProt can be installed by running
+
 ``pip install GWProt@git+https://github.com/CamaraLab/GWProt``
 
-
+in a terminal window. 
 
 
 
@@ -37,11 +38,11 @@ Installation:
 
    GW_protein
    GW_protein_pI
+   FGW_matrices
    stress_comparison
    switch_probs
    pymol_protein_viewer
    weighted_alignment
-   FGW_matrices
    
 
 

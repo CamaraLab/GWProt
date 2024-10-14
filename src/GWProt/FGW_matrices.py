@@ -123,12 +123,15 @@ def dict_to_mat(d):
             M[j,i] = d[keys[i]][keys[j]]
     return M
 
-def get_BLOSUM_dict(int:n = 62)-> dict[str , dict[str ,float]]
+def get_BLOSUM_dict(n:int = 62)-> dict[str , dict[str ,float]]:
     """
+
     This method calculates a difference dictionary derived from the BLOSUM matrices.
+
     :param n: Which BLOSUM matrix to use, must be 45,50,62,80, or 90.
     :return: dict 
     """
+
 
     if n not in [45,50,62,80,90]:
         raise ValueError("n must be 45,50,62,80, or 90")
@@ -143,8 +146,11 @@ def get_BLOSUM_dict(int:n = 62)-> dict[str , dict[str ,float]]
 
 def get_Grantham_dict()-> dict[str , dict[str ,float]]:
     """
+
     This method retrieves the Grantham amino acid difference scores.
+
     :return: dict
+
     """
     
     # raw = True,
@@ -197,9 +203,12 @@ def get_Grantham_dict()-> dict[str , dict[str ,float]]:
 
 def get_pI_dict()->dict[str , dict[str ,float]]:
     """
+
     This method calculates a dictionary of difference between the Solomon isoelectric point values of different amino acids.
     (It ignores the termini)
+
     :return: A dictionary
+
     """
 
     solomon = {"K" :  10.5,
@@ -227,9 +236,12 @@ def get_pI_dict()->dict[str , dict[str ,float]]:
 
 def get_pI_list(prot:GW_protein)->list[float]:
     """
+
     This method calculates a list of isoelectric point values of residues in a protein. 
     It assumes both termini are included.
+
     :return: A list of the Solomon isoelectric point values.
+
     """
 
     solomon = {"K" :  10.5,
@@ -255,8 +267,11 @@ def get_pI_list(prot:GW_protein)->list[float]:
 
 def get_hydrophobicity_list(prot: GW_protein) -> list[float]:
     """
+
     This method calculates a list of hydrophobicity values of residues in a protein. 
+
     :return: A list
+
     """
 
     # Source: http://us.expasy.org/tools/pscale/Hphob.Eisenberg.html
@@ -293,7 +308,9 @@ def get_hydrophobicity_list(prot: GW_protein) -> list[float]:
 
 def get_hydrophobicity_dict() -> dict[str , dict[str ,float]]:
     """
+
     This method calculates a dictionary of differences in hydrophobicity values.
+    
     :return: A dictionary
     
     """

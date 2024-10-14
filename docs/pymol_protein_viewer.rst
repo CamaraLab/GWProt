@@ -9,4 +9,5 @@ This module generates Pymol scene files files (.pse) which require the Pymol GUI
 
 .. autofunction:: GWProt.pymol_protein_viewer.compare_proteins_in_pymol
 
+
 .. autofunction:: GWProt.pymol_protein_viewer.show_proteins_with_values

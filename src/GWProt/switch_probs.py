@@ -23,8 +23,11 @@ import mpl_toolkits.axisartist.floating_axes as floating_axes
 
 def visualize_switch_probabibilities(A: np.array) -> None:
     """
+
     This method displays a switch probability matrix with matplotlib.
+
     :param A: The switch probability matrix to display; only the upper triangular part of it is used.
+
     """
     N = A.shape[0]    
     fig = plt.figure()
@@ -78,9 +81,11 @@ def get_switch_prob(T: np.array, prot_num: int = 0) -> np.array:
     """
     Calculates the probability that the order of two residues are switched or not when the transport plan is applied.
     This can be used to detect circular permutations between two proteins. 
+
     :param T: The transport plan to use
     :param prot_num: Which protein to use, 0 uses the 0th axis of ``T``, 1 uses the 1st axis.
     :return: A square np.array whose *ij*th entry is the probability that residues *i* and *j* are kept in the same order. 
+    
     """
     
     if prot_num == 1:
@@ -117,9 +122,12 @@ def get_switch_prob(T: np.array, prot_num: int = 0) -> np.array:
 
 def preprocess(A: np.array) -> np.array:
     """
+
     Processes a switch probability matrix for applying ``max_rectangle_diagonal``
+
     :param A: A switch probability matrix
     :return: A processed switch probability matrix
+
     """
     kernel = np.ones((5,5))
     mat2 = oaconvolve(A, kernel, mode = 'same')/np.sum(kernel)
@@ -187,10 +195,13 @@ def _histogram_area_helper_diag(histogram,j, min = 0):
 
 def max_rectangle_diagonal(A : np.array, min: int = 0) -> tuple[int, tuple[int,int,int,int]]: 
     """
+
     This method finds the area and coordinates of the largest rectange in an array containing only nonzero entries, with a corner on the main diagonal.
+    
     :param A: The array
     :param min: Rectangles whose width or height are below ``min`` are not considered
     :return: This returns the maximal area and the coordinates of the rectangle in the tuple ``(max_area, (left,  right, bottom, top ))`` 
+    
     """
     
     mat = (A).astype(int)
