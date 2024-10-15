@@ -495,21 +495,20 @@ class GW_protein_pI(GW_protein):
 
 
     @staticmethod
-    def FGW_stress(prot1: 'GW_protein_pI', prot2:'GW_protein_pI',  alpha: float, T : np.array,diff_mat: np.array = None):
+    def FGW_stress(prot1: 'GW_protein_pI', prot2:'GW_protein_pI',  alpha: float, T : np.array):
     #now with FGW stress
         n1= len(prot1)
         n2 = len(prot2)
         assert T.shape == (n1,n2)
         assert 0 <= alpha <= 1
 
-        if diff_mat is None:
-            a = np.array([np.array([x]) for x in pI1])
-            b = np.array(pI2)
-            aa = np.broadcast_to(a,(n1,n2))
-            bb = np.broadcast_to(b,(n1,n2))
-            M = abs(aa-bb)
-        else:
-            M = diff_mat
+        
+        a = np.array([np.array([x]) for x in pI1])
+        b = np.array(pI2)
+        aa = np.broadcast_to(a,(n1,n2))
+        bb = np.broadcast_to(b,(n1,n2))
+        M = abs(aa-bb)
+        
 
 
         A = prot1.ipdm

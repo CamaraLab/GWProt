@@ -61,11 +61,17 @@ Downsampling reduces the number of residues used so has the effect of speeding u
 The methods for computing the Gromov-Wasserstein distance use the `CAJAL library <https://github.com/CamaraLab/CAJAL/tree/main>`_ , also created by the CámaraLab, for efficient computation. 
 
 
-.. autofunction:: GWProt.GW_protein.GW_protein.make_GW_cell
-
-.. autofunction:: GWProt.GW_protein.GW_protein.run_GW_from_cells
-
 .. autofunction:: GWProt.GW_protein.GW_protein.run_GW
+
+This is a wrapper for the following two functions:
+
+.. autofunction:: GWProt.GW_protein.GW_protein.make_cajal_cell
+
+.. autofunction:: GWProt.GW_protein.GW_protein.run_GW_from_cajal
+
+
+.. autofunction:: GWProt.GW_protein.GW_protein.run_GW_seq_aln
+
 
 
 As this uses CAJAL, there is the ability to use other functionalities from CAJAL.
@@ -124,7 +130,6 @@ Explicity this runs the command
 
 for the Smith-Waterman algorithm in the `Fasta Package <https://github.com/wrpearson/fasta36>`_.
 
-.. autofunction:: GWProt.GW_protein.GW_protein.run_GW_seq_aln
 
 
 

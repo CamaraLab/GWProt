@@ -18,9 +18,10 @@ where lower stress regions could indicate active sites.
 In another example, higher stress regions can indicate flexible switch regions when comparing multiple files of the same or similar proteins. 
 
 In practice, it is better to average the stresses associated to GW computations across multiple proteins 
-than using the stresses associated to a single comparison.
+than using the stresses associated to a single comparison. It is not recommended to use stresses of downsampled proteins.
 
-WARNING - this version of stress is unrelated to chemical forces acting within a protein or the frustration of a protein conformation.
+.. warning:: 
+	This notion of stress is unrelated to chemical forces acting within a protein or the frustration of a protein conformation.
 
 We can also define the **fused stress** when using fused GW. Similarly it is a single residue's contribution to the FGW distance.
 Formally:

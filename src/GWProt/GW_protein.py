@@ -145,34 +145,36 @@ class GW_protein:
             return GW_protein(seq = self.seq, ipdm = m, coords = None, name = self.name+'_scaled', scaled_flag = True, distribution = self.distribution)
 
 
-    def make_GW_cell(self) -> gw_cython.GW_cell:
+    def make_cajal_cell(self) -> gw_cython.GW_cell:
 
         """
-        This method makes a ``gw_cython.GW_cell`` object from the CAJAL library. 
+        This method makes a ``cajal.gw_cython.GW_cell`` object from the CAJAL library. 
 
-        :return: A ``gw_cython.GW_cell`` object representing ``self``.
+        :return: A ``cajal.gw_cython.GW_cell`` object representing ``self``.
+
         """
 
         return gw_cython.GW_cell(self.ipdm,  self.distribution)
             
     @controller.wrap(limits=1, user_api=controller.info()[-1]['user_api'])
     @staticmethod       
-    def run_GW_from_cells(
-        cell1:gw_cython.GW_cell  , 
-        cell2: gw_cython.GW_cell,
+    def run_GW_from_cajal(
+        cajal_cell1:gw_cython.GW_cell  , 
+        cajal_cell2: gw_cython.GW_cell,
         transport_plan:bool = False) -> Union[float, tuple[float, np.array]]:
 
         """
-        This is a wrapper for the CAJAL code to compute the GW distance between ``cell1`` and ``cell2``, 
+        This is a wrapper for the CAJAL code to compute the GW distance between ``cajal_cell1`` and ``cajal_cell2``, 
         outputs the computed transport plan if ``tranport_plan``.
 
-        :param cell1:
-        :param cell2:
+        :param cajal_cell1:
+        :param cajal_cell2:
         :param transport_plan: Whether to return the computed transport plan
         :return: Returns the GW distance and optimal transport plan if ``transport_plan``
+
         """
 
-        return GW_identity_init(cell1, cell2, transport_plan= transport_plan)
+        return GW_identity_init(cajal_cell1, cajal_cell2, transport_plan= transport_plan)
         
     @controller.wrap(limits=1, user_api=controller.info()[-1]['user_api'])
     @staticmethod       
@@ -181,8 +183,7 @@ class GW_protein:
         transport_plan:bool = False) -> Union[float, tuple[float, np.array]]:
 
         """
-        This is a wrapper for the CAJAL code to create gw_cython.GW_cell objects then compute the GW distance between them.
-        Returns the GW distance and transport plan if ``transport_plan``.
+        Computes the GW distance and transport plan if ``transport_plan``.
 
         :param prot1:
         :param prot2:
@@ -192,9 +193,9 @@ class GW_protein:
 
         P1, P2 = prot1, prot2
 
-        cell_1 = P1.make_GW_cell()
-        cell_2 = P2.make_GW_cell()
-        return GW_protein.run_GW_from_cells(cell_1, cell_2, transport_plan = transport_plan)
+        cell_1 = P1.make_cajal_cell()
+        cell_2 = P2.make_cajal_cell()
+        return GW_protein.run_GW_from_cajal(cell_1, cell_2, transport_plan = transport_plan)
 
 
     def downsample_by_indices(self, 

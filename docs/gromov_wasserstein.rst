@@ -19,6 +19,10 @@ As a starting point we can form a one to one pairing :math:`f` between the resid
 However this in not computable in practice as the number of possibilities for :math:`f` grows on the order of :math:`|X|!`. 
 
 
+.. image:: Capture.PNG
+	:width: 500
+
+
 Thus we adjust our approach by turning it into a continuous problem which can be efficiently approximated[1]. 
 To do this we give each protein a mass of 1 and distribute it evenly among its residues, we call this a *distribution*. 
 Aligning two proteins of lengths `n` and `m` then amounts to transferring the mass of one protein the the other. We call this assignment a *transport plan* and represent it as a *n x m* matrix where each column sums to *1/m* and each row sums to *1/n*. 

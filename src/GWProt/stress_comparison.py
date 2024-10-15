@@ -53,7 +53,7 @@ class Stress_Comparison:
 
         self.prot_list = prot_list
         self.name_list = [p.name for p in prot_list]
-        self.cell_dict = {p.name: p.make_GW_cell for p in prot_list}
+        self.cell_dict = {p.name: p.make_cajal_cell for p in prot_list}
         self.RAM_flag = RAM
         
         if RAM:
@@ -101,7 +101,7 @@ class Stress_Comparison:
         name2 = p2.name 
         cell1 = self.cell_dict[name1]
         cell2 = self.cell_dict[name2]
-        c, T = GW_protein.run_GW_from_cells(cell1, cell2, transport_plan = True)
+        c, T = GW_protein.run_GW_from_cajal(cell1, cell2, transport_plan = True)
         s1, s2 = GW_protein.GW_stress(p1,p2, T)     
         return name1, name2, c, s1, s2, T 
 
@@ -115,7 +115,7 @@ class Stress_Comparison:
         name2 = p2.name 
         #cell1 = self.cell_dict[name1]
         #cell2 = self.cell_dict[name2]
-        c, T = GW_protein.run_GW_from_cells(cell1, cell2, transport_plan = True)
+        c, T = GW_protein.run_GW_from_cajal(cell1, cell2, transport_plan = True)
         s1, s2 = GW_protein.GW_stress(p1,p2, T)     
         return name1, name2, c, s1, s2, T 
 

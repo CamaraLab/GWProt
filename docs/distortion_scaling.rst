@@ -14,9 +14,11 @@ We choose a *scaling function* :math:`f` such that :math:`f(0) = 0`, :math:`f` i
 We can use distortion scaling with FGW the same way as with GW. The only difference is we must use a larger value of ``alpha``; we found 0.5 to work well with isoelectric points.
 
 
-Warning - Do not use GW or FGW to compare a scaled protein and and unscaled one. Similarly do not compare two proteins scaled with different scaling functions. The resulting numbers will be meaningless.
+.. warning::
+	 Do not use GW or FGW to compare a scaled protein and and unscaled one. Similarly do not compare two proteins scaled with different scaling functions. The resulting numbers will be meaningless.
 
-Warning - The distances given by GW or FGW after scaling will be smaller than those without scaling. We cannot directly compare distances between scaled proteins with distances between unscaled ones; similarly we cannot compare distances from two different scaling functions.
+.. warning::
+	 The distances given by GW or FGW after scaling will be smaller than those without scaling. We cannot directly compare distances between scaled proteins with distances between unscaled ones; similarly we cannot compare distances from two different scaling functions.
 
 
 

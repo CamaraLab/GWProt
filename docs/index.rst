@@ -32,6 +32,16 @@ in a terminal window.
 
 
 
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Examples
+
+   Examples/Example_1_Comparing_KRAS_Proteins
+   Examples/Example_2_Circular_Permutations
+   Examples/Example_3_Clustering_RdRps
+
 .. toctree::
    :maxdepth: 2
    :caption: API
@@ -40,21 +50,11 @@ in a terminal window.
    GW_protein_pI
    FGW_matrices
    stress_comparison
-   switch_probs
+   switch_probabilities
    pymol_protein_viewer
    weighted_alignment
    
 
-
-
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Examples
-
-   Examples/Example_1_Comparing_KRAS_Proteins
-   Examples/Example_2_Clustering_RdRps
-   Examples/Example_3_Circular_Permutations
 
 
 

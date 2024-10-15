@@ -77,7 +77,7 @@ def visualize_switch_probabibilities(A: np.array) -> None:
     
     plt.show()
 
-def get_switch_prob(T: np.array, prot_num: int = 0) -> np.array:
+def get_switch_probabilities(T: np.array, prot_num: int = 0) -> np.array:
     """
     Calculates the probability that the order of two residues are switched or not when the transport plan is applied.
     This can be used to detect circular permutations between two proteins. 
