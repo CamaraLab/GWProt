@@ -1,8 +1,5 @@
-GWProt - Gromov-Wasserstein for Protein Structual Alignment
-=======================================
 
-# <a><img src="docs/GWProt_logo.png" align="right" width="24%"/></a>
-
+# GWProt - Gromov-Wasserstein for Protein Structual Alignment <a href='https://github.com/CamaraLab/GWProt'><img src="docs/images/logo.png" align="right" width="24%"/></a>
 
 GWProt is a Python library for structural alignment of proteins using the Gromov-Wasserstein distance.
 Currently it requires PDB (Protein Data Bank) files of proteins.
