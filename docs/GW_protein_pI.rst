@@ -27,7 +27,7 @@ Then we can downsample:
 
 
 **Computing FGW and Stress**
----------------------
+----------------------------------
 
 As ``GW_protein_pI`` objects only use isoelectric points, the FGW methods are simpler:
 

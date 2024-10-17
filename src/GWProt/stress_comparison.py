@@ -79,7 +79,7 @@ class Stress_Comparison:
             del self.raw_stress_dict[n][n]
 
         self.computed_flag = False
-        self.cell_dict= {p.name : p.make_GW_cell() for p in prot_list}
+        self.cell_dict= {p.name : p.make_cajal_cell() for p in prot_list}
 
 
     def _load_transport_plan(self,name1,name2):

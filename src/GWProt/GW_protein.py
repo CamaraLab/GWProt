@@ -111,7 +111,7 @@ class GW_protein:
 
         """
 
-        Runs a local sequence alignment returns the indices of the two proteins which are aligned.
+        Runs a local sequence alignment returns the indices of the two proteins which are aligned. ssearch36 must be in the PATH to use this method.
         
         :param prot1: First protein
         :param prot2: Fecond protein
@@ -594,7 +594,7 @@ class GW_protein:
     def run_GW_seq_aln(prot1:'GW_protein', prot2:'GW_protein',  allow_mismatch:bool = True) -> float:
         """
         This calculates the Gromov-Wasserstein distance between two proteins when applied just to aligned residues. 
-        It first applies sequence alignment, downsamples to the aligned residues, then applies GW. 
+        It first applies sequence alignment, downsamples to the aligned residues, then applies GW. ssearch36 must be in the PATH to use this method.
 
         :param prot1: The first protein
         :param prot2: The second protein

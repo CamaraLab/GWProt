@@ -19,7 +19,7 @@ As a starting point we can form a one to one pairing :math:`f` between the resid
 However this in not computable in practice as the number of possibilities for :math:`f` grows on the order of :math:`|X|!`. 
 
 
-.. image:: Capture.PNG
+.. image:: Distortion.PNG
 	:width: 500
 
 

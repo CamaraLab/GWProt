@@ -2,7 +2,7 @@ Distortion Scaling
 =====================
 
 
-When comparing the shapes of molecules, we are generally more interested in atoms and substructures which are (geometrically) nearby one another as those are more likely to interact chemically. This is the key idea of the template-modelling (TM) score and the alignment software TM-align. To implement this idea in GWProt, we replace the intra-protein distance matrice of our proteins with related ones, causing the GW computation to give greater weight to nearby residues. We found that this generally improves accuracy with no impact on runtime.
+When comparing the shapes of molecules, we are generally more interested in atoms and substructures which are (geometrically) nearby one another as those are more likely to interact chemically. This is the key idea of the `template-modelling (TM) score <https://en.wikipedia.org/wiki/Template_modeling_score>`_ and the alignment software `TM-align <https://zhanggroup.org/TM-align/TM-align`_ . To implement this idea in GWProt, we replace the intra-protein distance matrice of our proteins with related ones, causing the GW computation to give greater weight to nearby residues. We found that this generally improves accuracy with no impact on runtime.
 
 
 

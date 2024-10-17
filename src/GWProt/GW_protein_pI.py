@@ -265,7 +265,8 @@ class GW_protein_pI(GW_protein):
     prot2: 'GW_protein',
     allow_mismatch: bool = True): 
         """
-        Runs the ssearch36 program from the seq36 packages and returns the indices of the two proteins which are aligned.
+        Runs the ssearch36 program from the seq36 packages and returns the indices of the two proteins which are aligned. 
+        ssearch36 must be in PATH to use thie method.
         
         :param prot1: First protein
         :param prot2: Fecond protein
@@ -586,7 +587,7 @@ class GW_protein_pI(GW_protein):
         :param kernel_list: The list of how many copies of nearby residues we use when smoothing the isoelectric points
         :param origin: The index in the ``kernel_list`` of the current residue
         :param inplace: Whether this modifies ``self.pI_list`` or returns a new list
-        :return: For ``inplace==False`` the new, smoothed list of isoelectric point values. For ``inplace==True`` nothing is returned.
+        :return: For ``inplace==False`` a new ``GW_protein_pI`` object with the smoothed isoelectric point values. For ``inplace==True`` nothing is returned.
         
         """
 
@@ -598,7 +599,7 @@ class GW_protein_pI(GW_protein):
         assert 0 <= origin < len(k)
         #fasta_header, fasta = re.findall(string = self.fasta, pattern = r'^(>.+)\n([A-Z]*)$')[0]
         out_pI_list = []
-        fasta = seq
+        fasta = self.seq
         for i in range(len(self.pI_list)):
             local_fasta_list = []
     
@@ -628,7 +629,13 @@ class GW_protein_pI(GW_protein):
             self.pI_list = out_pI_list
             return 0
         else:
-            return out_pI_list
+            return GW_protein_pI(name = self.name + '_convolved', 
+                seq = self.seq, 
+                coords = self.coords,
+                 ipdm = self.ipdm, 
+                 scaled_flag = self.scaled_flag,
+                  distribution = self.distribution, 
+                  pI_list = out_pI_list)
 
 
 

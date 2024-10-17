@@ -33,7 +33,6 @@ in a terminal window.
 
 
 
-
 .. toctree::
    :maxdepth: 1
    :caption: Examples

@@ -3,6 +3,7 @@ import math
 import numpy as np
 from subprocess import Popen, PIPE, STDOUT, DEVNULL
 import sys
+import warnings
 
 
 
@@ -20,7 +21,10 @@ class my_pymolPy3:
     # https://github.com/carbonscott/pymolPy3
     def __init__(self):
 
-
+        #check that pymol is in the PATH first
+        a = subprocess.run(['pymol', '--version'] , stdout = subprocess.PIPE)
+        if "PyMOL" not in a.stout:
+            raise FileNotFoundError("pymol was not found in the PATH. Pymol must be installed and in the PATH to use this module.")
 
         ### "pymol --version" gives the version
         V =  Popen(
@@ -164,7 +168,7 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, chain1:str
     pm("cmd.zoom('all')")
     pm("cmd.bg_color('grey80')")
     if "2." in pm.version:
-        raise ValueError("Pymol 2 can segmentation fault when running transform_selection, cmd.cealign used instead")
+        warnings.warn("Pymol 2 can segmentation fault when running transform_selection, cmd.cealign used instead")
         pm("cmd.cealign('prot1', 'prot2')")
 
     pm(f"cmd.transform_selection( 'prot2' , matrix =  {ll})")

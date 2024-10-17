@@ -11,7 +11,7 @@ Setting ``RAM = False`` saves these to files, but significantly slows down compu
 
 
 **Calculating Stresses and Distances**
------------------------------
+------------------------------------------
 
 These three methods run all pairwise computations. For each pair of proteins they run GW/FGW, store the distance, transport plan, and associated stresses. One of these must be run before any of the latter methods are called. 
 
@@ -43,7 +43,7 @@ For each protein it return the ``normalized_stress`` calculated below, where the
 
 
 **Transferring Stresses**
-------------------------
+----------------------------------
 
 
 
@@ -54,7 +54,7 @@ This is in the same format as ``self.raw_stress_dict`` so must be normalized bef
 
 
 **Analysis Helper Methods**
------------------------------
+--------------------------------
 
 We also havehelper methods not part of the ``Stress_Comparison`` class but can be useful for analyzing stresses.
 

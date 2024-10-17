@@ -8,7 +8,7 @@ import os
 import sys
 
 project = 'GWProt'
-copyright = '2024, Camara Lab'
+copyright = '2024, Cámara Lab'
 author = 'Elijah Gunther'
 
 release = '0.1'
@@ -47,7 +47,10 @@ templates_path = ['_templates']
 
 # -- Options for HTML output
 
-html_theme = 'sphinx_rtd_theme'
-
+html_logo = "GWProt_logo.png"
+html_theme_options = {
+    "logo_only": False,
+    "display_version": True,
+}
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
