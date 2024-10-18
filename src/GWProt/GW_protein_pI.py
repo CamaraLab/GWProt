@@ -448,7 +448,7 @@ class GW_protein_pI(GW_protein):
 
    
     
-    @controller.wrap(limits=1, user_api=controller.info()[-1]['user_api'])
+    @controller.wrap(limits=1, user_api='blas')
     @staticmethod
     def run_FGW(prot1: 'GW_protein_pI', prot2:'GW_protein_pI', alpha: float = 0.5, transport_plan: bool = False) -> Union[float, tuple[float, np.array]]:
         """
@@ -533,7 +533,7 @@ class GW_protein_pI(GW_protein):
 
         return stress1, stress2
         
-    @controller.wrap(limits=1, user_api=controller.info()[-1]['user_api'])
+    @controller.wrap(limits=1, user_api='blas')
     @staticmethod
     def run_FGW_seq_aln(prot1:'GW_protein_pI', prot2:'GW_protein_pI', alpha:float,allow_mismatch:bool = True) -> float:
         """

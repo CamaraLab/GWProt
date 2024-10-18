@@ -1,5 +1,6 @@
 
 import os
+os.environ['OPENBLAS_NUM_THREADS'] = '1' 
 
 from threadpoolctl import ThreadpoolController
 controller = ThreadpoolController()
@@ -94,7 +95,7 @@ class Stress_Comparison:
         return T 
 
 
-    @controller.wrap(limits=1, user_api=controller.info()[-1]['user_api'])
+    @controller.wrap(limits=1, user_api='blas')
     def _GW_helper(self, pp):
         p1,p2 = pp 
         name1 = p1.name
@@ -105,7 +106,7 @@ class Stress_Comparison:
         s1, s2 = GW_protein.GW_stress(p1,p2, T)     
         return name1, name2, c, s1, s2, T 
 
-    @controller.wrap(limits=1, user_api=controller.info()[-1]['user_api'])
+    @controller.wrap(limits=1, user_api='blas')
     @staticmethod
     def _GW_helper_multi(ppcc):
         pp, cc = ppcc
@@ -167,7 +168,7 @@ class Stress_Comparison:
 
 
 
-    @controller.wrap(limits=1, user_api=controller.info()[-1]['user_api'])
+    @controller.wrap(limits=1, user_api='blas')
     @staticmethod
     def _FGW_lists_helper_multi(ppdda): 
         pp, dd, alpha = ppdda
@@ -238,7 +239,7 @@ class Stress_Comparison:
         self.computed_flag = True
 
 
-    @controller.wrap(limits=1, user_api=controller.info()[-1]['user_api'])
+    @controller.wrap(limits=1, user_api='blas')
     @staticmethod
     def _FGW_dict_helper_multi(ppda): 
         pp, ddict, alpha = ppdda

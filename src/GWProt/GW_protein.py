@@ -1,5 +1,5 @@
 import os
-#os.environ['OPENBLAS_NUM_THREADS'] = '1' #should be first, before ot
+ #should be first, before ot
 
 from threadpoolctl import ThreadpoolController
 controller = ThreadpoolController()
@@ -103,7 +103,7 @@ class GW_protein:
     def __str__(self):
         return self.name
  
-    @controller.wrap(limits=1, user_api=controller.info()[-1]['user_api'])
+    @controller.wrap(limits=1, user_api='blas')
     @staticmethod
     def run_ssearch_indices(prot1: 'GW_protein',
     prot2: 'GW_protein',
@@ -156,7 +156,7 @@ class GW_protein:
 
         return gw_cython.GW_cell(self.ipdm,  self.distribution)
             
-    @controller.wrap(limits=1, user_api=controller.info()[-1]['user_api'])
+    @controller.wrap(limits=1, user_api='blas')
     @staticmethod       
     def run_GW_from_cajal(
         cajal_cell1:gw_cython.GW_cell  , 
@@ -176,7 +176,7 @@ class GW_protein:
 
         return GW_identity_init(cajal_cell1, cajal_cell2, transport_plan= transport_plan)
         
-    @controller.wrap(limits=1, user_api=controller.info()[-1]['user_api'])
+    @controller.wrap(limits=1, user_api='blas')
     @staticmethod       
     def run_GW(prot1 :'GW_protein',
         prot2: 'GW_protein',
@@ -288,7 +288,7 @@ class GW_protein:
         return GW_protein(name = name, coords = coords, seq=seq)
 
 
-    @controller.wrap(limits=1, user_api=controller.info()[-1]['user_api'])
+    @controller.wrap(limits=1, user_api='blas')
     @staticmethod
     def run_FGW_data_lists(prot1: 'GW_protein', prot2:'GW_protein', data1 :list[float] , data2 : list[float] , alpha:float = 1, transport_plan = False) -> Union[float, tuple[float, np.array]]:
         
@@ -496,7 +496,7 @@ class GW_protein:
 
         return stress1, stress2
         
-    @controller.wrap(limits=1, user_api=controller.info()[-1]['user_api'])
+    @controller.wrap(limits=1, user_api='blas')
     @staticmethod
     def run_FGW_dict(prot1: 'GW_protein', prot2:'GW_protein', d: dict[str , dict[str ,float]] ,alpha:float = 1, transport_plan: bool = False) -> Union[float, tuple[float, np.array]]:
         
@@ -549,7 +549,7 @@ class GW_protein:
             return d
 
 
-    @controller.wrap(limits=1, user_api=controller.info()[-1]['user_api'])
+    @controller.wrap(limits=1, user_api='blas')
     @staticmethod
     def run_FGW_diff_mat(prot1: 'GW_protein', prot2:'GW_protein', diff_mat: np.array ,alpha:float = 1, transport_plan: bool = False) -> Union[float, tuple[float, np.array]]:
         
@@ -589,7 +589,7 @@ class GW_protein:
         
 
 
-    @controller.wrap(limits=1, user_api=controller.info()[-1]['user_api'])
+    @controller.wrap(limits=1, user_api='blas')
     @staticmethod
     def run_GW_seq_aln(prot1:'GW_protein', prot2:'GW_protein',  allow_mismatch:bool = True) -> float:
         """
