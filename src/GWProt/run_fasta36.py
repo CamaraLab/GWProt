@@ -111,8 +111,8 @@ def run_ssearch_cigar(fasta1, #filepath
                       allow_mismatch = True):
     
     #first check that fasta36 is installed and in the path
-    a = subprocess.run(['ssearch36'] , stdout = subprocess.PIPE)
-    if "ssearch36 [-options] query_file library_file" not in a.stout:
+    a = subprocess.run(['ssearch36'] , stdout = subprocess.PIPE, text=True)
+    if "ssearch36 [-options] query_file library_file" not in a.stdout:
         raise FileNotFoundError("ssearch36 was not found in PATH. fasta36 package must be installed and in the PATH.")
 
 
@@ -147,8 +147,8 @@ def run_ssearch_cigar_Ram(fasta1, #string
                       allow_mismatch = True):
 
     #first check that fasta36 is installed and in the path
-    a = subprocess.run(['ssearch36'] , stdout = subprocess.PIPE)
-    if "ssearch36 [-options] query_file library_file" not in a.stout:
+    a = subprocess.run(['ssearch36'] , stdout = subprocess.PIPE, text = True)
+    if "ssearch36 [-options] query_file library_file" not in a.stdout:
         raise FileNotFoundError("ssearch36 was not found in PATH. fasta36 package must be installed and in the PATH.")
 
 

@@ -89,7 +89,7 @@ def get_switch_probabilities(T: np.array, prot_num: int = 0) -> np.array:
     """
     
     if prot_num == 1:
-        return get_switch_prob(T.T, prot_num = 0)
+        return get_switch_probabilities(T.T, prot_num = 0)
 
     if np.count_nonzero(np.sum(T, axis = 1) ==0) > 0:
         raise ValueError('T has a zero row or column')

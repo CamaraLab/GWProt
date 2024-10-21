@@ -22,8 +22,8 @@ class my_pymolPy3:
     def __init__(self):
 
         #check that pymol is in the PATH first
-        a = subprocess.run(['pymol', '--version'] , stdout = subprocess.PIPE)
-        if "PyMOL" not in a.stout:
+        a = subprocess.run(['pymol', '--version'] , stdout = subprocess.PIPE, text = True)
+        if "PyMOL" not in a.stdout:
             raise FileNotFoundError("pymol was not found in the PATH. Pymol must be installed and in the PATH to use this module.")
 
         ### "pymol --version" gives the version

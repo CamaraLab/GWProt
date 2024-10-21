@@ -23,6 +23,14 @@ RUN apt-get install gcc --fix-missing  -y
 RUN apt-get install ffmpeg libsm6 libxext6  -y
 RUN  conda update -n base -c conda-forge conda -y
 RUN conda install numpy
+
+RUN apt-get update && apt-get install -y `
+    bash `
+    coreutils `
+    --no-install-recommends && `
+    apt-get clean && `
+    rm -rf /var/lib/apt/lists/*
+
 RUN apt-get install git build-essential python3-dev libglew-dev `
   libpng-dev libfreetype6-dev libxml2-dev `
   libmsgpack-dev python3-pyqt5.qtopengl libglm-dev libnetcdf-dev --fix-missing -y
@@ -47,8 +55,10 @@ RUN rm -r fasta36-linux64.tar.gz
 RUN cd fasta-36.3.8i/src; `
     make -f ../make/Makefile.linux_sse2 all
    
-
+RUN echo "export PATH=\"/home/jovyan/fasta-36.3.8i/bin:\$PATH\"" >> .bashrc
 USER jovyan
+
+export PATH="/home/jovyan/.local/bin:$PATH"
 
 RUN  pip install pot `
  cajal `
@@ -66,7 +76,6 @@ multiprocess `
 threadpoolctl `
   --upgrade setuptools
 
-RUN export PATH="/home/jovyan/fasta-36.3.8i/bin:$PATH"
 
 
 #still needs to import GWProt

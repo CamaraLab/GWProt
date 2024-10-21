@@ -19,9 +19,9 @@ However all other functionality of GWProt is unaffected if they are not installe
 
 They can be downloaded from:
 
-``https://pymol.org/``
+[Pymol Website](https://pymol.org/)
 
-``https://fasta.bioch.virginia.edu/fasta_www2/fasta_down.shtml``
+[Fasta Website](https://fasta.bioch.virginia.edu/fasta_www2/fasta_down.shtml)
 
 Documentation
 =======================================
