@@ -12,6 +12,7 @@ import numpy as np
 import ot
 import itertools as it
 from scipy.spatial.distance import *
+from scipy import stats
 import multiprocess
 import sklearn
 import shutil

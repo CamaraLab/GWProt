@@ -133,6 +133,10 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, chain1:str
     ll = pymol_transform(pretrans=pret, rot=rot, posttrans=trans)
 
     stress1, stress2 = GW_protein.GW_stress(p1,p2, transport_plan)
+    
+    stress1 = [float(a) for a in stress1]
+    stress2 = [float(a) for a in stress2]
+
  
     pm = my_pymolPy3()
 
@@ -178,16 +182,20 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, chain1:str
     #return ps
 
 
-def show_proteins_with_values(infiles: list[str], chain_ids : list[str],  data_lists: list[float], output_file: str, hide: bool = True)->None:
+def show_proteins_with_values(infiles: list[str],   data_lists: list[list[float]], output_file: str, chain_ids : list[str] = None, hide: bool = True)->None:
     """    
     This loads pdb files and display them in Pymol with colors based on the ``data_lists``, then saves the scene to a .pse file.
     
     :param infiles: Filepaths to the first protein.
-    :param chain_ids: Which chains of the proteins to use, a value must be entered for each.
+    :param chain_ids: Which chains of the proteins to use, a value must be entered for each. Defaults to all 'A'.
+    :param data_lists: A list of lists of values to display
     :param output_file: Filepath where the resulting file should be saved to.
     :param hide: Whether to hide the chains that aren't selected.
     
     """
+    if chain_ids is None:
+        chain_ids = ['A']*len(infiles)
+
     if len(infiles) != len(chain_ids):
         raise ValueError('The number of input files must match the number of chain_ids given. The latter can contain None')
     if len(infiles) != len(data_lists):
@@ -198,25 +206,26 @@ def show_proteins_with_values(infiles: list[str], chain_ids : list[str],  data_l
     prots = [GW_protein.make_protein_from_pdb(infiles[i], chain_id = chain_ids[i]) for i in range(n)]
 
     pm = my_pymolPy3()
-    #print('pm created')
+    print('pm created')
 
 
     for i in range(n):
         #print(i,' started')
         if len(prots[i]) != len(data_lists[i]):
             raise ValueError(f'length of protein {i} does not match length of data {i}. This could be caused by missing data in a PDB file.')
-        pm(f"cmd.load('{infiles[i]}', 'prot' + str({i}))")
+        pm(f"cmd.load('{infiles[i]}', 'prot{str(i)}')")
+        pm(f"cmd.alter('prot{i}', 'b=0')")
         #print(i,' loaded')
         pm(f"residue_numbers{i} = list(set(atom.resi_number for atom in cmd.get_model('/prot{str(i)}//{chain_ids[i]}').atom))")
         #print(i, 'resnums set')
-        pm(f"new_b{i} = {str(list(data_lists[i]))}")
+        pm(f"new_b{i} = {str([float(a) for a in list(data_lists[i])])}")
         #print(i, 'b set')
-        pm(f"cmd.alter( selection='/prot' + str({i}) + '//{chain_ids[i]}', expression='b = new_b' + str({i}) + '[residue_numbers{i}.index(int(resi))]')")
+        pm(f"cmd.alter( selection='/prot{str(i)}//{chain_ids[i]}', expression='b = new_b{str(i)}[residue_numbers{str(i)}.index(int(resi))]')")
         #print(i, 'altered')
-        pm(f"cmd.spectrum(expression='b', selection='/prot' + str({i}) + '//{chain_ids[i]}', palette='yellow_red', byres=1)")
+        pm(f"cmd.spectrum(expression='b', selection='/prot{str(i)}//{chain_ids[i]}', palette='yellow_red', byres=1)")
         #print(i, 'colored')
         if i != 0:
-            pm(f"cmd.cealign( '/prot0//{chain_ids[0]}' , '/prot' + str({i}) + '//{chain_ids[i]}')")
+            pm(f"cmd.cealign( '/prot0//{chain_ids[0]}' , '/prot{str(i)}//{chain_ids[i]}')")
         if hide:
             #pm(f"cmd.hide('cartoon','not chain {chain_ids[i]} and prot{str(i)}' )")
             pm(f"cmd.hide('everything','prot{str(i)}')")

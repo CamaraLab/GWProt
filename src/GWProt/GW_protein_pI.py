@@ -558,7 +558,7 @@ class GW_protein_pI(GW_protein):
         p3 = p1.downsample_by_indices(inds1)
         p4 = p2.downsample_by_indices(inds2)
 
-        return GW_protein_pI.run_FGW(p3,p4, alpha = alpha, transport_plan = transport_plan)
+        return GW_protein_pI.run_FGW(p3,p4, alpha = alpha, transport_plan = False)
 
     def convolve_pIs(self, 
         kernel_list :list[int] = [1,2,3,2,1], 

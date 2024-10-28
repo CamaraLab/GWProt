@@ -93,7 +93,7 @@ def tensor_coupling(a,b):
 def unif(n):
     return np.ones((n))*1/n
 
-@controller.wrap(limits=1, user_api=controller.info()[-1]['user_api'])
+@controller.wrap(limits=1, user_api='blas')
 def GW_identity_init(P1,P2, transport_plan = False):
     #P1, P2 are GW_cells
     # returns the GW distance using the id_initial_coupling
@@ -102,13 +102,13 @@ def GW_identity_init(P1,P2, transport_plan = False):
     P = id_initial_coupling(a,b) #to do, check (m,n) vs (n,m)
     C = -2 * P1.dmat @ P @ P2.dmat
 
-    res = gw_cython.gw_cython_init_cost( A = P1.dmat, a = a,  c_A = P1.cell_constant, B = P2.dmat, b = b, c_B = P2.cell_constant, C = C)
+    res = gw_cython.gw_cython_init_cost( A = P1.dmat, a = a,  c_A = P1.cell_constant, B = P2.dmat, b = b, c_B = P2.cell_constant, C = C,max_iters_ot = 1000000000000)
     if transport_plan:
         return res[1], res[0]
     else:
         return res[1]
 
-@controller.wrap(limits=1, user_api=controller.info()[-1]['user_api'])
+@controller.wrap(limits=1, user_api='blas')
 def GW_tensor_init(P1,P2, transport_plan = False):
     #P1, P2 are GW_cells
     # returns the GW distance using the id_initial_coupling
@@ -120,7 +120,7 @@ def GW_tensor_init(P1,P2, transport_plan = False):
     #print(P.shape)
     C = -2 * P1.dmat @ P @ P2.dmat
     
-    res = gw_cython.gw_cython_init_cost( A = P1.dmat, a = a,  c_A = P1.cell_constant, B = P2.dmat, b = b, c_B = P2.cell_constant, C = C)
+    res = gw_cython.gw_cython_init_cost( A = P1.dmat, a = a,  c_A = P1.cell_constant, B = P2.dmat, b = b, c_B = P2.cell_constant, C = C,max_iters_ot = 10000000000)
     if transport_plan:
         return res[1], res[0]
     else:

@@ -604,13 +604,13 @@ class GW_protein:
 
         p1, p2 = prot1 , prot2
 
-        inds1, inds2 = GW_protein.run_ssearch_indices(p1 =p1, p2 = p2, allow_mismatch = allow_mismatch)
+        inds1, inds2 = GW_protein.run_ssearch_indices(prot1 =p1, prot2 = p2, allow_mismatch = allow_mismatch)
 
 
             
         p3 = p1.downsample_by_indices(inds1)
         p4 = p2.downsample_by_indices(inds2)
 
-        return GW_protein.run_FGW(p3,p4, transport_plan = False)
+        return GW_protein.run_GW(p3,p4, transport_plan = False)
 
     
