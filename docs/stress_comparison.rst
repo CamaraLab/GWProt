@@ -38,8 +38,8 @@ For each protein it return the ``normalized_stress`` calculated below, where the
 
 .. code-block:: python
 
-	a, b, c, d = code
-	normalized_stress = np.sum(mat**a * (np.sum(mat**b, axis=1) ** c)[:, np.newaxis] * mat.shape[1] ** d,axis=0)
+	a, b, c, d, e = code
+	normalized_stress = np.sum(mat**a * (np.sum(mat**b, axis=1) ** c)[:, np.newaxis] * mat.shape[1] ** d, axis=0) * mat.shape[0] ** e
 
 
 **Transferring Stresses**

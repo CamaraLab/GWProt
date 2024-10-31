@@ -372,7 +372,7 @@ class Stress_Comparison:
 
 
 
-def normalize_stress_dict(raw_dict: dict[str,dict[str,np.array]], code: tuple[float,float,float,float] =(1, 0, 0, 0)) -> dict[str,np.array]: 
+def normalize_stress_dict(raw_dict: dict[str,dict[str,np.array]], code: tuple[float,float,float,float] =(1, 0, 0, 0, 0)) -> dict[str,np.array]: 
     """
     This method takes in a dictionary of raw stress and outputs a dictionary of weighted averages.
 
@@ -381,19 +381,20 @@ def normalize_stress_dict(raw_dict: dict[str,dict[str,np.array]], code: tuple[fl
         ``code[0]`` is the exponent for each stress value, 
         ``code[1]`` is the exponent for each stress value to be summed, 
         ``code[2]`` is the exponent of the total stress in a row,
-        ``code[3]`` is the exponent for the number of other proteins.
-        The default is (1,0,0,0) which corresponds to the simple sum.
+        ``code[3]`` is the exponent of the number of residues in the protein,
+        ``code[4]`` is the exponent for the number of other proteins.
+        The default is (1,0,0,0,0) which corresponds to the simple sum. (1,0,0,0,-1) is the mean. 
     :return dict: A dictionary of stresses of the format ``stress_dict[name]== stress``
     
     """
-    a, b, c, d = code
+    a, b, c, d, e = code
     norm_stresses_dict = {}
     for k in raw_dict.keys():
         mat = np.stack(list(raw_dict[k].values())) 
         out = np.sum(
             mat**a * (np.sum(mat**b, axis=1) ** c)[:, np.newaxis] * mat.shape[1] ** d,
             axis=0,
-        )
+        )* mat.shape[0] ** e
         norm_stresses_dict[k] = out
     return norm_stresses_dict
 

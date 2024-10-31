@@ -153,8 +153,8 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, chain1:str
     pm(f"stress2 = {str(stress2)}")
     pm(f"cmd.alter( '/prot1//{chain1}',  'b = stress1[residue_numbers1.index(int(resi))]' )")
     pm(f"cmd.alter( '/prot2//{chain2}',  'b = stress2[residue_numbers2.index(int(resi))]' )")
-    pm(f"cmd.spectrum(expression='b', selection='/prot1//{chain1}', palette='red_lime', byres=1)")
-    pm(f"cmd.spectrum(expression='b', selection='/prot2//{chain2}', palette='red_marine', byres=1)")
+    pm(f"cmd.spectrum(expression='b', selection='/prot1//{chain1}', palette='lime_red', byres=1)")
+    pm(f"cmd.spectrum(expression='b', selection='/prot2//{chain2}', palette='marine_red', byres=1)")
 
 
     pm(f"ps = {str(ps)}")
@@ -206,7 +206,6 @@ def show_proteins_with_values(infiles: list[str],   data_lists: list[list[float]
     prots = [GW_protein.make_protein_from_pdb(infiles[i], chain_id = chain_ids[i]) for i in range(n)]
 
     pm = my_pymolPy3()
-    print('pm created')
 
 
     for i in range(n):
