@@ -91,9 +91,10 @@ class GW_protein:
         This does *NOT* compare the ``name`` or ``scaled_flag``.
         """
         
-        if self.coords is not None and other.coords is not None and ((self.coords.shape != other.coords.shape) or (self.coords != other.coords).any()):
-            return False  
-        return self.seq == other.seq  and (self.ipdm == other.ipdm).all() and (self.distribution == other.distribution).all()
+        if self.coords is not None and other.coords is not None:
+            return ((self.coords.shape == other.coords.shape)) and np.isclose(self.coords , other.coords).all() and self.seq == other.seq
+        else:
+            return self.seq == other.seq  and np.isclose(self.ipdm,other.ipdm).all() and np.isclose(self.distribution , other.distribution).all()
       
 
     def __len__(self):
@@ -209,6 +210,7 @@ class GW_protein:
         """
 
         assert set(indices).issubset(set(range(self.ipdm.shape[0])))
+        assert len(indices) >0
         if self.coords is not None:
             coords = self.coords[indices]
         else:
@@ -577,7 +579,7 @@ class GW_protein:
         
         G0 = id_initial_coupling(p1.distribution,p2.distribution)
 
-        T , log= ot.fused_gromov_wasserstein(M=M, C1=D1, C2=D2, alpha = alpha, p= p1.distribution ,q=p2.distribution, G0 = G0, loss_fun='square_loss', log = True)
+        T , log= ot.fused_gromov_wasserstein(M=diff_mat, C1=D1, C2=D2, alpha = alpha, p= p1.distribution ,q=p2.distribution, G0 = G0, loss_fun='square_loss', log = True)
         d = 0.5 * math.sqrt(max(0,log['fgw_dist']))
 
         if transport_plan:

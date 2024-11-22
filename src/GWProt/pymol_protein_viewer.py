@@ -204,7 +204,6 @@ def show_proteins_with_values(infiles: list[str],   data_lists: list[list[float]
     
     n = len(data_lists)
     prots = [GW_protein.make_protein_from_pdb(infiles[i], chain_id = chain_ids[i]) for i in range(n)]
-
     pm = my_pymolPy3()
 
 

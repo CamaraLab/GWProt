@@ -241,9 +241,10 @@ class GW_protein_pI(GW_protein):
         This does NOT compare the ``name`` or ``scaled_flag``.
         """
         
-        if self.coords is not None and other.coords is not None and ((self.coords.shape != other.coords.shape) or (self.coords != other.coords).any()):
-            return False  
-        return self.seq == other.seq and self.pI_list == other.pI_list and (self.ipdm == other.ipdm).all() and (self.distribution == other.distribution).all()
+        if self.coords is not None and other.coords is not None:
+            return (self.coords.shape== other.coords.shape) and np.isclose(self.coords , other.coords).all() and self.seq == other.seq and np.isclose(self.pI_list , other.pI_list).all() and np.isclose(self.distribution , other.distribution).all()
+        else:
+            return self.seq == other.seq and np.isclose(self.pI_list , other.pI_list).all() and np.isclose(self.ipdm , other.ipdm).all() and np.isclose(self.distribution , other.distribution).all()
       
 
     def __len__(self):
@@ -309,6 +310,7 @@ class GW_protein_pI(GW_protein):
 
         """
         assert set(indices).issubset(set(range(len(self.pI_list))))
+        assert len(indices) >0
         if self.coords is not None:
             coords = self.coords[indices]
         else:

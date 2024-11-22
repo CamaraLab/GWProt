@@ -186,7 +186,7 @@ class Stress_Comparison:
         bb = np.broadcast_to(b,(n1,n2))
         M = abs(aa-bb)
 
-        c, T = GW_protein.run_FGW_diff_mat(p1=p1, p2=p2, alpha = alpha, diff_mat = M , transport_plan = True)
+        c, T = GW_protein.run_FGW_diff_mat(prot1=p1, prot2=p2, alpha = alpha, diff_mat = M , transport_plan = True)
         s1, s2 = GW_protein.FGW_stress(prot1= p1,prot2 = p2, alpha = alpha, diff_mat = M, T= T)     
         return name1, name2, c, s1, s2, T 
 
@@ -252,7 +252,7 @@ class Stress_Comparison:
             for j in range(n2):
                 M[i,j] = d[p1.seq[i]][p2.seq[j]]
 
-        c, T = GW_protein.run_FGW_diff_mat(p1=p1, p2=p2, alpha = alpha, diff_mat = M, transport_plan = True)
+        c, T = GW_protein.run_FGW_diff_mat(prot1=p1, prot2=p2, alpha = alpha, diff_mat = M, transport_plan = True)
         s1, s2 = GW_protein.FGW_stress(prot1= p1,prot2 = p2, alpha = alpha, diff_mat = M, T= T)     
         return name1, name2, c, s1, s2, T 
         
