@@ -243,14 +243,16 @@ class Stress_Comparison:
     @controller.wrap(limits=1, user_api='blas')
     @staticmethod
     def _FGW_dict_helper_multi(ppda): 
-        pp, ddict, alpha = ppdda
+        pp, ddict, alpha = ppda
         p1,p2, = pp
         name1 = p1.name
         name2 = p2.name 
+        n1 = len(p1)
+        n2 = len(p2)
         M = np.zeros((n1,n2))
         for i in range(n1):
             for j in range(n2):
-                M[i,j] = d[p1.seq[i]][p2.seq[j]]
+                M[i,j] = ddict[p1.seq[i]][p2.seq[j]]
 
         c, T = GW_protein.run_FGW_diff_mat(prot1=p1, prot2=p2, alpha = alpha, diff_mat = M, transport_plan = True)
         s1, s2 = GW_protein.FGW_stress(prot1= p1,prot2 = p2, alpha = alpha, diff_mat = M, T= T)     
@@ -270,7 +272,7 @@ class Stress_Comparison:
 
         if processes is not None and processes >1:
             with multiprocess.Pool(processes = processes)  as pool:
-                results = pool.imap(Stress_Comparison._FGW_lists_helper_multi, zip( it.combinations(self.prot_list,2), it.repeat(diff_dict), it.repeat(alpha)), chunksize = 20)
+                results = pool.imap(Stress_Comparison._FGW_dict_helper_multi, zip( it.combinations(self.prot_list,2), it.repeat(diff_dict), it.repeat(alpha)), chunksize = 20)
                 for r in results:
                     name1, name2, c,s1,s2,T = r  
                     self.dist_dict[name1][name2] = c 

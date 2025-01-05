@@ -108,7 +108,10 @@ class GW_protein:
     @staticmethod
     def run_ssearch_indices(prot1: 'GW_protein',
     prot2: 'GW_protein',
-    allow_mismatch: bool = True) -> tuple[list[int],list[int]]: 
+    allow_mismatch: bool = True,
+    BLOSUM = '62',
+     gap_open = 0,
+     gap_extend = 0) -> tuple[list[int],list[int]]: 
 
         """
 
@@ -122,7 +125,7 @@ class GW_protein:
         """ 
         fasta1 = ">" + prot1.name + '\n' + prot1.seq
         fasta2 = ">" + prot2.name + '\n' + prot2.seq
-        return run_ssearch_cigar_Ram(fasta1 = fasta1, fasta2 = fasta2, allow_mismatch = allow_mismatch)
+        return run_ssearch_cigar_Ram(fasta1 = fasta1, fasta2 = fasta2, allow_mismatch = allow_mismatch, BLOSUM = BLOSUM, gap_extend =gap_extend, gap_open = gap_open)
 
     def scale_ipdm(self,
         scaler: Callable[[float],float] = math.sqrt, 
@@ -593,7 +596,7 @@ class GW_protein:
 
     @controller.wrap(limits=1, user_api='blas')
     @staticmethod
-    def run_GW_seq_aln(prot1:'GW_protein', prot2:'GW_protein',  allow_mismatch:bool = True) -> float:
+    def run_GW_seq_aln(prot1:'GW_protein', prot2:'GW_protein',  allow_mismatch:bool = True, BLOSUM = '62', gap_extend = 0, gap_open=0) -> float:
         """
         This calculates the Gromov-Wasserstein distance between two proteins when applied just to aligned residues. 
         It first applies sequence alignment, downsamples to the aligned residues, then applies GW. ssearch36 must be in the PATH to use this method.
@@ -606,7 +609,7 @@ class GW_protein:
 
         p1, p2 = prot1 , prot2
 
-        inds1, inds2 = GW_protein.run_ssearch_indices(prot1 =p1, prot2 = p2, allow_mismatch = allow_mismatch)
+        inds1, inds2 = GW_protein.run_ssearch_indices(prot1 =p1, prot2 = p2, allow_mismatch = allow_mismatch, BLOSUM = BLOSUM, gap_extend = gap_extend, gap_open =gap_open)
 
 
             

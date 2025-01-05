@@ -264,7 +264,10 @@ class GW_protein_pI(GW_protein):
     @staticmethod
     def run_ssearch_indices(prot1: 'GW_protein',
     prot2: 'GW_protein',
-    allow_mismatch: bool = True): 
+    allow_mismatch: bool = True,
+                           BLOSUM = '62',
+                     gap_open = 0,
+                     gap_extend = 0): 
         """
         Runs the ssearch36 program from the seq36 packages and returns the indices of the two proteins which are aligned. 
         ssearch36 must be in PATH to use thie method.
@@ -277,7 +280,7 @@ class GW_protein_pI(GW_protein):
         """ 
         fasta1 = ">" + prot1.name + '\n' + prot1.seq
         fasta2 = ">" + prot2.name + '\n' + prot2.seq
-        return run_ssearch_cigar_Ram(fasta1 = fasta1, fasta2 = fasta2, allow_mismatch = allow_mismatch)
+        return run_ssearch_cigar_Ram(fasta1 = fasta1, fasta2 = fasta2, allow_mismatch = allow_mismatch, BLOSUM = BLOSUM, gap_extend = gap_extend, gap_open = gap_open)
 
     def scale_ipdm(self,
         scaler: Callable[[float],float] = lambda x :x, 
@@ -537,7 +540,9 @@ class GW_protein_pI(GW_protein):
         
     @controller.wrap(limits=1, user_api='blas')
     @staticmethod
-    def run_FGW_seq_aln(prot1:'GW_protein_pI', prot2:'GW_protein_pI', alpha:float,allow_mismatch:bool = True) -> float:
+    def run_FGW_seq_aln(prot1:'GW_protein_pI', prot2:'GW_protein_pI', alpha:float,allow_mismatch:bool = True,BLOSUM = '62',
+                     gap_open = 0,
+                     gap_extend = 0) -> float:
         """
         This calculates the fused Gromov-Wasserstein distance between two proteins when applied just to aligned residues. 
         It first applies sequence alignment, downsamples up to the aligned residues, then applies FGW. 
@@ -553,7 +558,7 @@ class GW_protein_pI(GW_protein):
 
         p1, p2 = prot1 , prot2
 
-        inds1, inds2 = GW_protein.run_ssearch_indices(prot1 =p1, prot2 = p2, allow_mismatch = allow_mismatch)
+        inds1, inds2 = GW_protein.run_ssearch_indices(prot1 =p1, prot2 = p2, allow_mismatch = allow_mismatch, BLOSUM = BLOSUM, gap_extend = gap_extend, gap_open = gap_open)
 
  
             

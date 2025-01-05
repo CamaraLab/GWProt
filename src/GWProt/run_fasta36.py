@@ -108,7 +108,10 @@ def parse_ssearch_output(input, code_type, allow_mismatch = True):
 
 def run_ssearch_cigar(fasta1, #filepath
                       fasta2, #filepath
-                      allow_mismatch = True):
+                      allow_mismatch = True,
+                     BLOSUM = '62',
+                     gap_open = 0,
+                     gap_extend = 0):
     
     #first check that fasta36 is installed and in the path
     a = subprocess.run(['ssearch36'] , stdout = subprocess.PIPE, text=True)
@@ -116,7 +119,7 @@ def run_ssearch_cigar(fasta1, #filepath
         raise FileNotFoundError("ssearch36 was not found in PATH. fasta36 package must be installed and in the PATH.")
 
 
-    cigar_command =  '-s BP62 -p -T 1 -b 1 -f 0 -g 0 -z -1 -m 9C'
+    cigar_command =  f'-s BL{BLOSUM} -p -T 1 -b 1 -f {gap_open} -g {gap_extend} -z -1 -m 9C'
     a = subprocess.run(['ssearch36'] + cigar_command.split(' ') + [fasta1, fasta2], text=True,  stdout = subprocess.PIPE)
     cigar_result = a.stdout
 
@@ -142,9 +145,13 @@ def parse_ssearch_outputv2(input,  allow_mismatch = True):
 
 
 
+    
 def run_ssearch_cigar_Ram(fasta1, #string
                       fasta2, #string
-                      allow_mismatch = True):
+                      allow_mismatch = True,
+                    BLOSUM = '62',
+                     gap_open = 0,
+                     gap_extend = 0):
 
     #first check that fasta36 is installed and in the path
     a = subprocess.run(['ssearch36'] , stdout = subprocess.PIPE, text = True)
@@ -152,7 +159,7 @@ def run_ssearch_cigar_Ram(fasta1, #string
         raise FileNotFoundError("ssearch36 was not found in PATH. fasta36 package must be installed and in the PATH.")
 
 
-    command2 = f'''''/bin/bash -c "ssearch36 -s BP62 -p -T 1 -b 1 -f 0 -g 0 -z -1 -m 9C <(echo '{ fasta1 }') <(echo '{fasta2}')" '''
+    command2 = f'''''/bin/bash -c "ssearch36 -s BL{BLOSUM} -p -T 1 -b 1 -f {gap_open} -g {gap_extend} -z -1 -m 9C <(echo '{ fasta1 }') <(echo '{fasta2}')" '''
     
     result = subprocess.run(command2, shell=True,stdout = subprocess.PIPE, text=True)
     
