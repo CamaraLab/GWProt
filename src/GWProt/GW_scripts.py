@@ -16,8 +16,7 @@ import random
 import csv
 from scipy.spatial.distance import *
 
-
-from cajal import run_gw, qgw, gw_cython # triangle_ineq_parallel, 
+from cajal import run_gw, qgw, gw_cython 
 
 
 

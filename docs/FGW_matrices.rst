@@ -31,7 +31,7 @@ This method gives difference matrices based on the `BLOSUM matrices <https://en.
 
 .. autofunction:: GWProt.FGW_matrices.get_Grantham_dict
 
-This method gives difference matrices given by the `Grantham <https://www.jstor.org/stable/1739007?seq=1>`_ differnce scores.
+This method gives difference matrices given by the `Grantham <https://www.jstor.org/stable/1739007?seq=1>`_ difference scores.
 
 --------------------
 

@@ -193,8 +193,6 @@ def show_proteins_with_values(infiles: list[str],   data_lists: list[list[float]
     :param hide: Whether to hide the chains that aren't selected.
     
     """
-    if chain_ids is None:
-        chain_ids = ['A']*len(infiles)
 
     if len(infiles) != len(chain_ids):
         raise ValueError('The number of input files must match the number of chain_ids given. The latter can contain None')
@@ -206,6 +204,8 @@ def show_proteins_with_values(infiles: list[str],   data_lists: list[list[float]
     prots = [GW_protein.make_protein_from_pdb(infiles[i], chain_id = chain_ids[i]) for i in range(n)]
     pm = my_pymolPy3()
 
+    if chain_ids is None:
+        chain_ids = ['A']*len(infiles)
 
     for i in range(n):
         #print(i,' started')

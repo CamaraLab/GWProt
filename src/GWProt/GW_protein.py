@@ -273,7 +273,7 @@ class GW_protein:
 
  
     @staticmethod
-    def make_protein_from_pdb(pdb_file:str, chain_id: str = None) ->'GW_protein':
+    def make_protein_from_pdb(pdb_file:str, chain_id: str = None, name = None) ->'GW_protein':
 
         """
         Creates a ``GW_protein`` object with the coordinate and sequence data from the ``pdb_file``. This gives a uniform distribution.
@@ -285,9 +285,10 @@ class GW_protein:
         """
 
         coords, _ , seq = get_pdb_coords_pI(filepath = pdb_file, n = np.inf, median = True, chain_id = chain_id)
-        name = re.findall(string = pdb_file, pattern = r'([^\/]+)\.pdb$')[0]
-        if chain_id is not None:
-            name += '_'+chain_id
+        if name is None:
+            name = re.findall(string = pdb_file, pattern = r'([^\/]+)\.pdb$')[0]
+            if chain_id is not None:
+                name += '_'+chain_id
 
         
         return GW_protein(name = name, coords = coords, seq=seq)

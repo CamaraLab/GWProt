@@ -381,7 +381,7 @@ def normalize_stress_dict(raw_dict: dict[str,dict[str,np.array]], code: tuple[fl
     :param raw_dict: A dictionary of raw stresses of the format ``raw_dict[name1][name2] == stress``.
     :param code: This is a tuple of exponents to be used for weighting.
         ``code[0]`` is the exponent for each stress value, 
-        ``code[1]`` is the exponent for each stress value to be summed, 
+        ``code[1]`` is the exponent for each stress value to be summed for the row stress, 
         ``code[2]`` is the exponent of the total stress in a row,
         ``code[3]`` is the exponent of the number of residues in the protein,
         ``code[4]`` is the exponent for the number of other proteins.
