@@ -8,8 +8,7 @@ import warnings
 
 
 
-from .GW_scripts import *
-from .read_pdb import *
+
 from .GW_protein import *
 from .GW_stress import *
 from .weighted_alignment import *
@@ -153,11 +152,13 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, chain1:str
     pm(f"stress2 = {str(stress2)}")
     pm(f"cmd.alter( '/prot1//{chain1}',  'b = stress1[residue_numbers1.index(int(resi))]' )")
     pm(f"cmd.alter( '/prot2//{chain2}',  'b = stress2[residue_numbers2.index(int(resi))]' )")
-    pm(f"cmd.spectrum(expression='b', selection='/prot1//{chain1}', palette='lime_red', byres=1)")
-    pm(f"cmd.spectrum(expression='b', selection='/prot2//{chain2}', palette='marine_red', byres=1)")
+    pm(f"cmd.spectrum(expression='b', selection='/prot1//{chain1}', palette='yellow_red', byres=1)")
+    pm(f"cmd.spectrum(expression='b', selection='/prot2//{chain2}', palette='yellow_red', byres=1)")
 
 
     pm(f"ps = {str(ps)}")
+
+    
     pm("chain1 = '" + chain1 +"'")
     pm("chain2 = '" + chain2 +"'")
 

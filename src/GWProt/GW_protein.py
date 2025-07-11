@@ -341,7 +341,8 @@ class GW_protein:
             return d, T
         else:
             return d
-            
+
+ 
 
     def downsample_n(self,
         n:int = np.inf, 
