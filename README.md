@@ -1,6 +1,5 @@
+# GWProt <a href='https://github.com/CamaraLab/GWProt'><img src="docs/GWProt_logo.png" align="right" width="25%"/></a>
 ![License](https://img.shields.io/github/license/CamaraLab/GWProt)
-
-# GWProt - Gromov-Wasserstein for Protein Structural Alignment <a href='https://github.com/CamaraLab/GWProt'><img src="docs/GWProt_logo.png" align="right" width="25%"/></a>
 
 GWProt is a Python library for structural alignment of proteins using the Gromov-Wasserstein distance.
 
@@ -14,9 +13,9 @@ GWProt uses [Pymol 3](https://pymol.org/) for visualization and the [fasta36](ht
 Documentation
 =======================================
 
-Full documentation and tutorials can be found at [gwprot.readthedocs.io](https://gwprot.readthedocs.io/)
+Full documentation and tutorials can be found at [gwprot.readthedocs.io](https://gwprot.readthedocs.io/).
 
 Docker
 =================================
 
-A minimal Docker image is available at [DockerHub](https://hub.docker.com/repository/docker/camaralaboratory/gwprot/general)
+A minimal Docker image is available at [DockerHub](https://hub.docker.com/repository/docker/camaralaboratory/gwprot/general).
