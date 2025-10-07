@@ -9,14 +9,7 @@ Installation
 
 ``pip install git+https://github.com/CamaraLab/GWProt``
 
-GWProt uses Pymol 3 for visualization and the fasta36 package for sequence alignment.
-These must be installed and added to the ``PATH`` environment variable if you wish to use visualization and sequence-alignment features. However, all other GWProt functionality is unaffected if they are not installed.
-
-They can be downloaded from:
-
-[Pymol Website](https://pymol.org/)
-
-[Fasta Website](https://fasta.bioch.virginia.edu/fasta_www2/fasta_down.shtml)
+GWProt uses [Pymol 3](https://pymol.org/) for visualization and the [fasta36](https://fasta.bioch.virginia.edu/fasta_www2/fasta_down.shtml) package for sequence alignment. These must be installed and added to the ``PATH`` environment variable if you wish to use visualization and sequence-alignment features. However, all other GWProt functionality is unaffected if they are not installed.
 
 Documentation
 =======================================
