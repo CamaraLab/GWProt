@@ -26,20 +26,19 @@ Then we can downsample:
 .. autofunction:: GWProt.GW_protein_pI.GW_protein_pI.downsample_by_indices
 
 
-**Computing FGW and Stress**
-----------------------------------
 
-As ``GW_protein_pI`` objects only use isoelectric points, the FGW methods are simpler:
+**Computing FGW and LGD**
+-------------------------
 
-
+As ``GW_protein_pI`` objects only use isoelectric points, the FGW methods are streamlined:
 
 .. autofunction:: GWProt.GW_protein_pI.GW_protein_pI.run_FGW
 
-
-.. autofunction:: GWProt.GW_protein_pI.GW_protein_pI.FGW_stress
-
+.. autofunction:: GWProt.GW_protein_pI.GW_protein_pI.FGW_lgd
 
 .. autofunction:: GWProt.GW_protein_pI.GW_protein_pI.run_FGW_seq_aln
+
+The local geometric distortion (LGD) quantifies the contribution of each residue to the FGW distance, providing a residue-level measure of structural conservation or flexibility based on isoelectric point differences.
 
 
 
