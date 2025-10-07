@@ -22,31 +22,31 @@ This defines the *Gromov-Hausdorff distance* between :math:`X` and :math:`Y`:
 .. math::
    GH(X,Y) = \min_{f :X\cong Y} \max_{i,j \in X} | d_X(i,j) - d_Y(f(i),f(j)) |.
 
-However, this is not computable in practice, as the number of possibilities for :math:`f` grows 
-on the order of :math:`|X|!`.
-
 .. image:: Distortion.PNG
    :width: 500
 
+However, this is not computable in practice, as the number of possibilities for :math:`f` grows 
+on the order of :math:`|X|!`.
+
 Gromov-Wasserstein Distance
 ---------------------------
-To address this, we turn the problem into a continuous one that can be efficiently 
+To address this, one can turn the problem into a continuous one that can be efficiently 
 approximated [1]_. We assign each protein a total mass of 1, distributed evenly among its 
-residues (a *distribution*). Aligning two proteins of lengths :math:`n` and :math:`m` then 
+residues. Aligning two proteins of lengths :math:`n` and :math:`m` then 
 amounts to transferring the mass of one protein to the other. This assignment is called a 
-*transport plan* and is represented as an :math:`n \times m` matrix, where each column sums 
+*correspondence* or *transport plan* and is represented as an :math:`n \times m` matrix, where each column sums 
 to :math:`1/m` and each row sums to :math:`1/n`. The :math:`(i,j)`-th entry is the amount of 
 mass transported from the :math:`i`-th residue of one protein to the :math:`j`-th residue of 
-the other. Finding the best alignment is now equivalent to finding the optimal transport plan.
+the other. Finding the best alignment is now equivalent to finding the optimal correspondence.
 
 We define the Gromov-Wasserstein distance based on the sum of all distortions, weighted by 
-the optimal transport plan:
+the optimal correspondence:
 
 .. math::
    GW(X,Y) = \min_T \frac{1}{2} \left( \sum_{i,j,k,l} |d_X(x_i,x_j) - d_Y(y_k,y_l)|^2  T_{i,k}T_{j,l} \right)^{1/2}.
 
 This is a mathematical metric in that it satisfies basic axioms analogous to distances. Along 
-with calculating the GW distance, we also obtain the optimal transport plan. The squaring and 
+with calculating the GW distance, we also obtain the optimal correspondence. The squaring and 
 square root are not mathematically necessary, but are used for efficient computation.
 
 .. note::
