@@ -1,29 +1,58 @@
-Stress
-=========
+Local Geometric Distortion
+==========================
 
-When comparing two proteins with GW, the **stress** of a residue is defined as its contribution to the GW distance.
+Overview
+--------
 
-Formally, when comparing proteins :math:`X` and :math:`Y`, the stress of residue :math:`x_i` is
+When comparing two proteins with GW, the **local geometric distortion (LGD)** of a residue 
+quantifies its contribution to the overall GW distance. This provides a residue-level measure 
+of structural conservation.
 
-.. math:: stress(x_i) = \sum_{j,k,l} |d_X(x_i,x_j) - d_Y(y_k,y_l)|^2 T_{i,k}T_{j,l} .
+Definition
+----------
 
+Formally, when comparing proteins :math:`X` and :math:`Y`, the local geometric distortion of 
+residue :math:`x_i` is defined as:
 
+.. math::
+   LGD(x_i) = \sum_{j, k, l} |d_X(x_i, x_j) - d_Y(y_k, y_l)|^2 T_{i, k} T_{j, l}
 
-Note that :math:`\frac{1}{2}\sqrt{\sum_i stress(x_i)} = GW(X,Y)` and similarly for :math:`Y`. 
+where :math:`T` is the optimal transport plan between residues of :math:`X` and :math:`Y`.
 
-Intuitively this quantifies how well the individual residue :math:`x_i` is structurally conserved compared to :math:`Y.`
-A higher stress level indicates lower conservation.
-For instance this can be used to identify structurally conserved regions in evolutionarily related proteins, 
-where lower stress regions could indicate active sites.
-In another example, higher stress regions can indicate flexible switch regions when comparing multiple files of the same or similar proteins. 
+Relationship to GW Distance
+---------------------------
 
-In practice, it is better to average the stresses associated to GW computations across multiple proteins 
-than using the stresses associated to a single comparison. It is not recommended to use stresses of downsampled proteins.
+The sum of local geometric distortions relates directly to the GW distance:
 
-.. warning:: 
-	This notion of stress is unrelated to chemical forces acting within a protein or the frustration of a protein conformation.
+.. math::
+   \frac{1}{2} \sqrt{\sum_i LGD(x_i)} = GW(X, Y)
 
-We can also define the **fused stress** when using fused GW. Similarly it is a single residue's contribution to the FGW distance.
-Formally:
+and similarly for residues in :math:`Y`.
 
-.. math:: stress(x_i) = \sum_{j,k,l} (\alpha \cdot |d_X(x_i,x_j) - d_Y(y_k,y_l)|^2  + (1 - \alpha) \delta(x_i,y_j))T_{i,k}T_{j,l} .
+Interpretation and Applications
+------------------------------
+
+- **Low LGD:** Indicates that a residue is structurally well-conserved relative to the other protein.
+- **High LGD:** Indicates lower conservation, which may correspond to flexible or functionally 
+important regions (e.g., catalytic sites or switch regions).
+
+LGD can be used to:
+
+- Identify structurally conserved regions in evolutionarily related proteins.
+- Detect flexible or variable regions by comparing multiple conformations of the same or similar proteins.
+
+.. note::
+
+   For robust results, it is recommended to average LGD values across multiple protein comparisons rather than relying on a single pairwise comparison. Avoid using LGD values from downsampled proteins.
+
+Fused Local Geometric Distortion
+-------------------------------
+
+When using fused GW, the **fused local geometric distortion** extends the concept to 
+include biochemical data. It is defined as:
+
+.. math::
+   LGD(x_i) = \sum_{j, k, l} \left[ \alpha |d_X(x_i, x_j) - d_Y(y_k, y_l)|^2 + (1 - \alpha) \delta(x_i, y_j) \right] T_{i, k} T_{j, l}
+
+where :math:`\delta(x_i, y_j)` measures the biochemical difference between residues, 
+and :math:`\alpha` controls the balance between geometric and biochemical contributions.
