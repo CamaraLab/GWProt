@@ -1,24 +1,33 @@
 Distortion Scaling
-=====================
+==================
 
+Overview
+--------
+When comparing the shapes of molecules, we are generally more interested in substructures that 
+are geometrically close to one another, as these are more likely to interact chemically. This 
+principle underlies the `template-modelling (TM) score <https://en.wikipedia.org/wiki/Template_modeling_score>`_ and 
+`TM-align <https://zhanggroup.org/TM-align/TM-align>`_.
 
-When comparing the shapes of molecules, we are generally more interested in atoms and substructures which are (geometrically) nearby one another as those are more likely to interact chemically. This is the key idea of the `template-modelling (TM) score <https://en.wikipedia.org/wiki/Template_modeling_score>`_ and the alignment software `TM-align <https://zhanggroup.org/TM-align/TM-align`_ . To implement this idea in GWProt, we replace the intra-protein distance matrice of our proteins with related ones, causing the GW computation to give greater weight to nearby residues. We found that this generally improves accuracy with no impact on runtime.
+To implement this idea in GWProt, we modify the intra-protein distance matrices by applying a 
+scaling function, causing the GW computation to give greater weight to nearby residues. This 
+approach generally improves alignment accuracy without impacting runtime.
 
+Scaling Function
+----------------
+We choose a *scaling function* :math:`f` such that :math:`f(0) = 0`, :math:`f` is strictly 
+increasing, and :math:`f` is concave down. The square root function, :math:`f(x) = \sqrt{x}`, 
+works well in practice. For each protein, we apply :math:`f` to all entries in its intra-protein 
+distance matrix before running GW.
 
+.. note::
+   Distortion scaling can also be used with FGW in the same way as with GW. However, it is 
+   recommended to use a larger value of ``alpha``.
 
+References
+----------
+- Zhang, Y., & Skolnick, J. (2004). Scoring function for automated assessment of protein structure template quality. Proteins: Structure, Function, and Bioinformatics, 57(4), 702-710. (`TM-score paper <https://zhanggroup.org/TM-score/TMscore.pdf>`_)
+- TM-align: https://zhanggroup.org/TM-align/
 
-
-
-We choose a *scaling function* :math:`f` such that :math:`f(0) = 0`, :math:`f` is strictly monotonic increasing, and :math:`f` is concave down. We found the square root function works well. Then for all proteins we apply :math:`f` to all entries in their intra-protein distance matrices. Finally we run GW using the new intra-protein distance matrices.
-
-We can use distortion scaling with FGW the same way as with GW. The only difference is we must use a larger value of ``alpha``; we found 0.5 to work well with isoelectric points.
-
-
-.. warning::
-	 Do not use GW or FGW to compare a scaled protein and and unscaled one. Similarly do not compare two proteins scaled with different scaling functions. The resulting numbers will be meaningless.
-
-.. warning::
-	 The distances given by GW or FGW after scaling will be smaller than those without scaling. We cannot directly compare distances between scaled proteins with distances between unscaled ones; similarly we cannot compare distances from two different scaling functions.
 
 
 
