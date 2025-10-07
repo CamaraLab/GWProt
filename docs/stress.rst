@@ -33,8 +33,7 @@ Interpretation and Applications
 ------------------------------
 
 - **Low LGD:** Indicates that a residue is structurally well-conserved relative to the other protein.
-- **High LGD:** Indicates lower conservation, which may correspond to flexible or functionally 
-important regions (e.g., catalytic sites or switch regions).
+- **High LGD:** Indicates lower conservation, which may correspond to flexible or functionally important regions (e.g., catalytic sites or switch regions).
 
 LGD can be used to:
 
