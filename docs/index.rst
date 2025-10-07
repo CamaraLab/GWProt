@@ -1,29 +1,17 @@
 .. GWProt documentation master file
 
 
-Welcome to GWProt's documentation!
+Welcome to GWProt's documentation
 ===================================
 
-**GWProt**  is a Python library for applying Gromov-Wasserstein to protein morphology developed by the `Cámara Lab <https://camara-lab.org/>`_
-
-
-
-.. note::
-
-   This project is under active development. Documentation and code will be updated continuously
-
-
-With hundreds of thousands of protein structures experimentally determined and hundreds of millions predicted, computational methods for comparing protein structures are becoming key to determining evolutionary connections and functional similarities. Most existing methods rely on linear sequence alignment and rigid structural alignment, which limits their utility in studying circularly permuted and other multiply rearranged proteins, especially those with low sequence homology. 
-We introduce GWProt: a novel method of protein structure alignment based on concepts from metric geometry and optimal transport theory. GWProt utilizes the Gromov-Wasserstein (GW) distance to find an optimal structural alignment between pairs of proteins that minimizes the distortion of intra-molecular distances among paired residues. In addition, the flexibility of GW distances presents some unique features, including the possibility of incorporating biochemical information such as isoelectric points into the alignment, as well as user-inputted data.
-
-
-**Installation:**
-GWProt can be installed by running
-
-``pip install GWProt@git+https://github.com/CamaraLab/GWProt``
-
-in a terminal window. 
-
+**GWProt** is a computational framework that leverages recent advances in metric geometry, specifically the use of Gromov-Wasserstein (GW) 
+correspondences, for protein structure alignment. GW correspondences find an optimal structural alignment between pairs of proteins by 
+minimizing the distortion of intra-molecular distances among paired residues. GWProt enables the incorporation of biochemical information 
+into structural comparisons and introduces the concept of local geometric distortion, a measure that captures fine-scale conformational 
+differences. Using this framework, we can identify conformational switches in individual proteins, detect functional domains shared among 
+evolutionarily distant proteins, reveal topological rearrangements in homologous folds, or uncover recurrent short structural motifs 
+underlying functional domains. GWProt has been developed by the `Cámara Lab <https://camara-lab.org/>`_. Installation instructions can be 
+found at the `GWProt GitHub repository <https://github.com/CamaraLab/GWProt>`_.
 
 
 .. toctree::
@@ -34,8 +22,6 @@ in a terminal window.
    fused_gromov_wasserstein
    stress
    distortion_scaling
-
-
 
 
 .. toctree::

@@ -1,45 +1,61 @@
 .. -*- coding: utf-8 -*-
 
-Gromov-Wasserstein
-==================
+Gromov-Wasserstein Correspondences
+==================================
 
-Gromov-Wasserstein (GW) metric is a method  of quantifying the difference between shapes or point clouds introduced by
-`Memoli <https://www.math.ucdavis.edu/~saito/data/acha.read.w12/memoli-gromov-dist.pdf>`_.
-In GWProt we treat proteins as shapes in 3-dimensional space defined by their alpha-Carbons. 
+Overview
+--------
+GWProt treats proteins as point clouds in 3-dimensional space defined by their alpha-carbons. The 
+Gromov-Wasserstein (GW) distance [1]_ between two point clouds quantifies how different the 
+two structures are, up to rigid transformations (rotations and translations).
 
+Intuitively, GW compares proteins by structurally aligning their residues in a way that 
+minimizes distortion between their internal distance matrices.
 
---------------------------------
+Gromov-Hausdorff Distance
+-------------------------
+As a starting point, we can form a one-to-one pairing :math:`f` between the residues in 
+protein :math:`X` and those in protein :math:`Y` that minimizes the largest distortion—the 
+difference between a distance within :math:`X` and the corresponding distance in :math:`Y`. 
+This defines the *Gromov-Hausdorff distance* between :math:`X` and :math:`Y`:
 
-Intuitively GW compares proteins by structurally aligning their residues in a way that minimizes distortion. 
+.. math::
+   GH(X,Y) = \min_{f :X\cong Y} \max_{i,j \in X} | d_X(i,j) - d_Y(f(i),f(j)) |.
 
-As a starting point we can form a one to one pairing :math:`f` between the residues in protein :math:`X` with those in protein :math:`Y` that minimizes the largest distortion - the difference between a distance within :math:`X` and the corresponding distance in :math:`Y`. This defines the *Gromov-Hausdorff distance* between :math:`X` and :math:`Y`:
-
-.. math::  GH(X,Y) = \min_{f :X\cong Y} \max_{i,j \in X} \lvert d_X(i,j) - d_Y(f(i),f(j)) \rvert .
-
-However this in not computable in practice as the number of possibilities for :math:`f` grows on the order of :math:`|X|!`. 
-
+However, this is not computable in practice, as the number of possibilities for :math:`f` grows 
+on the order of :math:`|X|!`.
 
 .. image:: Distortion.PNG
-	:width: 500
+   :width: 500
 
+Gromov-Wasserstein Distance
+---------------------------
+To address this, we turn the problem into a continuous one that can be efficiently 
+approximated [1]_. We assign each protein a total mass of 1, distributed evenly among its 
+residues (a *distribution*). Aligning two proteins of lengths :math:`n` and :math:`m` then 
+amounts to transferring the mass of one protein to the other. This assignment is called a 
+*transport plan* and is represented as an :math:`n \times m` matrix, where each column sums 
+to :math:`1/m` and each row sums to :math:`1/n`. The :math:`(i,j)`-th entry is the amount of 
+mass transported from the :math:`i`-th residue of one protein to the :math:`j`-th residue of 
+the other. Finding the best alignment is now equivalent to finding the optimal transport plan.
 
-Thus we adjust our approach by turning it into a continuous problem which can be efficiently approximated[1]. 
-To do this we give each protein a mass of 1 and distribute it evenly among its residues, we call this a *distribution*. 
-Aligning two proteins of lengths `n` and `m` then amounts to transferring the mass of one protein the the other. We call this assignment a *transport plan* and represent it as a *n x m* matrix where each column sums to *1/m* and each row sums to *1/n*. 
-The `ij` th entry is thus the amount of mass tranported from the `i` th residue of one protein to the `j` th residue of the other. 
-Finding the best alignment is now finding the best transport plan.
+We define the Gromov-Wasserstein distance based on the sum of all distortions, weighted by 
+the optimal transport plan:
 
+.. math::
+   GW(X,Y) = \min_T \frac{1}{2} \left( \sum_{i,j,k,l} |d_X(x_i,x_j) - d_Y(y_k,y_l)|^2  T_{i,k}T_{j,l} \right)^{1/2}.
 
-We define the Gromov-Wasserstein distance based on the sum of all distortions weighted by the optimal tranport plan:
+This is a mathematical metric in that it satisfies basic axioms analogous to distances. Along 
+with calculating the GW distance, we also obtain the optimal transport plan. The squaring and 
+square root are not mathematically necessary, but are used for efficient computation.
 
-.. math::  GW(X,Y) = \min_T \frac{1}{2} \big (\sum_{i,j,k,l} |d_X(x_i,x_j) - d_Y(y_k,y_l)|^2  T_{i,k}T_{j,l} \big )^{\frac{1}{2}}.
+.. note::
+   In almost all cases, the calculated approximation is equivalent to the precise GW metric 
+   for practical purposes. The key exception is that the calculated approximations do not 
+   always satisfy the mathematical properties of the true metric (e.g., the triangle inequality 
+   may not hold).
 
-
-This is a mathematic metric in that it satisfies basic axiom analogous to distances.
-Along with calculating the GW distance, we also have the optimal transport plan. The squaring and squareroot is not mathematically necessary, but is needed for efficient computation.
-
-
-
-
-.. [1] In almost all cases the calculated approximation is equivalent to the precise GW metric for practical purposes. The key exception is that the calculated approximations do not satisfy the mathematical formulae that the actual metric does. For instance the triangle inequality may not be satisfied.
+References
+----------
+.. [1] Mémoli, F. (2011). Gromov–Wasserstein distances and the metric approach to object matching. Foundations of Computational Mathematics, 11(4), 417-487.
 
