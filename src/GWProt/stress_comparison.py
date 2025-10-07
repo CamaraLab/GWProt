@@ -15,7 +15,9 @@ from scipy.spatial.distance import *
 from scipy import stats
 import multiprocess
 import sklearn
+
 import shutil
+import scipy
 
 from typing import Iterator, Iterable, Optional, TypeVar, Generic, Mapping
 
@@ -28,17 +30,17 @@ from .GW_protein import *
 
 
 
-class Stress_Comparison:
+class LGD_Comparison:
     """
-    This class streamlines computing stresses for a dataset of proteins and analyzing transport plans. 
+    This class streamlines computing local geometric distortions for a dataset of proteins and analyzing transport plans. 
     
     :param prot_list: A list of ``GW_protein.GW_protein`` objects
     :param RAM: Whether to store the computed transport plans in RAM versus saving to files. Default is in RAM.
     :param transport_dir: If ``RAM == False``, a filepath to save the transport plans in.
     :ivar name_list: A list of the names of the ``GW_protein``s in ``prot_list``, equivalent to ``[p.name for p in prot_list]``.   
         This serves as the keys for the dicts.
-    :ivar raw_stress_dict: A dict storing all computed stresses. 
-        Where ``raw_stress_dict[prot1.name][prot1.name]`` is the stress of the residues in ``prot1`` when aligning it to ``prot2``.
+    :ivar raw_lgd_dict: A dict storing all computed lgd values. 
+        Where ``raw_lgd_dict[prot1.name][prot1.name]`` is the local geometric distortion of the residues in ``prot1`` when aligning it to ``prot2``.
     :ivar dist_dict: A dict storing all computed GW or FGW distances. 
         Where ``dist_dict[prot1.name][prot1.name]`` is the GW or FGW distance between ``prot1`` and ``prot2``.
     :ivar transport_dict: A dict storing all computed transport plans; only used if ``RAM ==True``. 
@@ -57,28 +59,23 @@ class Stress_Comparison:
         self.name_list = [p.name for p in prot_list]
         self.cell_dict = {p.name: p.make_cajal_cell for p in prot_list}
         self.RAM_flag = RAM
-        
+
         if RAM:
-            self.transport_dict = {n: {n: None for n in self.name_list}  for n in self.name_list} 
+            self.transport_dict = {n: {n: None for n in self.name_list}  for n in self.name_list}
         else:
             if transport_dir is None:
                 raise ValueError('If RAM is not used, a directory must be provided')
-                
-            self.transport_dir = os.path.join(transport_dir, 'tmp_'+str(self)) 
-            os.makedirs(self.transport_dir )
+            self.transport_dir = os.path.join(transport_dir, 'tmp_'+str(self))
+            os.makedirs(self.transport_dir)
 
-        
-        
-        
         if len(np.unique(self.name_list)) != len(self.name_list):
             raise ValueError('Names of the proteins must be unique')
-        
-        
-        self.raw_stress_dict = {n: {n: None for n in self.name_list}  for n in self.name_list} 
-        self.dist_dict = {n: {n: None for n in self.name_list}  for n in self.name_list} 
+
+        self.raw_lgd_dict = {n: {n: None for n in self.name_list}  for n in self.name_list}
+        self.dist_dict = {n: {n: None for n in self.name_list}  for n in self.name_list}
         for n in self.name_list:
             self.dist_dict[n][n] = 0
-            del self.raw_stress_dict[n][n]
+            del self.raw_lgd_dict[n][n]
 
         self.computed_flag = False
         self.cell_dict= {p.name : p.make_cajal_cell() for p in prot_list}
@@ -98,32 +95,30 @@ class Stress_Comparison:
 
     @controller.wrap(limits=1, user_api='blas')
     def _GW_helper(self, pp):
-        p1,p2 = pp 
+        p1, p2 = pp
         name1 = p1.name
-        name2 = p2.name 
+        name2 = p2.name
         cell1 = self.cell_dict[name1]
         cell2 = self.cell_dict[name2]
-        c, T = GW_protein.run_GW_from_cajal(cell1, cell2, transport_plan = True)
-        s1, s2 = GW_protein.GW_stress(p1,p2, T)     
-        return name1, name2, c, s1, s2, T 
+        c, T = GW_protein.run_GW_from_cajal(cell1, cell2, transport_plan=True)
+        s1, s2 = GW_protein.GW_lgd(p1, p2, T)
+        return name1, name2, c, s1, s2, T
 
     @controller.wrap(limits=1, user_api='blas')
     @staticmethod
     def _GW_helper_multi(ppcc):
         pp, cc = ppcc
-        p1,p2 = pp
+        p1, p2 = pp
         cell1, cell2 = cc
         name1 = p1.name
-        name2 = p2.name 
-        #cell1 = self.cell_dict[name1]
-        #cell2 = self.cell_dict[name2]
-        c, T = GW_protein.run_GW_from_cajal(cell1, cell2, transport_plan = True)
-        s1, s2 = GW_protein.GW_stress(p1,p2, T)     
-        return name1, name2, c, s1, s2, T 
+        name2 = p2.name
+        c, T = GW_protein.run_GW_from_cajal(cell1, cell2, transport_plan=True)
+        s1, s2 = GW_protein.GW_lgd(p1, p2, T)
+        return name1, name2, c, s1, s2, T
 
 
 
-    def GW_compute_stresses(self, processes: int = None) -> None:
+    def GW_compute_lgd(self, processes: int = None) -> None:
         """
 
         This method runs all pairwise GW computations. This can be done in parallel with ``processes`` number of processes.
@@ -138,13 +133,13 @@ class Stress_Comparison:
         if processes is not None and processes >1:
             with multiprocess.Pool(processes = processes)  as pool:
                 cell_list = [self.cell_dict[n] for n in self.name_list]
-                results = pool.imap(Stress_Comparison._GW_helper_multi, zip( it.combinations(self.prot_list,2),  it.combinations(cell_list,2)), chunksize = 20)
+                results = pool.imap(LGD_Comparison._GW_helper_multi, zip( it.combinations(self.prot_list,2),  it.combinations(cell_list,2)), chunksize = 20)
                 for r in results:
                     name1, name2, c,s1,s2,T = r  
                     self.dist_dict[name1][name2] = c 
                     self.dist_dict[name2][name1] = c
-                    self.raw_stress_dict[name1][name2] = s1
-                    self.raw_stress_dict[name2][name1] = s2
+                    self.raw_lgd_dict[name1][name2] = s1
+                    self.raw_lgd_dict[name2][name1] = s2
                     if self.RAM_flag:
                         self.transport_dict[name1][name2] = T
                         self.transport_dict[name2][name1] = T.T
@@ -157,8 +152,8 @@ class Stress_Comparison:
                 name1, name2, c,s1,s2,T = r  
                 self.dist_dict[name1][name2] = c 
                 self.dist_dict[name2][name1] = c
-                self.raw_stress_dict[name1][name2] = s1
-                self.raw_stress_dict[name2][name1] = s2
+                self.raw_lgd_dict[name1][name2] = s1
+                self.raw_lgd_dict[name2][name1] = s2
                 if self.RAM_flag:
                     self.transport_dict[name1][name2] = T
                     self.transport_dict[name2][name1] = T.T
@@ -191,7 +186,7 @@ class Stress_Comparison:
         return name1, name2, c, s1, s2, T 
 
 
-    def FGW_compute_stresses_data_lists(self, data_list_dict : dict, alpha: float, processes: int = None) -> None: 
+    def FGW_compute_lgd_data_lists(self, data_list_dict : dict, alpha: float, processes: int = None) -> None: 
         """
         This method runs all pairwise FGW computations with ``GW_protein.run_FGW_data_lists``. This can be done in parallel with ``processes`` number of processes.
         
@@ -202,7 +197,7 @@ class Stress_Comparison:
         """
 
         if set(data_list_dict.keys()) != set(self.name_list):
-            raise ValueError("keys of stress_list_dict must match name_list")
+            raise ValueError("keys of lgd_list_dict must match name_list")
         for prot in self.prot_list:
             if len(prot) != len(data_list_dict[prot.name]):
                 raise ValueError("lengths of data_list_dict entries must match lengths of proteins")
@@ -211,27 +206,27 @@ class Stress_Comparison:
         
         if processes is not None and processes >1:
             with multiprocess.Pool(processes = processes)  as pool:
-                results = pool.imap(Stress_Comparison._FGW_lists_helper_multi, zip( it.combinations(self.prot_list,2), it.combinations(data_list_list,2), it.repeat(alpha)), chunksize = 20)
+                results = pool.imap(LGD_Comparison._FGW_lists_helper_multi, zip( it.combinations(self.prot_list,2), it.combinations(data_list_list,2), it.repeat(alpha)), chunksize = 20)
                 for r in results:
                     name1, name2, c,s1,s2,T = r  
                     self.dist_dict[name1][name2] = c 
                     self.dist_dict[name2][name1] = c
-                    self.raw_stress_dict[name1][name2] = s1
-                    self.raw_stress_dict[name2][name1] = s2
+                    self.raw_lgd_dict[name1][name2] = s1
+                    self.raw_lgd_dict[name2][name1] = s2
                     if self.RAM_flag:
                         self.transport_dict[name1][name2] = T
                         self.transport_dict[name2][name1] = T.T
                     else:
                         np.save(file = os.path.join(self.transport_dir, f'{name1}_{name2}.npy' ), arr = T)
         else:
-            results = map(Stress_Comparison._FGW_lists_helper_multi, zip( it.combinations(self.prot_list,2), it.combinations(data_list_list,2), it.repeat(alpha)))
+            results = map(LGD_Comparison._FGW_lists_helper_multi, zip( it.combinations(self.prot_list,2), it.combinations(data_list_list,2), it.repeat(alpha)))
         
             for r in results:
                 name1, name2, c,s1,s2,T = r  
                 self.dist_dict[name1][name2] = c 
                 self.dist_dict[name2][name1] = c
-                self.raw_stress_dict[name1][name2] = s1
-                self.raw_stress_dict[name2][name1] = s2
+                self.raw_lgd_dict[name1][name2] = s1
+                self.raw_lgd_dict[name2][name1] = s2
                 if self.RAM_flag:
                     self.transport_dict[name1][name2] = T
                     self.transport_dict[name2][name1] = T.T
@@ -258,12 +253,12 @@ class Stress_Comparison:
         s1, s2 = GW_protein.FGW_stress(prot1= p1,prot2 = p2, alpha = alpha, diff_mat = M, T= T)     
         return name1, name2, c, s1, s2, T 
         
-    def FGW_compute_stresses_dict(self, diff_dict : dict, alpha: float, processes: int = None) -> None: 
+    def FGW_compute_lgd_dict(self, diff_dict : dict, alpha: float, processes: int = None) -> None: 
         """
 
         This method runs all pairwise FGW computations with ``GW_protein.run_FGW_dict``. This can be done in parallel with ``processes`` number of processes.
         
-        :param data_list_dict: A dictionary for ``GW_protein.run_FGW_dict``
+    :param diff_dict: A dictionary for ``GW_protein.run_FGW_dict``
         :param processes: How many parallel processes to run, default is 1. 
         :param alpha: The value of alpha to use for FGW.
 
@@ -272,27 +267,27 @@ class Stress_Comparison:
 
         if processes is not None and processes >1:
             with multiprocess.Pool(processes = processes)  as pool:
-                results = pool.imap(Stress_Comparison._FGW_dict_helper_multi, zip( it.combinations(self.prot_list,2), it.repeat(diff_dict), it.repeat(alpha)), chunksize = 20)
+                results = pool.imap(LGD_Comparison._FGW_dict_helper_multi, zip( it.combinations(self.prot_list,2), it.repeat(diff_dict), it.repeat(alpha)), chunksize = 20)
                 for r in results:
                     name1, name2, c,s1,s2,T = r  
                     self.dist_dict[name1][name2] = c 
                     self.dist_dict[name2][name1] = c
-                    self.raw_stress_dict[name1][name2] = s1
-                    self.raw_stress_dict[name2][name1] = s2
+                    self.raw_lgd_dict[name1][name2] = s1
+                    self.raw_lgd_dict[name2][name1] = s2
                     if self.RAM_flag:
                         self.transport_dict[name1][name2] = T
                         self.transport_dict[name2][name1] = T.T
                     else:
                         np.save(file = os.path.join(self.transport_dir, f'{name1}_{name2}.npy' ), arr = T)
         else:
-            results = map(Stress_Comparison._FGW_lists_helper_multi, zip( it.combinations(self.prot_list,2), it.repeat(diff_dict), it.repeat(alpha)))
+            results = map(LGD_Comparison._FGW_lists_helper_multi, zip( it.combinations(self.prot_list,2), it.repeat(diff_dict), it.repeat(alpha)))
         
             for r in results:
                 name1, name2, c,s1,s2,T = r  
                 self.dist_dict[name1][name2] = c 
                 self.dist_dict[name2][name1] = c
-                self.raw_stress_dict[name1][name2] = s1
-                self.raw_stress_dict[name2][name1] = s2
+                self.raw_lgd_dict[name1][name2] = s1
+                self.raw_lgd_dict[name2][name1] = s2
                 if self.RAM_flag:
                     self.transport_dict[name1][name2] = T
                     self.transport_dict[name2][name1] = T.T
@@ -310,38 +305,30 @@ class Stress_Comparison:
 
 
 
-    def raw_transferred_stresses(self, stress_dict: dict[str,np.array]) ->dict[str,dict[str,np.array]]:
+    def raw_transferred_lgd(self, lgd_dict: dict[str, np.array]) -> dict[str, dict[str, np.array]]:
         """
-
-        This method computes all of the transferred stresses. 
+        This method computes all of the transferred local geometric distortions. 
         
-        :param stress_dict: A dictionary of the form ``{name: np.array}`` with keys the protein names in ``self.name_list``, where the arrays represent the stresses of each residue.
-        :return dict: A dictionary of all transferred stresses where
-                Where ``raw_transferred_stress[prot1.name][prot1.name]`` is the stress of the residues in ``prot1`` based on the transferred stress from ``prot2``.
-
-
+        :param lgd_dict: A dictionary of the form ``{name: np.array}`` with keys the protein names in ``self.name_list``, where the arrays represent the local geometric distortion of each residue.
+        :return dict: A dictionary of all transferred local geometric distortions where
+            Where ``raw_transferred_lgd[prot1.name][prot1.name]`` is the local geometric distortion of the residues in ``prot1`` based on the transferred local geometric distortion from ``prot2``.
         """
-        assert set(stress_dict.keys()) == set(self.name_list)
+        assert set(lgd_dict.keys()) == set(self.name_list)
         assert self.computed_flag
         for i in range(len(self.prot_list)):
-            assert len(self.prot_list[i]) == len(stress_dict[self.name_list[i]])
-        raw_transferred_stresses = {n: {n: None for n in self.name_list}  for n in self.name_list} 
+            assert len(self.prot_list[i]) == len(lgd_dict[self.name_list[i]])
+        raw_transferred_lgd = {n: {n: None for n in self.name_list} for n in self.name_list}
         for n in self.name_list:
-            del raw_transferred_stresses[n][n]
-        
-        
-        for nn in it.combinations(self.name_list,2):
+            del raw_transferred_lgd[n][n]
+        for nn in it.combinations(self.name_list, 2):
             name1, name2 = nn
             if self.RAM_flag:
                 T = self.transport_dict[name1][name2]
             else:
-                T = self._load_transport_plan(name1,name2)
-        
-            raw_transferred_stresses[name1][name2] = T @ stress_dict[name2]
-            raw_transferred_stresses[name2][name1] = T.T@ stress_dict[name1]
-        
-        
-        return raw_transferred_stresses
+                T = self._load_transport_plan(name1, name2)
+            raw_transferred_lgd[name1][name2] = T @ lgd_dict[name2]
+            raw_transferred_lgd[name2][name1] = T.T @ lgd_dict[name1]
+        return raw_transferred_lgd
 
 
     def get_GW_dmat(self) -> np.array:
@@ -374,72 +361,71 @@ class Stress_Comparison:
 
 
 
-def normalize_stress_dict(raw_dict: dict[str,dict[str,np.array]], code: tuple[float,float,float,float] =(1, 0, 0, 0, 0)) -> dict[str,np.array]: 
+def normalize_lgd_dict(raw_dict: dict[str,dict[str,np.array]], code: tuple[float,float,float,float] =(1, 0, 0, 0, 0)) -> dict[str,np.array]: 
     """
-    This method takes in a dictionary of raw stress and outputs a dictionary of weighted averages.
+    This method takes in a dictionary of raw local geometric distortions and outputs a dictionary of weighted averages.
 
-    :param raw_dict: A dictionary of raw stresses of the format ``raw_dict[name1][name2] == stress``.
+    :param raw_dict: A dictionary of raw local geometric distortions of the format ``raw_dict[name1][name2] == lgd``.
     :param code: This is a tuple of exponents to be used for weighting.
-        ``code[0]`` is the exponent for each stress value, 
-        ``code[1]`` is the exponent for each stress value to be summed for the row stress, 
-        ``code[2]`` is the exponent of the total stress in a row,
+        ``code[0]`` is the exponent for each local geometric distortion value, 
+        ``code[1]`` is the exponent for each local geometric distortion value to be summed for the row local geometric distortion, 
+        ``code[2]`` is the exponent of the total local geoemtric distortion in a row,
         ``code[3]`` is the exponent of the number of residues in the protein,
         ``code[4]`` is the exponent for the number of other proteins.
         The default is (1,0,0,0,0) which corresponds to the simple sum. (1,0,0,0,-1) is the mean. 
-    :return dict: A dictionary of stresses of the format ``stress_dict[name]== stress``
-    
+    :return dict: A dictionary of local geometric distortions of the format ``lgd_dict[name]== lgd``
     """
     a, b, c, d, e = code
-    norm_stresses_dict = {}
+    norm_lgd_dict = {}
     for k in raw_dict.keys():
         mat = np.stack(list(raw_dict[k].values())) 
         out = np.sum(
             mat**a * (np.sum(mat**b, axis=1) ** c)[:, np.newaxis] * mat.shape[1] ** d,
             axis=0,
         )* mat.shape[0] ** e
-        norm_stresses_dict[k] = out
-    return norm_stresses_dict
+        norm_lgd_dict[k] = out
+    return norm_lgd_dict
 
 
-def get_percentile_of_dict(stress_dict: dict[str,np.array]) ->dict[str,np.array]:
+def get_percentile_of_dict(lgd_dict: dict[str,np.array]) ->dict[str,np.array]:
     """
-    This method replaces each stress array with the percentile values of the stresses for that protein.
+    This method replaces each local geometric distortion array with the percentile values of the local geometric distortion for that protein.
 
-    :param stress_dict: A dict of the stress levels for each protein.
-    :return: A dict of the percentiles of the stress levels at each residue for each protein.
+    :param lgd_dict: A dict of the local geometric distortion levels for each protein.
+    :return: A dict of the percentiles of the local geometric distortion levels at each residue for each protein.
 
     """
     return {
-        k: scipy.stats.percentileofscore(stress_dict[k], stress_dict[k])
-        for k in stress_dict.keys()
+        k: scipy.stats.percentileofscore(lgd_dict[k], lgd_dict[k])
+        for k in lgd_dict.keys()
     }
 
 
-def get_AP_scores(stress_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]], upper = False ) ->dict[str, float]:
+def get_AP_scores(lgd_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]], upper = False ) ->dict[str, float]:
     """
-    This method takes a stress dict and calculates the average precision for each protein
-     of using the stresses to predict user-inputted regions in the proteins
+    This method takes an lgd dict and calculates the average precision for each protein
+     of using the local geometric distortions to predict user-inputted regions in the proteins
 
-    :param stress_dict: A dict of the stress levels for each protein.
+    :param lgd_dict: A dict of the local geometric distortion levels for each protein.
     :param true_region_dict: A dict of the true regions to be predicted.
-    :param upper: Whether to predict the regions based on high stress (``True``) or low stress (``False``)
+    :param upper: Whether to predict the regions based on high local geometric distortion (``True``) or low local geometric distortion (``False``)
     :return: A dict of the average precision scores for each protein.
 
     """
 
     if upper:
-            AP_dict = {
+        AP_dict = {
             name: sklearn.metrics.average_precision_score(
-                y_true=true_region_dict[name], y_score=[ s for s in stress_dict[name]]
+                y_true=true_region_dict[name], y_score=[ s for s in lgd_dict[name]]
             )
-            for name in stress_dict.keys()
+            for name in lgd_dict.keys()
         }
     else:
         AP_dict = {
             name: sklearn.metrics.average_precision_score(
-                y_true=true_region_dict[name], y_score=[1 - s for s in stress_dict[name]]
+                y_true=true_region_dict[name], y_score=[1 - s for s in lgd_dict[name]]
             )
-            for name in stress_dict.keys()
+            for name in lgd_dict.keys()
         }
     return AP_dict
 

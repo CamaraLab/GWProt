@@ -124,9 +124,9 @@ def weighted_RMSD(X:np.array ,Y:np.array, T:np.array) -> tuple[np.array, np.arra
 
 
 
-def get_raw_RMSD_stresses(X,Y):
+def get_raw_RMSD_lgd(X,Y):
     """
-    This takes two point clouds of the same shape and computes the RMSD as well as the stresses
+    This takes two point clouds of the same shape and computes the RMSD as well as the local geometric distortions
     assumes they are already superimposed
     """
 
@@ -138,13 +138,13 @@ def get_raw_RMSD_stresses(X,Y):
     RMSD = math.sqrt(mean_sq_dists)
     return RMSD, mean_sq_dists
 
-def get_RMSD_stresses(X,Y):
+def get_RMSD_lgd(X,Y):
     """
-    first applies the transformation then does get_raw_RMSD_stresses
+    first applies the transformation then does get_raw_RMSD_lgd
     """
     pre, rot, post = weighted_RMSD(X,Y, np.identity(X.shape[0]))
     Y2 = (Y+ pre) @ rot +post
-    return get_raw_RMSD_stresses(X,Y2)
+    return get_raw_RMSD_lgd(X,Y2)
 
 
 
