@@ -87,11 +87,13 @@ Multiple ways of inputting the feature space data are included.
 
 .. autofunction:: GWProt.GW_protein.GW_protein.run_FGW_diff_mat
 
-The first is the most general as it can use any user-inputted feature difference matrix. However a new difference matrix must be used for every pair of proteins. 
+The first is the most general as it can use any user-inputted feature difference matrix. However 
+a new difference matrix must be used for every pair of proteins. 
 
 .. autofunction:: GWProt.GW_protein.GW_protein.run_FGW_data_lists
 
-The second uses a linear feature space. This is suitable for scalar features including isoelectric point, solvent-accessible surface area, charge, and hydrophobicity. 
+The second uses a linear feature space. This is suitable for scalar features including isoelectric 
+point, solvent-accessible surface area, charge, and hydrophobicity. 
 
 
 .. autofunction:: GWProt.GW_protein.GW_protein.run_FGW_dict
@@ -101,22 +103,26 @@ The third uses a dictionary giving difference values between different types of 
 
 
 
-It is not recommended to use these on downsampled proteins, as the data is lost from the excluded residues. 
+It is not recommended to use these on downsampled proteins, as the data is lost from the excluded 
+residues. 
 
 As CAJAL does not run FGW, these computation are done with the Python ``ot`` library. 
 
 
-**Computing Stress**
---------------------
 
+**Computing Local Geometric Distortion (LGD)**
+---------------------------------------------
 
+The local geometric distortion (LGD) quantifies the contribution of each residue to the GW 
+or FGW distance, providing a residue-level measure of structural conservation or flexibility.
 
+.. autofunction:: GWProt.GW_protein.GW_protein.GW_lgd
 
-.. autofunction:: GWProt.GW_protein.GW_protein.GW_stress
+.. autofunction:: GWProt.GW_protein.GW_protein.FGW_lgd
 
-.. autofunction:: GWProt.GW_protein.GW_protein.FGW_stress
-
-WARNING - ``np.sum(stress1) != c``, where ``c`` is the GW cost; rather ``math.sqrt(np.sum(stress1))/2 == c``; and similarly for ``stress2`` , and for FGW.
+.. note::
+	``np.sum(lgd1) != c``, where ``c`` is the GW cost; rather ``math.sqrt(np.sum(lgd1))/2 == c``; 
+    and similarly for ``lgd2``, and for FGW.
 
 
 **Miscellaneous Methods**
@@ -136,7 +142,7 @@ for the Smith-Waterman algorithm in the `Fasta Package <https://github.com/wrpea
 
 .. autofunction:: GWProt.GW_protein.GW_protein.get_eccentricity
 
- Eccentricity is defined in `Memolis's paper <https://www.math.ucdavis.edu/~saito/data/acha.read.w12/memoli-gromov-dist.pdf>`_, Definition 5.3. Intuitively it quantifies how far each residue is from the rest of the residues in a protein. Within a give protein, residues with higher eccentricity often have higher stress when aligned to other proteins, so this could be used for normalization.
+ Eccentricity is defined in `this paper <https://www.math.ucdavis.edu/~saito/data/acha.read.w12/memoli-gromov-dist.pdf>`_, Definition 5.3. Intuitively, it quantifies how far each residue is from the rest of the residues in a protein. Within a given protein, residues with higher eccentricity often have higher LGD when aligned to other proteins, so this could be used for normalization.
 
 
 
