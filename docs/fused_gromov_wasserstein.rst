@@ -1,18 +1,30 @@
-Fused Gromov Wasserstein
-===========================
+Fused Gromov-Wasserstein Correspondences
+=========================================
 
-Fused Gromov-Wasserstein (FGW) is a variant of Gromov-Wasserstein that allow biochemical data to be incorporated, introduced by `Vayer, Chapel, Flamary, Tavenard, and Courty <https://arxiv.org/pdf/1811.02834>`_ .
+Overview
+--------
+Fused Gromov-Wasserstein (FGW) [1]_ is a variant of the Gromov-Wasserstein distance that, 
+in the context of GWProt, allows biochemical data to be incorporated into structural alignments.
 
+In FGW, each residue is described not only by its spatial coordinates but also by additional 
+data, such as hydrophobicity, isoelectric point, or a substitution score (e.g., from the BLOSUM62 matrix). 
+FGW adds a penalty term for aligning biochemically dissimilar residues, enabling more 
+biologically meaningful alignments.
 
-In addition to its coordinates each residue now has an added datapoint which can be used to compare it to residues in other proteins. 
-For instance this could be the difference in isoelectric points, or a substitution score based on the BLOSUM62 matrix. 
-Fused GW now adds a penalty term for aligning dissimilar residues. 
+Mathematical Formulation
+------------------------
+Let :math:`\delta(x, y)` denote the difference in the biochemical data associated with 
+residues :math:`x` and :math:`y`. The *fused Gromov-Wasserstein distance* between 
+proteins :math:`X` and :math:`Y` is defined as:
 
-Formally, we write :math:`\delta(x,y)` to denote the difference in the data associated to residues :math:`x` and :math:`y`. Then the *fused Gromov-Wasserstein distance* between proteins  :math:`X` and :math:`Y` is defined as
+.. math::
+   FGW(X, Y) = \min_T \frac{1}{2} \left( \sum_{i, j, k, l} \left[ \alpha |d_X(x_i, x_j) - d_Y(y_k, y_l)|^2 + (1 - \alpha) \delta(x_i, y_j) \right] T_{i, k} T_{j, l} \right)^{1/2}
 
+where :math:`\alpha \in [0, 1]` determines the weight of the geometric cost relative 
+to the biochemical penalty. Optimal values of :math:`\alpha` may vary depending on the 
+type of biochemical data used.
 
-.. math::  FGW(X,Y) = \min_T \frac{1}{2} \big ( \sum_{i,j,k,l} (\alpha \cdot |d_X(x_i,x_j) - d_Y(y_k,y_l)|^2  + (1 - \alpha) \delta(x_i,y_j))T_{i,k}T_{j,l} \big )^{\frac{1}{2}}.
-
-
-where :math:`\alpha` in the interval [0,1] determines the weight of the penalty relative to the usual geometric cost. We found 0.05 to work well for isoelectic points though good values will vary depending on the type of biochemical data used.
+References
+----------
+.. [1] Vayer, T., Chapel, L., Flamary, R., Tavenard, R., & Courty, N. (2019). Fused Gromov-Wasserstein distance for structured objects. Advances in Neural Information Processing Systems, 32.
 
