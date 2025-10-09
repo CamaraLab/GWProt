@@ -422,23 +422,22 @@ class GW_protein:
         else:
             ipdm_pp = ipdm**p
             ipdm_pp_w = ipdm_pp * distr 
-            pre_stress = np.sum(ipdm_pp_w, axis = 0) 
-            eccentricity = pre_stress**(1/p)
+            pre_lgd = np.sum(ipdm_pp_w, axis = 0) 
+            eccentricity = pre_lgd**(1/p)
 
         return eccentricity
 
 
     @staticmethod
-    def GW_stress(prot1: 'GW_protein', prot2: 'GW_protein', T: np.array) -> tuple[np.array,np.array]:
-
+    def GW_lgd(prot1: 'GW_protein', prot2: 'GW_protein', T: np.array) -> tuple[np.array,np.array]:
         """
-        This calculates the stress, i.e. the contribution of each residue to the sum in the GW cost, using the transport plan ``T``.
+        This calculates the local geometric distortion (LGD), i.e. the contribution of each residue to the sum in the GW cost, using the transport plan ``T``.
         This is output as two ``np.array`` s, one for ``prot1`` , the second for ``prot2``.
 
         :param prot1: The first ``GW_protein``
         :param prot2: The second ``GW_protein``
         :param T: The transport plan to be used
-        :return: ``stress1, stress2``; the stresses for the two proteins
+        :return: ``lgd1, lgd2``; the LGD values for the two proteins
 
         """
 
@@ -446,23 +445,21 @@ class GW_protein:
         n2 = len(prot2)
         assert T.shape == (n1,n2)
 
-
         A = prot1.ipdm
         a = prot1.distribution
         B = prot2.ipdm
         b = prot2.distribution
 
-        stress1 = np.einsum('ik,il->i',T,(np.einsum('ij,ij->ij',A,A) @T) )   + T @ np.einsum('kl,kl->kl',B,B) @b  -(2 * np.einsum('ab,ab->a', A @T @B, T))
-        stress2 = np.einsum('kj,lj->j' ,T @ np.einsum('kl,kl->kl',B,B), T) +a.T @ np.einsum('ij,ij->ij',A,A) @T -(2 * np.einsum('ab,ab->b', A @T @B, T))
+        lgd1 = np.einsum('ik,il->i',T,(np.einsum('ij,ij->ij',A,A) @T) )   + T @ np.einsum('kl,kl->kl',B,B) @b  -(2 * np.einsum('ab,ab->a', A @T @B, T))
+        lgd2 = np.einsum('kj,lj->j' ,T @ np.einsum('kl,kl->kl',B,B), T) +a.T @ np.einsum('ij,ij->ij',A,A) @T -(2 * np.einsum('ab,ab->b', A @T @B, T))
 
-        return stress1, stress2
+        return lgd1, lgd2
 
 
     @staticmethod
-    def FGW_stress(prot1: 'GW_protein', prot2: 'GW_protein', T: np.array, diff_mat : np.array, alpha:float)-> tuple[np.array,np.array]:
-        
+    def FGW_lgd(prot1: 'GW_protein', prot2: 'GW_protein', T: np.array, diff_mat : np.array, alpha:float)-> tuple[np.array,np.array]:
         """
-        This calculates the stress, i.e. the contribution of each residue to the sum in the FGW cost, using the transport plan ``T``.
+        This calculates the local geometric distortion (LGD), i.e. the contribution of each residue to the sum in the FGW cost, using the transport plan ``T``.
         This is output as two ``np.array`` s, one for ``prot1`` , the second for ``prot2``.
 
         :param prot1: The first ``GW_protein``
@@ -470,7 +467,7 @@ class GW_protein:
         :param diff_mat: The difference matrix in the feature space
         :param T: The transport plan to be used
         :param alpha: The trade-off constant between the fused cost and the geometric cost
-        :return: ``stress1, stress2``;  the stresses for the two proteins
+        :return: ``lgd1, lgd2``;  the LGD values for the two proteins
 
         """   
 
@@ -480,28 +477,22 @@ class GW_protein:
         assert diff_mat.shape == (n1,n2)
         assert 0 <= alpha <= 1
 
-
         A = prot1.ipdm
         a = prot1.distribution
         B = prot2.ipdm
         b = prot2.distribution
         M = diff_mat
 
+        geo_lgd1 = alpha * (np.einsum('ik,il->i',T,(np.einsum('ij,ij->ij',A,A) @T) )   + T @ np.einsum('kl,kl->kl',B,B) @b  -(2 * np.einsum('ab,ab->a', A @T @B, T)))
+        geo_lgd2 = alpha *(np.einsum('kj,lj->j' ,T @ np.einsum('kl,kl->kl',B,B), T) +a.T @ np.einsum('ij,ij->ij',A,A) @T -(2 * np.einsum('ab,ab->b', A @T @B, T)))
 
+        fused_lgd1 = (1-alpha) * np.einsum('ik,ik->i', M,T)
+        fused_lgd2 = (1-alpha) * np.einsum('ik,ik->k', M,T)
 
-        geo_stress1 = alpha * (np.einsum('ik,il->i',T,(np.einsum('ij,ij->ij',A,A) @T) )   + T @ np.einsum('kl,kl->kl',B,B) @b  -(2 * np.einsum('ab,ab->a', A @T @B, T)))
-        geo_stress2 = alpha *(np.einsum('kj,lj->j' ,T @ np.einsum('kl,kl->kl',B,B), T) +a.T @ np.einsum('ij,ij->ij',A,A) @T -(2 * np.einsum('ab,ab->b', A @T @B, T)))
+        lgd1 = geo_lgd1 + fused_lgd1
+        lgd2 = geo_lgd2 + fused_lgd2
 
-        
-
-
-        fused_stress1 = (1-alpha) * np.einsum('ik,ik->i', M,T)
-        fused_stress2 = (1-alpha) * np.einsum('ik,ik->k', M,T)
-
-        stress1 = geo_stress1 + fused_stress1
-        stress2 = geo_stress2 + fused_stress2
-
-        return stress1, stress2
+        return lgd1, lgd2
         
     @controller.wrap(limits=1, user_api='blas')
     @staticmethod
