@@ -29,7 +29,7 @@ found at the `GWProt GitHub repository <https://github.com/CamaraLab/GWProt>`_.
    :caption: Examples
 
    Examples/Example_1_Comparing_KRAS_Proteins
-   Examples/Example_2_Circular_Permutations
+   Examples/Example_2_Permutations
    Examples/Example_3_Clustering_RdRps
 
 .. toctree::
