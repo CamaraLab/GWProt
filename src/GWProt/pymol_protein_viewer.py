@@ -103,7 +103,7 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, chain1:str
     """
     This loads two pdb files and display them in Pymol and aligns them with a transport plan, then saves the scene to a .pse file.
     A rigid alignment is created minimizing weighted RSMD. Note that if Pymol 2 is used it uses ``cmd.cealign`` instead. 
-    For a pair of aligned residues, a line will connect them if over ``threshold`` of each of their mass is connected. The proteins are also colored by the stress levels.
+    For a pair of aligned residues, a line will connect them if over ``threshold`` of each of their mass is connected. The proteins are also colored by the local geometric distortion (LGD) levels.
     
     :param file1: Filepath to the first protein.
     :param file2: Filepath to the second protien.
@@ -131,10 +131,10 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, chain1:str
 
     ll = pymol_transform(pretrans=pret, rot=rot, posttrans=trans)
 
-    stress1, stress2 = GW_protein.GW_stress(p1,p2, transport_plan)
+    lgd1, lgd2 = GW_protein.GW_lgd(p1,p2, transport_plan)
     
-    stress1 = [float(a) for a in stress1]
-    stress2 = [float(a) for a in stress2]
+    lgd1 = [float(a) for a in lgd1]
+    lgd2 = [float(a) for a in lgd2]
 
  
     pm = my_pymolPy3()
@@ -148,10 +148,10 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, chain1:str
     #print(f"residue_numbers1 = list(set(atom.resi_number for atom in cmd.get_model('/prot1//{chain1}').atom))")
     pm(f"residue_numbers2 = list(set(atom.resi_number for atom in cmd.get_model('/prot2//{chain2}').atom))")
     #print(f"residue_numbers2 = list(set(atom.resi_number for atom in cmd.get_model('/prot2//{chain2}').atom))")
-    pm(f"stress1 = {str(stress1)}")
-    pm(f"stress2 = {str(stress2)}")
-    pm(f"cmd.alter( '/prot1//{chain1}',  'b = stress1[residue_numbers1.index(int(resi))]' )")
-    pm(f"cmd.alter( '/prot2//{chain2}',  'b = stress2[residue_numbers2.index(int(resi))]' )")
+    pm(f"lgd1 = {str(lgd1)}")
+    pm(f"lgd2 = {str(lgd2)}")
+    pm(f"cmd.alter( '/prot1//{chain1}',  'b = lgd1[residue_numbers1.index(int(resi))]' )")
+    pm(f"cmd.alter( '/prot2//{chain2}',  'b = lgd2[residue_numbers2.index(int(resi))]' )")
     pm(f"cmd.spectrum(expression='b', selection='/prot1//{chain1}', palette='yellow_red', byres=1)")
     pm(f"cmd.spectrum(expression='b', selection='/prot2//{chain2}', palette='yellow_red', byres=1)")
 
