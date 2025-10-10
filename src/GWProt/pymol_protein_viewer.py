@@ -10,7 +10,7 @@ import warnings
 
 
 from .GW_protein import *
-from .GW_stress import *
+from .GW_lgd import *
 from .weighted_alignment import *
 
 
