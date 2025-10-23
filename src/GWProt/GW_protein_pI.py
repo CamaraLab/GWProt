@@ -501,8 +501,8 @@ class GW_protein_pI(GW_protein):
 
 
     @staticmethod
-    def FGW_stress(prot1: 'GW_protein_pI', prot2:'GW_protein_pI',  alpha: float, T : np.array):
-    #now with FGW stress
+    def FGW_lgd(prot1: 'GW_protein_pI', prot2:'GW_protein_pI',  alpha: float, T : np.array):
+    #now with FGW lgd
         n1= len(prot1)
         n2 = len(prot2)
         assert T.shape == (n1,n2)
@@ -524,19 +524,19 @@ class GW_protein_pI(GW_protein):
 
 
 
-        geo_stress1 = alpha * (np.einsum('ik,il->i',T,(np.einsum('ij,ij->ij',A,A) @T) )   + T @ np.einsum('kl,kl->kl',B,B) @b  -(2 * np.einsum('ab,ab->a', A @T @B, T)))
-        geo_stress2 = alpha *(np.einsum('kj,lj->j' ,T @ np.einsum('kl,kl->kl',B,B), T) +a.T @ np.einsum('ij,ij->ij',A,A) @T -(2 * np.einsum('ab,ab->b', A @T @B, T)))
+        geo_lgd1 = alpha * (np.einsum('ik,il->i',T,(np.einsum('ij,ij->ij',A,A) @T) )   + T @ np.einsum('kl,kl->kl',B,B) @b  -(2 * np.einsum('ab,ab->a', A @T @B, T)))
+        geo_lgd2 = alpha *(np.einsum('kj,lj->j' ,T @ np.einsum('kl,kl->kl',B,B), T) +a.T @ np.einsum('ij,ij->ij',A,A) @T -(2 * np.einsum('ab,ab->b', A @T @B, T)))
 
         
 
 
-        fused_stress1 = (1-alpha) * np.einsum('ik,ik->i', M,T)
-        fused_stress2 = (1-alpha) * np.einsum('ik,ik->k', M,T)
+        fused_lgd1 = (1-alpha) * np.einsum('ik,ik->i', M,T)
+        fused_lgd2 = (1-alpha) * np.einsum('ik,ik->k', M,T)
 
-        stress1 = geo_stress1 + fused_stress1
-        stress2 = geo_stress2 + fused_stress2
+        lgd1 = geo_lgd1 + fused_lgd1
+        lgd2 = geo_lgd2 + fused_lgd2
 
-        return stress1, stress2
+        return lgd1, lgd2
         
     @controller.wrap(limits=1, user_api='blas')
     @staticmethod

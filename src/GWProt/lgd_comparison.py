@@ -182,7 +182,7 @@ class LGD_Comparison:
         M = abs(aa-bb)
 
         c, T = GW_protein.run_FGW_diff_mat(prot1=p1, prot2=p2, alpha = alpha, diff_mat = M , transport_plan = True)
-        s1, s2 = GW_protein.FGW_stress(prot1= p1,prot2 = p2, alpha = alpha, diff_mat = M, T= T)     
+        s1, s2 = GW_protein.FGW_lgd(prot1= p1,prot2 = p2, alpha = alpha, diff_mat = M, T= T)     
         return name1, name2, c, s1, s2, T 
 
 
@@ -250,7 +250,7 @@ class LGD_Comparison:
                 M[i,j] = ddict[p1.seq[i]][p2.seq[j]]
 
         c, T = GW_protein.run_FGW_diff_mat(prot1=p1, prot2=p2, alpha = alpha, diff_mat = M, transport_plan = True)
-        s1, s2 = GW_protein.FGW_stress(prot1= p1,prot2 = p2, alpha = alpha, diff_mat = M, T= T)     
+        s1, s2 = GW_protein.FGW_lgd(prot1= p1,prot2 = p2, alpha = alpha, diff_mat = M, T= T)     
         return name1, name2, c, s1, s2, T 
         
     def FGW_compute_lgd_dict(self, diff_dict : dict, alpha: float, processes: int = None) -> None: 
@@ -351,8 +351,8 @@ class LGD_Comparison:
                 name2 = self.name_list[j]
                 assert self.dist_dict[name1][name2] == self.dist_dict[name2][name1]
                 if self.dist_dict[name1][name2] is None:
-                    raise RuntimeError('Stresses and distances must be computed with \
-                        GW_compute_stresses before get_GW_dmat can be run')
+                    raise RuntimeError('LGDes and distances must be computed with \
+                        GW_compute_lgdes before get_GW_dmat can be run')
                 else:
                     dmat[i,j] = self.dist_dict[name1][name2]
                     dmat[j,i] = self.dist_dict[name1][name2]
@@ -430,15 +430,15 @@ def get_AP_scores(lgd_dict: dict[str,np.array], true_region_dict : dict[str,list
     return AP_dict
 
 
-# def mean_AP_scores(stress_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]],upper = False ):
+# def mean_AP_scores(lgd_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]],upper = False ):
 #     if upper:
 #         return np.mean(
 #             [
 #                 metrics.average_precision_score(
 #                     y_true=true_region_dict[name],
-#                     y_score=[ s for s in stress_dict[name]],
+#                     y_score=[ s for s in lgd_dict[name]],
 #                 )
-#                 for name in stress_dict.keys()
+#                 for name in lgd_dict.keys()
 #             ]
 #         )
         
@@ -447,69 +447,69 @@ def get_AP_scores(lgd_dict: dict[str,np.array], true_region_dict : dict[str,list
 #             [
 #                 metrics.average_precision_score(
 #                     y_true=true_region_dict[name],
-#                     y_score=[1 - s for s in stress_dict[name]],
+#                     y_score=[1 - s for s in lgd_dict[name]],
 #                 )
-#                 for name in stress_dict.keys()
+#                 for name in lgd_dict.keys()
 #             ]
 #         )
 
 
-# def single_threshold_AP_score(stress_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]],  upper = False ):
-#     full_stresses = []
+# def single_threshold_AP_score(lgd_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]],  upper = False ):
+#     full_lgdes = []
 #     full_true_regions = []
-#     for name in list(stress_dict.keys()):
-#         full_stresses += list(stress_dict[name])
+#     for name in list(lgd_dict.keys()):
+#         full_lgdes += list(lgd_dict[name])
 #         full_true_regions += list(true_region_dict[name])
 
 #     if upper:
 #         return metrics.average_precision_score(
 #         y_true=np.array(full_true_regions),
-#         y_score=np.array([ s for s in full_stresses]),
+#         y_score=np.array([ s for s in full_lgdes]),
 #         )
 #     else:
 #         return metrics.average_precision_score(
 #             y_true=np.array(full_true_regions),
-#             y_score=np.array([1 - s for s in full_stresses]),
+#             y_score=np.array([1 - s for s in full_lgdes]),
 #         )
 
 
-# def avgd_single_threshold_AP_score(stress_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]],  upper = False ):
-#     avgd_full_stresses = []
+# def avgd_single_threshold_AP_score(lgd_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]],  upper = False ):
+#     avgd_full_lgdes = []
 #     full_true_regions = []
-#     for name in list(stress_dict.keys()):
-#         avgd_full_stresses += list(
-#             stress_dict[name] / np.mean(stress_dict[name])
+#     for name in list(lgd_dict.keys()):
+#         avgd_full_lgdes += list(
+#             lgd_dict[name] / np.mean(lgd_dict[name])
 #         )
 #         full_true_regions += list(true_regions_dict[name])
 
 #     if upper:
 #         return metrics.average_precision_score(
 #             y_true=np.array(full_true_regions),
-#             y_score=np.array([s for s in avgd_full_stresses]),
+#             y_score=np.array([s for s in avgd_full_lgdes]),
 #         )
 #     else:
 #         return metrics.average_precision_score(
 #             y_true=np.array(full_true_regions),
-#             y_score=np.array([1 - s for s in avgd_full_stresses]),
+#             y_score=np.array([1 - s for s in avgd_full_lgdes]),
 #         )
 
 
-# def z_single_threshold_AP_score(stress_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]],  upper = False) ->float:
-#     z_full_stresses = []
+# def z_single_threshold_AP_score(lgd_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]],  upper = False) ->float:
+#     z_full_lgdes = []
 #     full_true_regions = []
-#     for name in list(stress_dict.keys()):
-#         z_full_stresses += list(scipy.stats.zscore(stress_dict[name]))
+#     for name in list(lgd_dict.keys()):
+#         z_full_lgdes += list(scipy.stats.zscore(lgd_dict[name]))
 #         full_true_regions += list(true_region_dict[name])
 
 #     if upper:
 #         return metrics.average_precision_score(
 #             y_true=np.array(full_true_regions),
-#             y_score=np.array([s for s in z_full_stresses]),
+#             y_score=np.array([s for s in z_full_lgdes]),
 #         )
 #     else:
 #         return metrics.average_precision_score(
 #             y_true=np.array(full_true_regions),
-#             y_score=np.array([1 - s for s in z_full_stresses]),
+#             y_score=np.array([1 - s for s in z_full_lgdes]),
 #         )
 
 
