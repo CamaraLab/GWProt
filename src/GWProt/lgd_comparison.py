@@ -352,7 +352,7 @@ class LGD_Comparison:
                 assert self.dist_dict[name1][name2] == self.dist_dict[name2][name1]
                 if self.dist_dict[name1][name2] is None:
                     raise RuntimeError('LGDes and distances must be computed with \
-                        GW_compute_lgdes before get_GW_dmat can be run')
+                        GW_compute_lgds before get_GW_dmat can be run')
                 else:
                     dmat[i,j] = self.dist_dict[name1][name2]
                     dmat[j,i] = self.dist_dict[name1][name2]
@@ -455,29 +455,29 @@ def get_AP_scores(lgd_dict: dict[str,np.array], true_region_dict : dict[str,list
 
 
 # def single_threshold_AP_score(lgd_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]],  upper = False ):
-#     full_lgdes = []
+#     full_lgds = []
 #     full_true_regions = []
 #     for name in list(lgd_dict.keys()):
-#         full_lgdes += list(lgd_dict[name])
+#         full_lgds += list(lgd_dict[name])
 #         full_true_regions += list(true_region_dict[name])
 
 #     if upper:
 #         return metrics.average_precision_score(
 #         y_true=np.array(full_true_regions),
-#         y_score=np.array([ s for s in full_lgdes]),
+#         y_score=np.array([ s for s in full_lgds]),
 #         )
 #     else:
 #         return metrics.average_precision_score(
 #             y_true=np.array(full_true_regions),
-#             y_score=np.array([1 - s for s in full_lgdes]),
+#             y_score=np.array([1 - s for s in full_lgds]),
 #         )
 
 
 # def avgd_single_threshold_AP_score(lgd_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]],  upper = False ):
-#     avgd_full_lgdes = []
+#     avgd_full_lgds = []
 #     full_true_regions = []
 #     for name in list(lgd_dict.keys()):
-#         avgd_full_lgdes += list(
+#         avgd_full_lgds += list(
 #             lgd_dict[name] / np.mean(lgd_dict[name])
 #         )
 #         full_true_regions += list(true_regions_dict[name])
@@ -485,31 +485,31 @@ def get_AP_scores(lgd_dict: dict[str,np.array], true_region_dict : dict[str,list
 #     if upper:
 #         return metrics.average_precision_score(
 #             y_true=np.array(full_true_regions),
-#             y_score=np.array([s for s in avgd_full_lgdes]),
+#             y_score=np.array([s for s in avgd_full_lgds]),
 #         )
 #     else:
 #         return metrics.average_precision_score(
 #             y_true=np.array(full_true_regions),
-#             y_score=np.array([1 - s for s in avgd_full_lgdes]),
+#             y_score=np.array([1 - s for s in avgd_full_lgds]),
 #         )
 
 
 # def z_single_threshold_AP_score(lgd_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]],  upper = False) ->float:
-#     z_full_lgdes = []
+#     z_full_lgds = []
 #     full_true_regions = []
 #     for name in list(lgd_dict.keys()):
-#         z_full_lgdes += list(scipy.stats.zscore(lgd_dict[name]))
+#         z_full_lgds += list(scipy.stats.zscore(lgd_dict[name]))
 #         full_true_regions += list(true_region_dict[name])
 
 #     if upper:
 #         return metrics.average_precision_score(
 #             y_true=np.array(full_true_regions),
-#             y_score=np.array([s for s in z_full_lgdes]),
+#             y_score=np.array([s for s in z_full_lgds]),
 #         )
 #     else:
 #         return metrics.average_precision_score(
 #             y_true=np.array(full_true_regions),
-#             y_score=np.array([1 - s for s in z_full_lgdes]),
+#             y_score=np.array([1 - s for s in z_full_lgds]),
 #         )
 
 
