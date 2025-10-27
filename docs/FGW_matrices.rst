@@ -52,3 +52,12 @@ This method generates difference matrices using the `Grantham <https://www.jstor
 .. autofunction:: GWProt.FGW_matrices.get_pI_list
 
 These methods generate difference matrices using Solomon isoelectric point values. For more advanced handling of isoelectric points, use the ``GWProt.GW_pI`` module, which offers greater functionality for FGW and LGD computations.
+
+**References**
+----------------
+
+- Solomons, T.W.G. and Fryhle, C.B. and Snyder, S.A. (2016) Organic Chemistry 12th Ed. Wiley.
+
+- Grantham, R. (1974) Amino Acid Difference Formula to Help Explain Protein Evolution. Science, New Series, Vol. 185, No. 4154. 862-864.
+
+- Eisenberg, D.;  Schwarz, E.; Komaromy, M.; and Wall, R. (1984) Analysis of membrane and surface protein sequences with the hydrophobic moment plot. J Mol Biol.  Oct 15;179(1):125-42.

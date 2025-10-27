@@ -97,7 +97,7 @@ def get_eccentricity(prot, p =2):
     return eccentricity
     
 def get_pairing(T, threshold0 = 0.5, threshold1 = 0.5):
-    #T is the transport plan matrix
+    #T is the correspondence matrix
     #returns pairs of indices where T[i,j] > threshold0 * weight0 and T[i,j] > threshold1 * weight1
     
     pairs = []

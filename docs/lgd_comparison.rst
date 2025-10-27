@@ -6,13 +6,13 @@ LGD Comparison
 
 .. autoclass:: GWProt.lgd_comparison.LGD_Comparison
 
-This module stores the transport plans and local geometric distortion (LGD) values between all pairs of proteins, which can be memory intensive. Setting ``RAM = False`` saves these to files, but significantly slows down computations due to file I/O.
+This module stores the correspondences and local geometric distortion (LGD) values between all pairs of proteins, which can be memory intensive. Setting ``RAM = False`` saves these to files, but significantly slows down computations due to file I/O.
 
 
 **Calculating LGDs and Distances**
 ------------------------------------------
 
-These methods run all pairwise computations. For each pair of proteins, they run GW/FGW, store the distance, transport plan, and associated LGD values. One of these must be run before any of the latter methods are called. 
+These methods run all pairwise computations. For each pair of proteins, they run GW/FGW, store the distance, correspondence, and associated LGD values. One of these must be run before any of the latter methods are called. 
 
 As these involve a large number of computations, they can be time consuming on large datasets.
 

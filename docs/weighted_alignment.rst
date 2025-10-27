@@ -1,7 +1,7 @@
 Weighted Alignment
 ========================
 
-Weighted alignment methods in GWProt allow for optimal superposition of two point clouds (e.g., protein structures) using a transport plan as weights. This is particularly useful for comparing structures after GW or FGW alignment, where the transport plan encodes the correspondence between residues.
+Weighted alignment methods in GWProt allow for optimal superposition of two point clouds (e.g., protein structures) using a correspondence as weights. This is particularly useful for comparing structures after GW or FGW alignment, where the correspondence encodes the correspondence between residues.
 
 **Weighted RMSD Alignment**
 --------------------------
@@ -13,7 +13,7 @@ This function finds a special orthogonal matrix :math:`S` that minimizes the wei
     .. math::
         \sum_{i,j} |(x_i - x') - S(y_j - y')|^2 \cdot T_{i,j}
 
-where :math:`x'` is the weighted mean of the :math:`x_i` and :math:`y'` is the weighted mean of the :math:`y_j`, and :math:`T_{i,j}` is the transport plan (e.g., from GW alignment).
+where :math:`x'` is the weighted mean of the :math:`x_i` and :math:`y'` is the weighted mean of the :math:`y_j`, and :math:`T_{i,j}` is the correspondence (e.g., from GW alignment).
 
 Note: In general, there may not be a unique solution matrix :math:`S` that minimizes this expression.
 

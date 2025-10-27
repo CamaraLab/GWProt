@@ -4,14 +4,14 @@ Switch Probabilities
 These methods calculate and help visualize the probability of pairs of residues having their order switched when one protein is aligned to another using the Gromov-Wasserstein (GW) framework. This analysis is most meaningful when the proteins are morphologically similar (typically with a GW distance under 2).
 
 **Switch Probability Calculation**
-----------------------------------
+------------------------------------------
 
 .. autofunction:: GWProt.switch_probabilities.get_switch_probabilities
 
-This function uses sparse matrices for efficiency, but may encounter issues if the transport plan ``T`` has many non-zero entries. In practice, this is rarely a problem.
+This function uses sparse matrices for efficiency, but may encounter issues if the correspondence ``T`` has many non-zero entries. In practice, this is rarely a problem.
 
 **Visualization and Utilities**
-------------------------------
+--------------------------------------
 
 .. autofunction:: GWProt.switch_probabilities.visualize_switch_probabibilities
 

@@ -44,7 +44,7 @@ def weighted_RMSD(X:np.array ,Y:np.array, T:np.array) -> tuple[np.array, np.arra
     
     :param X: A np.array of shape (n,3) representing the n row vectors in R^3 defining ``X``
     :param Y: A np.array of shape (m,3) representing the m row vectors in R^3 defining ``Y``
-    :param T: A np.array of shape (n,m) representing the weights for the alignment. Its entries must be non-negative.
+    :param T: A np.array of shape (n,m) representing the correspondence or weights for the alignment. Its entries must be non-negative.
     So ``T[i,j]`` defines how strongly the distance between ``X[i,:]`` and ``Y[j,:]`` should be weighted in the minimization.
     :return: ``-y_mean, rot, x_mean``, where ``rot`` is a 3x3 matrix.
     """
