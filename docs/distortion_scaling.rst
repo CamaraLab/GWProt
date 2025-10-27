@@ -16,8 +16,8 @@ Scaling Function
 ----------------
 We choose a *scaling function* :math:`f` such that :math:`f(0) = 0`, :math:`f` is strictly 
 increasing, and :math:`f` is concave down. The square root function, :math:`f(x) = \sqrt{x}`, 
-works well in practice. For each protein, we apply :math:`f` to all entries in its intra-protein 
-distance matrix before running GW.
+works well in practice and is the default value. For each protein, we apply :math:`f` to all entries in its intra-protein 
+distance matrix before running GW, where we align it with other proteins scaled with the same :math:`f`.
 
 .. note::
    Distortion scaling can also be used with FGW in the same way as with GW. However, it is 

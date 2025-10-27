@@ -51,7 +51,7 @@ When using fused GW, the **fused local geometric distortion** extends the concep
 include biochemical data. It is defined as:
 
 .. math::
-   LGD(x_i) = \sum_{j, k, l} \left[ \alpha |d_X(x_i, x_j) - d_Y(y_k, y_l)|^2 + (1 - \alpha) \delta(x_i, y_j) \right] T_{i, k} T_{j, l}
+   LGD(x_i) = \sum_{j, k, l} \left[ \alpha \cdot |d_X(x_i, x_j) - d_Y(y_k, y_l)|^2 + (1 - \alpha) \cdot \delta(x_i, y_j) \right] T_{i, k} T_{j, l}
 
 where :math:`\delta(x_i, y_j)` measures the biochemical difference between residues, 
 and :math:`\alpha` controls the balance between geometric and biochemical contributions.

@@ -31,7 +31,7 @@ on the order of :math:`|X|!`.
 Gromov-Wasserstein Distance
 ---------------------------
 To address this, one can turn the problem into a continuous one that can be efficiently 
-approximated [1]_. We assign each protein a total mass of 1, distributed evenly among its 
+approximated. We assign each protein a total mass of 1, distributed evenly among its 
 residues. Aligning two proteins of lengths :math:`n` and :math:`m` then 
 amounts to transferring the mass of one protein to the other. This assignment is called a 
 *correspondence* or *transport plan* and is represented as an :math:`n \times m` matrix, where each column sums 

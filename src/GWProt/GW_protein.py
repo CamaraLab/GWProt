@@ -118,7 +118,7 @@ class GW_protein:
         Runs a local sequence alignment returns the indices of the two proteins which are aligned. ssearch36 must be in the PATH to use this method.
         
         :param prot1: First protein
-        :param prot2: Fecond protein
+        :param prot2: Second protein
         :param allow_mismatch: Whether to include residues which are aligned but not the same type of amino acid
         :return: Two lists of indices, those of ``prot1`` and ``prot2`` which are aligned
 
