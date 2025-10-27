@@ -16,7 +16,7 @@ from .GW_protein import *
 
 
 
-def GW_stress(prot1:GW_protein, prot2:GW_protein, T: np.array):
+def GW_lgd(prot1:GW_protein, prot2:GW_protein, T: np.array):
     """
     :param prot1:
     
@@ -32,17 +32,17 @@ def GW_stress(prot1:GW_protein, prot2:GW_protein, T: np.array):
     B = prot2.ipdm
     b = prot2.distribution
 
-    stress1 = np.einsum('ik,il->i',T,(np.einsum('ij,ij->ij',A,A) @T) )   + T @ np.einsum('kl,kl->kl',B,B) @b  -(2 * np.einsum('ab,ab->a', A @T @B, T))
-    stress2 = np.einsum('kj,lj->j' ,T @ np.einsum('kl,kl->kl',B,B), T) +a.T @ np.einsum('ij,ij->ij',A,A) @T -(2 * np.einsum('ab,ab->b', A @T @B, T))
+    lgd1 = np.einsum('ik,il->i',T,(np.einsum('ij,ij->ij',A,A) @T) )   + T @ np.einsum('kl,kl->kl',B,B) @b  -(2 * np.einsum('ab,ab->a', A @T @B, T))
+    lgd2 = np.einsum('kj,lj->j' ,T @ np.einsum('kl,kl->kl',B,B), T) +a.T @ np.einsum('ij,ij->ij',A,A) @T -(2 * np.einsum('ab,ab->b', A @T @B, T))
 
-    return stress1, stress2
+    return lgd1, lgd2
    
 
 
 
 
-def FGW_stress(prot1, prot2, diff_mat, alpha, T):
-#now with FGW stress
+def FGW_lgd(prot1, prot2, diff_mat, alpha, T):
+#now with FGW lgd
     n1= len(prot1)
     n2 = len(prot2)
     assert T.shape == (n1,n2)
@@ -56,19 +56,19 @@ def FGW_stress(prot1, prot2, diff_mat, alpha, T):
 
 
 
-    geo_stress1 = alpha * (np.einsum('ik,il->i',T,(np.einsum('ij,ij->ij',A,A) @T) )   + T @ np.einsum('kl,kl->kl',B,B) @b  -(2 * np.einsum('ab,ab->a', A @T @B, T)))
-    geo_stress2 = alpha *(np.einsum('kj,lj->j' ,T @ np.einsum('kl,kl->kl',B,B), T) +a.T @ np.einsum('ij,ij->ij',A,A) @T -(2 * np.einsum('ab,ab->b', A @T @B, T)))
+    geo_lgd1 = alpha * (np.einsum('ik,il->i',T,(np.einsum('ij,ij->ij',A,A) @T) )   + T @ np.einsum('kl,kl->kl',B,B) @b  -(2 * np.einsum('ab,ab->a', A @T @B, T)))
+    geo_lgd2 = alpha *(np.einsum('kj,lj->j' ,T @ np.einsum('kl,kl->kl',B,B), T) +a.T @ np.einsum('ij,ij->ij',A,A) @T -(2 * np.einsum('ab,ab->b', A @T @B, T)))
 
     
 
 
-    fused_stress1 = (1-alpha) * np.einsum('ik,ik->i', M,T)
-    fused_stress2 = (1-alpha) * np.einsum('ik,ik->k', M,T)
+    fused_lgd1 = (1-alpha) * np.einsum('ik,ik->i', M,T)
+    fused_lgd2 = (1-alpha) * np.einsum('ik,ik->k', M,T)
 
-    stress1 = geo_stress1 + fused_stress1
-    stress2 = geo_stress2 + fused_stress2
+    lgd1 = geo_lgd1 + fused_lgd1
+    lgd2 = geo_lgd2 + fused_lgd2
 
-    return stress1, stress2
+    return lgd1, lgd2
 
 
 
@@ -91,13 +91,13 @@ def get_eccentricity(prot, p =2):
     else:
         ipdm_pp = ipdm**p
         ipdm_pp_w = ipdm_pp * distr #not sure about shape and broadcasting here
-        pre_stress = np.sum(ipdm_pp_w, axis = 0) #unclear which axis this should be
-        eccentricity = pre_stress**(1/p)
+        pre_lgd = np.sum(ipdm_pp_w, axis = 0) #unclear which axis this should be
+        eccentricity = pre_lgd**(1/p)
 
     return eccentricity
     
 def get_pairing(T, threshold0 = 0.5, threshold1 = 0.5):
-    #T is the transport plan matrix
+    #T is the correspondence matrix
     #returns pairs of indices where T[i,j] > threshold0 * weight0 and T[i,j] > threshold1 * weight1
     
     pairs = []

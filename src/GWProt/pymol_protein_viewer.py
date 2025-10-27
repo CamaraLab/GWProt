@@ -99,9 +99,9 @@ class my_pymolPy3:
 
 
 def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, chain1:str = 'A', chain2: str = 'A',
-     transport_plan: np.array = None, threshold:float =0.5)->None:
+     correspondence: np.array = None, threshold:float =0.5)->None:
     """
-    This loads two pdb files and display them in Pymol and aligns them with a transport plan, then saves the scene to a .pse file.
+    This loads two pdb files and display them in Pymol and aligns them with a correspondence, then saves the scene to a .pse file.
     A rigid alignment is created minimizing weighted RSMD. Note that if Pymol 2 is used it uses ``cmd.cealign`` instead. 
     For a pair of aligned residues, a line will connect them if over ``threshold`` of each of their mass is connected. The proteins are also colored by the local geometric distortion (LGD) levels.
     
@@ -110,28 +110,28 @@ def compare_proteins_in_pymol(file1:str , file2:str, output_file:str, chain1:str
     :param output_file: Filepath where the resulting file should be saved to.
     :param chain1: Which chain of the first protein to use, default is ``A``.
     :param chain2: Which chain of the second protein to use, default is ``A``.
-    :param transport_plan: A transport plan to align the two proteins. If none is provided one will be calculated with ``GW_protein.run_GW``.
+    :param correspondence: A correspondence to align the two proteins. If none is provided one will be calculated with ``GW_protein.run_GW``.
     :param threshold: The threshold for displaying aligned residues. 
 
     """
     p1 = GW_protein.make_protein_from_pdb(file1,chain_id = chain1)
     p2 = GW_protein.make_protein_from_pdb(file2 ,chain_id = chain2)
 
-    if transport_plan is  None:
-        c, transport_plan = GW_protein.run_GW(p1,p2, transport_plan=True) 
+    if correspondence is  None:
+        c, correspondence = GW_protein.run_GW(p1,p2, correspondence=True) 
 
 
-    assert transport_plan.shape == (len(p1), len(p2))
-    assert math.isclose(np.sum(transport_plan),1)
+    assert correspondence.shape == (len(p1), len(p2))
+    assert math.isclose(np.sum(correspondence),1)
 
 
-    ps = get_pairing(transport_plan, threshold0=threshold, threshold1=threshold)
+    ps = get_pairing(correspondence, threshold0=threshold, threshold1=threshold)
 
-    pret, rot, trans = weighted_RMSD(p1.coords, p2.coords, transport_plan)
+    pret, rot, trans = weighted_RMSD(p1.coords, p2.coords, correspondence)
 
     ll = pymol_transform(pretrans=pret, rot=rot, posttrans=trans)
 
-    lgd1, lgd2 = GW_protein.GW_lgd(p1,p2, transport_plan)
+    lgd1, lgd2 = GW_protein.GW_lgd(p1,p2, correspondence)
     
     lgd1 = [float(a) for a in lgd1]
     lgd2 = [float(a) for a in lgd2]

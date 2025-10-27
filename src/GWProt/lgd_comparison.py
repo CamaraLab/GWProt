@@ -32,20 +32,20 @@ from .GW_protein import *
 
 class LGD_Comparison:
     """
-    This class streamlines computing local geometric distortions for a dataset of proteins and analyzing transport plans. 
+    This class streamlines computing local geometric distortions for a dataset of proteins and analyzing correspondences. 
     
     :param prot_list: A list of ``GW_protein.GW_protein`` objects
-    :param RAM: Whether to store the computed transport plans in RAM versus saving to files. Default is in RAM.
-    :param transport_dir: If ``RAM == False``, a filepath to save the transport plans in.
+    :param RAM: Whether to store the computed correspondences in RAM versus saving to files. Default is in RAM.
+    :param transport_dir: If ``RAM == False``, a filepath to save the correspondences in.
     :ivar name_list: A list of the names of the ``GW_protein``s in ``prot_list``, equivalent to ``[p.name for p in prot_list]``.   
         This serves as the keys for the dicts.
     :ivar raw_lgd_dict: A dict storing all computed lgd values. 
         Where ``raw_lgd_dict[prot1.name][prot1.name]`` is the local geometric distortion of the residues in ``prot1`` when aligning it to ``prot2``.
     :ivar dist_dict: A dict storing all computed GW or FGW distances. 
         Where ``dist_dict[prot1.name][prot1.name]`` is the GW or FGW distance between ``prot1`` and ``prot2``.
-    :ivar transport_dict: A dict storing all computed transport plans; only used if ``RAM ==True``. 
-        Where ``transport_dict[prot1.name][prot1.name]`` is the transport plan aligning ``prot1`` to ``prot2``.
-    :ivar transport_dir: A filepath to the directory where transport plans are stored if ``RAM ==False``.
+    :ivar transport_dict: A dict storing all computed correspondences; only used if ``RAM ==True``. 
+        Where ``transport_dict[prot1.name][prot1.name]`` is the correspondence aligning ``prot1`` to ``prot2``.
+    :ivar transport_dir: A filepath to the directory where correspondences are stored if ``RAM ==False``.
     
 
     """
@@ -81,14 +81,14 @@ class LGD_Comparison:
         self.cell_dict= {p.name : p.make_cajal_cell() for p in prot_list}
 
 
-    def _load_transport_plan(self,name1,name2):
+    def _load_correspondence(self,name1,name2):
         assert not self.RAM_flag
         if os.path.isfile(os.path.join(self.transport_dir, f'{name1}_{name2}.npy' )):
             T = np.load(os.path.join(self.transport_dir, f'{name1}_{name2}.npy' ) )
         elif os.path.isfile(os.path.join(self.transport_dir, f'{name2}_{name1}.npy' )):
             T = np.load(os.path.join(self.transport_dir, f'{name2}_{name1}.npy' ) ).T
         else:
-            raise ValueError('transport plan not found')
+            raise ValueError('correspondence not found')
 
         return T 
 
@@ -100,7 +100,7 @@ class LGD_Comparison:
         name2 = p2.name
         cell1 = self.cell_dict[name1]
         cell2 = self.cell_dict[name2]
-        c, T = GW_protein.run_GW_from_cajal(cell1, cell2, transport_plan=True)
+        c, T = GW_protein.run_GW_from_cajal(cell1, cell2, correspondence=True)
         s1, s2 = GW_protein.GW_lgd(p1, p2, T)
         return name1, name2, c, s1, s2, T
 
@@ -112,7 +112,7 @@ class LGD_Comparison:
         cell1, cell2 = cc
         name1 = p1.name
         name2 = p2.name
-        c, T = GW_protein.run_GW_from_cajal(cell1, cell2, transport_plan=True)
+        c, T = GW_protein.run_GW_from_cajal(cell1, cell2, correspondence=True)
         s1, s2 = GW_protein.GW_lgd(p1, p2, T)
         return name1, name2, c, s1, s2, T
 
@@ -181,8 +181,8 @@ class LGD_Comparison:
         bb = np.broadcast_to(b,(n1,n2))
         M = abs(aa-bb)
 
-        c, T = GW_protein.run_FGW_diff_mat(prot1=p1, prot2=p2, alpha = alpha, diff_mat = M , transport_plan = True)
-        s1, s2 = GW_protein.FGW_stress(prot1= p1,prot2 = p2, alpha = alpha, diff_mat = M, T= T)     
+        c, T = GW_protein.run_FGW_diff_mat(prot1=p1, prot2=p2, alpha = alpha, diff_mat = M , correspondence = True)
+        s1, s2 = GW_protein.FGW_lgd(prot1= p1,prot2 = p2, alpha = alpha, diff_mat = M, T= T)     
         return name1, name2, c, s1, s2, T 
 
 
@@ -249,8 +249,8 @@ class LGD_Comparison:
             for j in range(n2):
                 M[i,j] = ddict[p1.seq[i]][p2.seq[j]]
 
-        c, T = GW_protein.run_FGW_diff_mat(prot1=p1, prot2=p2, alpha = alpha, diff_mat = M, transport_plan = True)
-        s1, s2 = GW_protein.FGW_stress(prot1= p1,prot2 = p2, alpha = alpha, diff_mat = M, T= T)     
+        c, T = GW_protein.run_FGW_diff_mat(prot1=p1, prot2=p2, alpha = alpha, diff_mat = M, correspondence = True)
+        s1, s2 = GW_protein.FGW_lgd(prot1= p1,prot2 = p2, alpha = alpha, diff_mat = M, T= T)     
         return name1, name2, c, s1, s2, T 
         
     def FGW_compute_lgd_dict(self, diff_dict : dict, alpha: float, processes: int = None) -> None: 
@@ -325,7 +325,7 @@ class LGD_Comparison:
             if self.RAM_flag:
                 T = self.transport_dict[name1][name2]
             else:
-                T = self._load_transport_plan(name1, name2)
+                T = self._load_correspondence(name1, name2)
             raw_transferred_lgd[name1][name2] = T @ lgd_dict[name2]
             raw_transferred_lgd[name2][name1] = T.T @ lgd_dict[name1]
         return raw_transferred_lgd
@@ -351,8 +351,8 @@ class LGD_Comparison:
                 name2 = self.name_list[j]
                 assert self.dist_dict[name1][name2] == self.dist_dict[name2][name1]
                 if self.dist_dict[name1][name2] is None:
-                    raise RuntimeError('Stresses and distances must be computed with \
-                        GW_compute_stresses before get_GW_dmat can be run')
+                    raise RuntimeError('LGDes and distances must be computed with \
+                        GW_compute_lgds before get_GW_dmat can be run')
                 else:
                     dmat[i,j] = self.dist_dict[name1][name2]
                     dmat[j,i] = self.dist_dict[name1][name2]
@@ -430,15 +430,15 @@ def get_AP_scores(lgd_dict: dict[str,np.array], true_region_dict : dict[str,list
     return AP_dict
 
 
-# def mean_AP_scores(stress_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]],upper = False ):
+# def mean_AP_scores(lgd_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]],upper = False ):
 #     if upper:
 #         return np.mean(
 #             [
 #                 metrics.average_precision_score(
 #                     y_true=true_region_dict[name],
-#                     y_score=[ s for s in stress_dict[name]],
+#                     y_score=[ s for s in lgd_dict[name]],
 #                 )
-#                 for name in stress_dict.keys()
+#                 for name in lgd_dict.keys()
 #             ]
 #         )
         
@@ -447,69 +447,69 @@ def get_AP_scores(lgd_dict: dict[str,np.array], true_region_dict : dict[str,list
 #             [
 #                 metrics.average_precision_score(
 #                     y_true=true_region_dict[name],
-#                     y_score=[1 - s for s in stress_dict[name]],
+#                     y_score=[1 - s for s in lgd_dict[name]],
 #                 )
-#                 for name in stress_dict.keys()
+#                 for name in lgd_dict.keys()
 #             ]
 #         )
 
 
-# def single_threshold_AP_score(stress_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]],  upper = False ):
-#     full_stresses = []
+# def single_threshold_AP_score(lgd_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]],  upper = False ):
+#     full_lgds = []
 #     full_true_regions = []
-#     for name in list(stress_dict.keys()):
-#         full_stresses += list(stress_dict[name])
+#     for name in list(lgd_dict.keys()):
+#         full_lgds += list(lgd_dict[name])
 #         full_true_regions += list(true_region_dict[name])
 
 #     if upper:
 #         return metrics.average_precision_score(
 #         y_true=np.array(full_true_regions),
-#         y_score=np.array([ s for s in full_stresses]),
+#         y_score=np.array([ s for s in full_lgds]),
 #         )
 #     else:
 #         return metrics.average_precision_score(
 #             y_true=np.array(full_true_regions),
-#             y_score=np.array([1 - s for s in full_stresses]),
+#             y_score=np.array([1 - s for s in full_lgds]),
 #         )
 
 
-# def avgd_single_threshold_AP_score(stress_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]],  upper = False ):
-#     avgd_full_stresses = []
+# def avgd_single_threshold_AP_score(lgd_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]],  upper = False ):
+#     avgd_full_lgds = []
 #     full_true_regions = []
-#     for name in list(stress_dict.keys()):
-#         avgd_full_stresses += list(
-#             stress_dict[name] / np.mean(stress_dict[name])
+#     for name in list(lgd_dict.keys()):
+#         avgd_full_lgds += list(
+#             lgd_dict[name] / np.mean(lgd_dict[name])
 #         )
 #         full_true_regions += list(true_regions_dict[name])
 
 #     if upper:
 #         return metrics.average_precision_score(
 #             y_true=np.array(full_true_regions),
-#             y_score=np.array([s for s in avgd_full_stresses]),
+#             y_score=np.array([s for s in avgd_full_lgds]),
 #         )
 #     else:
 #         return metrics.average_precision_score(
 #             y_true=np.array(full_true_regions),
-#             y_score=np.array([1 - s for s in avgd_full_stresses]),
+#             y_score=np.array([1 - s for s in avgd_full_lgds]),
 #         )
 
 
-# def z_single_threshold_AP_score(stress_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]],  upper = False) ->float:
-#     z_full_stresses = []
+# def z_single_threshold_AP_score(lgd_dict: dict[str,np.array], true_region_dict : dict[str,list[bool]],  upper = False) ->float:
+#     z_full_lgds = []
 #     full_true_regions = []
-#     for name in list(stress_dict.keys()):
-#         z_full_stresses += list(scipy.stats.zscore(stress_dict[name]))
+#     for name in list(lgd_dict.keys()):
+#         z_full_lgds += list(scipy.stats.zscore(lgd_dict[name]))
 #         full_true_regions += list(true_region_dict[name])
 
 #     if upper:
 #         return metrics.average_precision_score(
 #             y_true=np.array(full_true_regions),
-#             y_score=np.array([s for s in z_full_stresses]),
+#             y_score=np.array([s for s in z_full_lgds]),
 #         )
 #     else:
 #         return metrics.average_precision_score(
 #             y_true=np.array(full_true_regions),
-#             y_score=np.array([1 - s for s in z_full_stresses]),
+#             y_score=np.array([1 - s for s in z_full_lgds]),
 #         )
 
 

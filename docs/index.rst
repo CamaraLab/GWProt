@@ -20,7 +20,7 @@ found at the `GWProt GitHub repository <https://github.com/CamaraLab/GWProt>`_.
 
    gromov_wasserstein
    fused_gromov_wasserstein
-   stress
+   lgd
    distortion_scaling
 
 
@@ -39,7 +39,7 @@ found at the `GWProt GitHub repository <https://github.com/CamaraLab/GWProt>`_.
    GW_protein
    GW_protein_pI
    FGW_matrices
-   stress_comparison
+   lgd_comparison
    switch_probabilities
    pymol_protein_viewer
    weighted_alignment

@@ -455,15 +455,15 @@ class GW_protein_pI(GW_protein):
     
     @controller.wrap(limits=1, user_api='blas')
     @staticmethod
-    def run_FGW(prot1: 'GW_protein_pI', prot2:'GW_protein_pI', alpha: float = 0.5, transport_plan: bool = False) -> Union[float, tuple[float, np.array]]:
+    def run_FGW(prot1: 'GW_protein_pI', prot2:'GW_protein_pI', alpha: float = 0.5, correspondence: bool = False) -> Union[float, tuple[float, np.array]]:
         """
         This calculates the fused Gromov-Wasserstein distance between two proteins. The computation is done with the Python ``ot`` library. 
         
         :param p1: The first protein
         :param p2: The second protein
         :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. A higher value of ``alpha`` means more geometric weight, ``alpha`` = 1 is equivalent to regular GW.
-        :param transport_plan: Whether to return the computed transport plan
-        :return: Returns the FGW distance and the optimal transport plan if ``transport_plan``
+        :param correspondence: Whether to return the computed correspondence
+        :return: Returns the FGW distance and the optimal correspondence if ``correspondence``
 
         """
 
@@ -494,15 +494,15 @@ class GW_protein_pI(GW_protein):
         T , log= ot.fused_gromov_wasserstein(M=M, C1=D1, C2=D2, alpha = alpha, p= p1.distribution ,q=p2.distribution, G0 = G0, loss_fun='square_loss',log = True)
         d = 0.5 * math.sqrt(max(0,log['fgw_dist']))
 
-        if transport_plan:
+        if correspondence:
             return d, T
         else:
             return d
 
 
     @staticmethod
-    def FGW_stress(prot1: 'GW_protein_pI', prot2:'GW_protein_pI',  alpha: float, T : np.array):
-    #now with FGW stress
+    def FGW_lgd(prot1: 'GW_protein_pI', prot2:'GW_protein_pI',  alpha: float, T : np.array):
+    #now with FGW lgd
         n1= len(prot1)
         n2 = len(prot2)
         assert T.shape == (n1,n2)
@@ -524,19 +524,19 @@ class GW_protein_pI(GW_protein):
 
 
 
-        geo_stress1 = alpha * (np.einsum('ik,il->i',T,(np.einsum('ij,ij->ij',A,A) @T) )   + T @ np.einsum('kl,kl->kl',B,B) @b  -(2 * np.einsum('ab,ab->a', A @T @B, T)))
-        geo_stress2 = alpha *(np.einsum('kj,lj->j' ,T @ np.einsum('kl,kl->kl',B,B), T) +a.T @ np.einsum('ij,ij->ij',A,A) @T -(2 * np.einsum('ab,ab->b', A @T @B, T)))
+        geo_lgd1 = alpha * (np.einsum('ik,il->i',T,(np.einsum('ij,ij->ij',A,A) @T) )   + T @ np.einsum('kl,kl->kl',B,B) @b  -(2 * np.einsum('ab,ab->a', A @T @B, T)))
+        geo_lgd2 = alpha *(np.einsum('kj,lj->j' ,T @ np.einsum('kl,kl->kl',B,B), T) +a.T @ np.einsum('ij,ij->ij',A,A) @T -(2 * np.einsum('ab,ab->b', A @T @B, T)))
 
         
 
 
-        fused_stress1 = (1-alpha) * np.einsum('ik,ik->i', M,T)
-        fused_stress2 = (1-alpha) * np.einsum('ik,ik->k', M,T)
+        fused_lgd1 = (1-alpha) * np.einsum('ik,ik->i', M,T)
+        fused_lgd2 = (1-alpha) * np.einsum('ik,ik->k', M,T)
 
-        stress1 = geo_stress1 + fused_stress1
-        stress2 = geo_stress2 + fused_stress2
+        lgd1 = geo_lgd1 + fused_lgd1
+        lgd2 = geo_lgd2 + fused_lgd2
 
-        return stress1, stress2
+        return lgd1, lgd2
         
     @controller.wrap(limits=1, user_api='blas')
     @staticmethod
@@ -565,7 +565,7 @@ class GW_protein_pI(GW_protein):
         p3 = p1.downsample_by_indices(inds1)
         p4 = p2.downsample_by_indices(inds2)
 
-        return GW_protein_pI.run_FGW(p3,p4, alpha = alpha, transport_plan = False)
+        return GW_protein_pI.run_FGW(p3,p4, alpha = alpha, correspondence = False)
 
     def convolve_pIs(self, 
         kernel_list :list[int] = [1,2,3,2,1], 

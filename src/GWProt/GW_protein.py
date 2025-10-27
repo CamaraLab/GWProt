@@ -118,7 +118,7 @@ class GW_protein:
         Runs a local sequence alignment returns the indices of the two proteins which are aligned. ssearch36 must be in the PATH to use this method.
         
         :param prot1: First protein
-        :param prot2: Fecond protein
+        :param prot2: Second protein
         :param allow_mismatch: Whether to include residues which are aligned but not the same type of amino acid
         :return: Two lists of indices, those of ``prot1`` and ``prot2`` which are aligned
 
@@ -165,41 +165,41 @@ class GW_protein:
     def run_GW_from_cajal(
         cajal_cell1:gw_cython.GW_cell  , 
         cajal_cell2: gw_cython.GW_cell,
-        transport_plan:bool = False) -> Union[float, tuple[float, np.array]]:
+        correspondence:bool = False) -> Union[float, tuple[float, np.array]]:
 
         """
         This is a wrapper for the CAJAL code to compute the GW distance between ``cajal_cell1`` and ``cajal_cell2``, 
-        outputs the computed transport plan if ``tranport_plan``.
+        outputs the computed correspondence if ``tranport_plan``.
 
         :param cajal_cell1:
         :param cajal_cell2:
-        :param transport_plan: Whether to return the computed transport plan
-        :return: Returns the GW distance and optimal transport plan if ``transport_plan``
+        :param correspondence: Whether to return the computed correspondence
+        :return: Returns the GW distance and optimal correspondence if ``correspondence``
 
         """
 
-        return GW_identity_init(cajal_cell1, cajal_cell2, transport_plan= transport_plan)
+        return GW_identity_init(cajal_cell1, cajal_cell2, correspondence= correspondence)
         
     @controller.wrap(limits=1, user_api='blas')
     @staticmethod       
     def run_GW(prot1 :'GW_protein',
         prot2: 'GW_protein',
-        transport_plan:bool = False) -> Union[float, tuple[float, np.array]]:
+        correspondence:bool = False) -> Union[float, tuple[float, np.array]]:
 
         """
-        Computes the GW distance and transport plan if ``transport_plan``.
+        Computes the GW distance and correspondence if ``correspondence``.
 
         :param prot1:
         :param prot2:
-        :param transport_plan: Whether to return the computed transport plan
-        :return: Returns the GW distance and optimal transport plan if ``transport_plan``
+        :param correspondence: Whether to return the computed correspondence
+        :return: Returns the GW distance and optimal correspondence if ``correspondence``
         """
 
         P1, P2 = prot1, prot2
 
         cell_1 = P1.make_cajal_cell()
         cell_2 = P2.make_cajal_cell()
-        return GW_protein.run_GW_from_cajal(cell_1, cell_2, transport_plan = transport_plan)
+        return GW_protein.run_GW_from_cajal(cell_1, cell_2, correspondence = correspondence)
 
 
     def downsample_by_indices(self, 
@@ -296,7 +296,7 @@ class GW_protein:
 
     @controller.wrap(limits=1, user_api='blas')
     @staticmethod
-    def run_FGW_data_lists(prot1: 'GW_protein', prot2:'GW_protein', data1 :list[float] , data2 : list[float] , alpha:float = 1, transport_plan = False) -> Union[float, tuple[float, np.array]]:
+    def run_FGW_data_lists(prot1: 'GW_protein', prot2:'GW_protein', data1 :list[float] , data2 : list[float] , alpha:float = 1, correspondence = False) -> Union[float, tuple[float, np.array]]:
         
         """
         This calculates the fused Gromov-Wasserstein distance between two proteins. 
@@ -309,8 +309,8 @@ class GW_protein:
         :param data2: The data used in the second protein
         :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. A higher value of ``alpha`` means more geometric weight, 
             ``alpha=1`` is equivalent to regular GW.
-        :param transport_plan: Whether to return the computed transport plan
-        :return: Returns the FGW distance and transport plan if ``transport_plan``
+        :param correspondence: Whether to return the computed correspondence
+        :return: Returns the FGW distance and correspondence if ``correspondence``
 
         """
 
@@ -337,7 +337,7 @@ class GW_protein:
         T , log= ot.fused_gromov_wasserstein(M=M, C1=D1, C2=D2, alpha = alpha, p= p1.distribution ,q=p2.distribution, G0 = G0, loss_fun='square_loss', log = True)
         d = 0.5 * math.sqrt(max(0,log['fgw_dist']))
 
-        if transport_plan:
+        if correspondence:
             return d, T
         else:
             return d
@@ -431,12 +431,12 @@ class GW_protein:
     @staticmethod
     def GW_lgd(prot1: 'GW_protein', prot2: 'GW_protein', T: np.array) -> tuple[np.array,np.array]:
         """
-        This calculates the local geometric distortion (LGD), i.e. the contribution of each residue to the sum in the GW cost, using the transport plan ``T``.
+        This calculates the local geometric distortion (LGD), i.e. the contribution of each residue to the sum in the GW cost, using the correspondence ``T``.
         This is output as two ``np.array`` s, one for ``prot1`` , the second for ``prot2``.
 
         :param prot1: The first ``GW_protein``
         :param prot2: The second ``GW_protein``
-        :param T: The transport plan to be used
+        :param T: The correspondence to be used
         :return: ``lgd1, lgd2``; the LGD values for the two proteins
 
         """
@@ -459,13 +459,13 @@ class GW_protein:
     @staticmethod
     def FGW_lgd(prot1: 'GW_protein', prot2: 'GW_protein', T: np.array, diff_mat : np.array, alpha:float)-> tuple[np.array,np.array]:
         """
-        This calculates the local geometric distortion (LGD), i.e. the contribution of each residue to the sum in the FGW cost, using the transport plan ``T``.
+        This calculates the local geometric distortion (LGD), i.e. the contribution of each residue to the sum in the FGW cost, using the correspondence ``T``.
         This is output as two ``np.array`` s, one for ``prot1`` , the second for ``prot2``.
 
         :param prot1: The first ``GW_protein``
         :param prot2: The second ``GW_protein``
         :param diff_mat: The difference matrix in the feature space
-        :param T: The transport plan to be used
+        :param T: The correspondence to be used
         :param alpha: The trade-off constant between the fused cost and the geometric cost
         :return: ``lgd1, lgd2``;  the LGD values for the two proteins
 
@@ -496,7 +496,7 @@ class GW_protein:
         
     @controller.wrap(limits=1, user_api='blas')
     @staticmethod
-    def run_FGW_dict(prot1: 'GW_protein', prot2:'GW_protein', d: dict[str , dict[str ,float]] ,alpha:float = 1, transport_plan: bool = False) -> Union[float, tuple[float, np.array]]:
+    def run_FGW_dict(prot1: 'GW_protein', prot2:'GW_protein', d: dict[str , dict[str ,float]] ,alpha:float = 1, correspondence: bool = False) -> Union[float, tuple[float, np.array]]:
         
         """
         This calculates the fused Gromov-Wasserstein distance between two proteins.  
@@ -505,8 +505,8 @@ class GW_protein:
         :param prot2: The second protein
         :param d: The dictionary used for the fused distances based on the protein sequences. Of the form ``d['A']['B'] == float``
         :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. A higher value of ``alpha`` means more geometric weight, ``alpha = 1`` is equivalent to regular GW.
-        :param transport_plan: Whether to return the transport plan
-        :return: Returns the FGW distance and transport plan if ``transport_plan``
+        :param correspondence: Whether to return the correspondence
+        :return: Returns the FGW distance and correspondence if ``correspondence``
 
         """
 
@@ -541,7 +541,7 @@ class GW_protein:
         T , log= ot.fused_gromov_wasserstein(M=M, C1=D1, C2=D2, alpha = alpha, p= prot1.distribution ,q=prot2.distribution, G0 = G0, loss_fun='square_loss', log = True)
         d = 0.5 * math.sqrt(max(0,log['fgw_dist']))
 
-        if transport_plan:
+        if correspondence:
             return d, T
         else:
             return d
@@ -549,7 +549,7 @@ class GW_protein:
 
     @controller.wrap(limits=1, user_api='blas')
     @staticmethod
-    def run_FGW_diff_mat(prot1: 'GW_protein', prot2:'GW_protein', diff_mat: np.array ,alpha:float = 1, transport_plan: bool = False) -> Union[float, tuple[float, np.array]]:
+    def run_FGW_diff_mat(prot1: 'GW_protein', prot2:'GW_protein', diff_mat: np.array ,alpha:float = 1, correspondence: bool = False) -> Union[float, tuple[float, np.array]]:
         
         """
         This calculates the fused Gromov-Wasserstein distance between two proteins. 
@@ -560,8 +560,8 @@ class GW_protein:
             ``diff_mat[i,j]`` is the difference in features between the ith residue of ``prot1`` and the jth residue of ``prot2``.
         :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. 
             A higher value of ``alpha`` means more geometric weight, ``alpha = 1`` is equivalent to regular GW.
-        :param transport_plan: Whether to return the transport plan
-        :return: Returns the FGW distance and optimal transport plan if ``transport_plan``
+        :param correspondence: Whether to return the correspondence
+        :return: Returns the FGW distance and optimal correspondence if ``correspondence``
 
         """
         p1,p2 = prot1, prot2
@@ -578,7 +578,7 @@ class GW_protein:
         T , log= ot.fused_gromov_wasserstein(M=diff_mat, C1=D1, C2=D2, alpha = alpha, p= p1.distribution ,q=p2.distribution, G0 = G0, loss_fun='square_loss', log = True)
         d = 0.5 * math.sqrt(max(0,log['fgw_dist']))
 
-        if transport_plan:
+        if correspondence:
             return d, T
         else:
             return d
@@ -609,6 +609,6 @@ class GW_protein:
         p3 = p1.downsample_by_indices(inds1)
         p4 = p2.downsample_by_indices(inds2)
 
-        return GW_protein.run_GW(p3,p4, transport_plan = False)
+        return GW_protein.run_GW(p3,p4, correspondence = False)
 
     

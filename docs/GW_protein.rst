@@ -83,22 +83,23 @@ As this uses CAJAL, there is the ability to use other functionalities from CAJAL
 
 
 
-Multiple ways of inputting the feature space data are included.
-
-.. autofunction:: GWProt.GW_protein.GW_protein.run_FGW_diff_mat
-
-The first is the most general as it can use any user-inputted feature difference matrix. However 
+FGW computations are done with the `POT package <https://pythonot.github.io/>`_. Multiple ways of inputting the feature space data are included. The first is the most general as it can use any user-inputted feature difference matrix. However 
 a new difference matrix must be used for every pair of proteins. 
 
-.. autofunction:: GWProt.GW_protein.GW_protein.run_FGW_data_lists
+
+.. autofunction:: GWProt.GW_protein.GW_protein.run_FGW_diff_mat
 
 The second uses a linear feature space. This is suitable for scalar features including isoelectric 
 point, solvent-accessible surface area, charge, and hydrophobicity. 
 
+.. autofunction:: GWProt.GW_protein.GW_protein.run_FGW_data_lists
+
+
+The third uses a dictionary giving difference values between different types of amino acids.
 
 .. autofunction:: GWProt.GW_protein.GW_protein.run_FGW_dict
 
-The third uses a dictionary giving difference values between different types of amino acids.
+
 
 
 
@@ -106,7 +107,6 @@ The third uses a dictionary giving difference values between different types of 
 It is not recommended to use these on downsampled proteins, as the data is lost from the excluded 
 residues. 
 
-As CAJAL does not run FGW, these computation are done with the Python ``ot`` library. 
 
 
 
@@ -142,8 +142,11 @@ for the Smith-Waterman algorithm in the `Fasta Package <https://github.com/wrpea
 
 .. autofunction:: GWProt.GW_protein.GW_protein.get_eccentricity
 
- Eccentricity is defined in `this paper <https://www.math.ucdavis.edu/~saito/data/acha.read.w12/memoli-gromov-dist.pdf>`_, Definition 5.3. Intuitively, it quantifies how far each residue is from the rest of the residues in a protein. Within a given protein, residues with higher eccentricity often have higher LGD when aligned to other proteins, so this could be used for normalization.
+ Eccentricity is defined in [1]_ Definition 5.3. Intuitively, it quantifies how far each residue is from the rest of the residues in a protein. Within a given protein, residues with higher eccentricity often have higher LGD when aligned to other proteins, so this could be used for normalization.
 
+References
+----------
+.. [1] Mémoli, F. (2011). Gromov–Wasserstein distances and the metric approach to object matching. Foundations of Computational Mathematics, 11(4), 417-487.
 
 
 
