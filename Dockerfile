@@ -67,6 +67,7 @@ RUN  pip install pot `
  multiprocess `
 cython `
 blosum `
+plotly `
 sparse `
 Bio `
 statistics `
