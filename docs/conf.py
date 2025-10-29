@@ -8,7 +8,7 @@ import os
 import sys
 
 project = 'GWProt'
-copyright = '2024, Cámara Lab'
+copyright = '2025, Cámara Lab'
 author = 'Elijah Gunther'
 
 release = '0.1'
