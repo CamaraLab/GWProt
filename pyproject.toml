@@ -18,7 +18,7 @@ build-backend = "setuptools.build_meta"
 name = "GWProt"
 readme = "README.rst"
 version = "0.0.2"
-authors = [{name = "Elijah Gunther, Patrick Nicodemus, Pablo Camara", email = "elijah.gunther@pennmedicine.upenn.edu"}]
+authors = [{name = "Elijah Gunther, Pablo Camara", email = "elijah.gunther@pennmedicine.upenn.edu"}]
 classifiers=[
     'Programming Language :: Python :: 3',
     'Framework :: Jupyter',
