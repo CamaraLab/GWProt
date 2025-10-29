@@ -111,7 +111,7 @@ residues.
 
 
 **Computing Local Geometric Distortion (LGD)**
----------------------------------------------
+--------------------------------------------------------
 
 The local geometric distortion (LGD) quantifies the contribution of each residue to the GW 
 or FGW distance, providing a residue-level measure of structural conservation or flexibility.

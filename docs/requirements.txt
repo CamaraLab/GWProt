@@ -5,4 +5,18 @@ docutils==0.17.1
 nbsphinx==0.9.1
 pandoc==2.3
 cython==3.0.0b2
+numpy
+cython >= 3
+scipy>=1.10
+umap-learn>=0.5.3
+sparse
+Bio
+blosum
+POT
+statistics
+os
+cajal
+scikit-learn
+multiprocess
 threadpoolctl
+typing

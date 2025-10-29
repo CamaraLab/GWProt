@@ -15,7 +15,7 @@ This module provides methods to generate difference dictionaries and data lists 
 
 
 **Hydrophobicity-Based Differences**
------------------------------------
+----------------------------------------------
 .. autofunction:: GWProt.FGW_matrices.get_hydrophobicity_dict
 .. autofunction:: GWProt.FGW_matrices.get_hydrophobicity_list
 
@@ -25,7 +25,7 @@ These methods generate difference matrices using hydrophobicity values from `Eis
 
 
 **BLOSUM-Based Differences**
----------------------------
+--------------------------------------
 .. autofunction:: GWProt.FGW_matrices.get_BLOSUM_dict
 
 This method generates difference matrices based on the `BLOSUM matrices <https://en.wikipedia.org/wiki/BLOSUM>`_. For a pair of amino acids, it computes :math:`e^{-b}` (where :math:`b` is the BLOSUM entry), then normalizes the result to ensure the distances satisfy the triangle inequality. These matrices can be used in FGW to compute LGD based on sequence similarity.
@@ -36,7 +36,7 @@ This method generates difference matrices based on the `BLOSUM matrices <https:/
 
 
 **Grantham-Based Differences**
------------------------------
+----------------------------------------
 .. autofunction:: GWProt.FGW_matrices.get_Grantham_dict
 
 This method generates difference matrices using the `Grantham <https://www.jstor.org/stable/1739007?seq=1>`_ difference scores, which reflect physicochemical differences between amino acids. These can be used in FGW to compute LGD based on these properties.
@@ -47,14 +47,14 @@ This method generates difference matrices using the `Grantham <https://www.jstor
 
 
 **Isoelectric Point Differences**
----------------------------------
+--------------------------------------------
 .. autofunction:: GWProt.FGW_matrices.get_pI_dict
 .. autofunction:: GWProt.FGW_matrices.get_pI_list
 
 These methods generate difference matrices using Solomon isoelectric point values. For more advanced handling of isoelectric points, use the ``GWProt.GW_pI`` module, which offers greater functionality for FGW and LGD computations.
 
 **References**
-----------------
+---------------------------
 
 - Solomons, T.W.G. and Fryhle, C.B. and Snyder, S.A. (2016) Organic Chemistry 12th Ed. Wiley.
 
