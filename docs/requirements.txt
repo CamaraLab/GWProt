@@ -13,7 +13,6 @@ Bio
 blosum
 POT
 statistics
-os
 cajal
 scikit-learn
 multiprocess
