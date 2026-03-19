@@ -85,6 +85,7 @@ def id_initial_coupling(a,b):
     return P
 
 
+
     
 def tensor_coupling(a,b):
     return (a[np.newaxis]).T @ b[np.newaxis]

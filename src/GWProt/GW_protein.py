@@ -201,7 +201,51 @@ class GW_protein:
         cell_2 = P2.make_cajal_cell()
         return GW_protein.run_GW_from_cajal(cell_1, cell_2, correspondence = correspondence)
 
+    @controller.wrap(limits=1, user_api='blas')
+    @staticmethod       
+    def run_UGW(prot1 :'GW_protein',
+        prot2: 'GW_protein',
+        rho: float = 3,
+        epsilon:float = 3, 
+        correspondence:bool = False) -> Union[float, tuple[float, np.array]]:
 
+        """
+        Computes the unbalanced GW distance and correspondence if ``correspondence``.
+
+        :param prot1:
+        :param prot2:
+        :param rho: Marginal relaxation term - trade off between geometric distortion and Kullback-Leibler divergence on marginals, higher rho means less mass is lost
+        :param epsilon: Regularization parameters for entropic approximation
+        :param correspondence: Whether to return the computed correspondence
+        :return: Returns the unbalanced GW distance and optimal correspondence if ``correspondence``
+        """
+
+        p1,p2 = prot1, prot2
+        D1 = p1.ipdm
+        D2 = p2.ipdm
+        n1 = len(D1)
+        n2 = len(D2)
+    
+        init_pi = GW_scripts.id_initial_coupling(p1.distribution,p2.distribution)
+        wx = p1.distribution
+        wy = p2.distribution
+        Cx = p1.ipdm
+        Cy = p2.ipdm
+        reg_marginals = rho
+    
+        M = np.zeros((n1,n2))
+    
+        pi_samp, pi_samp2, log = ot.gromov.fused_unbalanced_gromov_wasserstein(Cx=Cx,Cy=Cy,wx=wx,wy=wy, M=M,
+                                                                               reg_marginals = reg_marginals,
+                                                                                divergence = divergence,epsilon = epsilon,
+                                                                               log = True, alpha = 0,
+                                                                              init_pi=init_pi)
+        if correspondence:
+            return pi_samp, 0.5 * math.sqrt( max(0, log['fugw_cost']))
+        else:
+            return  0.5 * math.sqrt( max(0, log['fugw_cost']))
+
+    
     def downsample_by_indices(self, 
         indices: list[int]) -> 'GW_protein':
 

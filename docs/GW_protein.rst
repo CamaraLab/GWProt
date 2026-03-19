@@ -76,7 +76,7 @@ This is a wrapper for the following two functions:
 
 As this uses CAJAL, there is the ability to use other functionalities from CAJAL.
 
-**Computing FGW**
+**Computing FGW and UGW**
 --------------------
 
 
@@ -101,12 +101,13 @@ The third uses a dictionary giving difference values between different types of 
 
 
 
+UGW computations are done with the `POT package <https://pythonot.github.io/>`_. Runtime and computed alignments are very sensitive to choice of ``rho`` and ``epsilon`` and suitable values can vary depending on the proteins.
 
+.. autofunction:: GWProt.GW_protein.GW_protein.run_UGW
 
 
 It is not recommended to use these on downsampled proteins, as the data is lost from the excluded 
 residues. 
-
 
 
 
