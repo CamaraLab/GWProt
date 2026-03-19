@@ -8,11 +8,11 @@ import os
 import sys
 
 project = 'GWProt'
-copyright = '2025, Cámara Lab'
+copyright = '2026, Cámara Lab'
 author = 'Elijah Gunther'
 
 release = '0.1'
-version = '0.1.0'
+version = '0.1.1'
 
 # -- General configuration
 
