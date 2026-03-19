@@ -201,49 +201,7 @@ class GW_protein:
         cell_2 = P2.make_cajal_cell()
         return GW_protein.run_GW_from_cajal(cell_1, cell_2, correspondence = correspondence)
 
-    @controller.wrap(limits=1, user_api='blas')
-    @staticmethod       
-    def run_UGW(prot1 :'GW_protein',
-        prot2: 'GW_protein',
-        rho: float = 3,
-        epsilon:float = 3, 
-        correspondence:bool = False) -> Union[float, tuple[float, np.array]]:
 
-        """
-        Computes the unbalanced GW distance and correspondence if ``correspondence``.
-
-        :param prot1:
-        :param prot2:
-        :param rho: Marginal relaxation term - trade off between geometric distortion and Kullback-Leibler divergence on marginals, higher rho means less mass is lost
-        :param epsilon: Regularization parameters for entropic approximation
-        :param correspondence: Whether to return the computed correspondence
-        :return: Returns the unbalanced GW distance and optimal correspondence if ``correspondence``
-        """
-
-        p1,p2 = prot1, prot2
-        D1 = p1.ipdm
-        D2 = p2.ipdm
-        n1 = len(D1)
-        n2 = len(D2)
-    
-        init_pi = GW_scripts.id_initial_coupling(p1.distribution,p2.distribution)
-        wx = p1.distribution
-        wy = p2.distribution
-        Cx = p1.ipdm
-        Cy = p2.ipdm
-        reg_marginals = rho
-    
-        M = np.zeros((n1,n2))
-    
-        pi_samp, pi_samp2, log = ot.gromov.fused_unbalanced_gromov_wasserstein(Cx=Cx,Cy=Cy,wx=wx,wy=wy, M=M,
-                                                                               reg_marginals = reg_marginals,
-                                                                                divergence = divergence,epsilon = epsilon,
-                                                                               log = True, alpha = 0,
-                                                                              init_pi=init_pi)
-        if correspondence:
-            return pi_samp, 0.5 * math.sqrt( max(0, log['fugw_cost']))
-        else:
-            return  0.5 * math.sqrt( max(0, log['fugw_cost']))
 
     
     def downsample_by_indices(self, 
@@ -655,4 +613,199 @@ class GW_protein:
 
         return GW_protein.run_GW(p3,p4, correspondence = False)
 
+
     
+    @controller.wrap(limits=1, user_api='blas')    
+    @staticmethod       
+    def run_UGW(prot1 :'GW_protein',
+        prot2: 'GW_protein',
+        rho: float = 3,
+        epsilon:float = 3, 
+        correspondence:bool = False) -> Union[float, tuple[float, np.array]]:
+
+        """
+        Computes the unbalanced GW distance and correspondence if ``correspondence``.
+
+        :param prot1:
+        :param prot2:
+        :param rho: Marginal relaxation term - trade off between geometric distortion and Kullback-Leibler divergence on marginals, higher rho means less mass is lost
+        :param epsilon: Regularization parameters for entropic approximation
+        :param correspondence: Whether to return the computed correspondence
+        :return: Returns the unbalanced GW distance and optimal correspondence if ``correspondence``
+        """
+
+        p1,p2 = prot1, prot2
+        D1 = p1.ipdm
+        D2 = p2.ipdm
+        n1 = len(D1)
+        n2 = len(D2)
+    
+        init_pi = GW_scripts.id_initial_coupling(p1.distribution,p2.distribution)
+        wx = p1.distribution
+        wy = p2.distribution
+        Cx = p1.ipdm
+        Cy = p2.ipdm
+        reg_marginals = rho
+    
+        M = np.zeros((n1,n2))
+    
+        pi_samp, pi_samp2, log = ot.gromov.fused_unbalanced_gromov_wasserstein(Cx=Cx,Cy=Cy,wx=wx,wy=wy, M=M,
+                                                                               reg_marginals = reg_marginals,
+                                                                                divergence = divergence,epsilon = epsilon,
+                                                                               log = True, alpha = 0,
+                                                                              init_pi=init_pi)
+        if correspondence:
+            return pi_samp, 0.5 * math.sqrt( max(0, log['fugw_cost']))
+        else:
+            return  0.5 * math.sqrt( max(0, log['fugw_cost']))
+
+
+    @controller.wrap(limits=1, user_api='blas')
+    @staticmethod
+    def run_FUGW_diff_mat(prot1: 'GW_protein', prot2:'GW_protein', diff_mat: np.array ,alpha:float = 1, rho: float = 3,
+        epsilon:float = 3,correspondence: bool = False) -> Union[float, tuple[float, np.array]]:
+        
+        """
+        This calculates the fused unbalanced Gromov-Wasserstein distance between two proteins. 
+
+        :param prot1: The first protein
+        :param prot2: The second protein
+        :param diff_mat: A user-inputted matrix of the differences in the feature space between the residues of the two proteins. Of shape ``(len(prot1),len(prot2))``. \
+            ``diff_mat[i,j]`` is the difference in features between the ith residue of ``prot1`` and the jth residue of ``prot2``.
+        :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. A higher value of ``alpha`` means more geometric weight.
+        :param rho: Marginal relaxation term - trade off between geometric distortion and Kullback-Leibler divergence on marginals, higher rho means less mass is lost
+        :param epsilon: Regularization parameters for entropic approximation
+        :param correspondence: Whether to return the computed correspondence
+        :return: Returns the FGW distance and optimal correspondence if ``correspondence``
+
+        """
+
+        
+        p1,p2 = prot1, prot2
+        assert 0 <= alpha <=1
+        D1 = p1.ipdm
+        D2 = p2.ipdm
+        n1 = len(p1)
+        n2 = len(p2)
+        assert diff_mat.shape == (n1,n2)
+        reg_marginals = rho
+        G0 = id_initial_coupling(p1.distribution,p2.distribution)
+
+        pi_samp, pi_samp2, log = ot.gromov.fused_unbalanced_gromov_wasserstein(Cx=Cx,Cy=Cy,wx=wx,wy=wy, M=diff_mat,
+                                                                               reg_marginals = reg_marginals,
+                                                                                divergence = divergence,epsilon = epsilon,
+                                                                               log = True, alpha = 1- alpha,
+                                                                              init_pi=G0)
+        if correspondence:
+            return pi_samp, 0.5 * math.sqrt( max(0, log['fugw_cost']))
+        else:
+            return  0.5 * math.sqrt( max(0, log['fugw_cost']))
+
+
+
+    @controller.wrap(limits=1, user_api='blas')
+    @staticmethod
+    def run_FUGW_data_lists(prot1: 'GW_protein', prot2:'GW_protein', data1 :list[float] , data2 : list[float] , rho: float = 3,
+        epsilon:float = 3, alpha:float = 1, correspondence = False) -> Union[float, tuple[float, np.array]]:
+        
+        """
+        This calculates the fused unbalanced Gromov-Wasserstein distance between two proteins. 
+        It takes in a list of ``float`` s for each proteins representing the value in the feature space for each residue. 
+        The ijth entry in the associated distance matrix is ``abs(data1[i] - data2[j])``.
+        
+        :param prot1: The first protein
+        :param prot2: The second protein
+        :param data1: The data used in the first protein
+        :param data2: The data used in the second protein
+        :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. A higher value of ``alpha`` means more geometric weight, 
+        :param rho: Marginal relaxation term - trade off between geometric distortion and Kullback-Leibler divergence on marginals, higher rho means less mass is lost
+        :param epsilon: Regularization parameters for entropic approximation
+        :param correspondence: Whether to return the computed correspondence
+        :return: Returns the FGW distance and correspondence if ``correspondence``
+
+        """
+
+        p1,p2 = prot1, prot2
+        D1 = p1.ipdm
+        D2 = p2.ipdm
+
+        n1 = len(D1)
+        n2 = len(D2)
+        try:
+            assert n1 == len(data1)
+            assert n2 == len(data2)
+        except:
+            print(D1.shape, D2.shape, len(data1), len(data2))
+            assert False
+        
+        a = np.array([np.array([x]) for x in data1])
+        b = np.array(data2)
+        aa = np.broadcast_to(a,(n1,n2))
+        bb = np.broadcast_to(b,(n1,n2))
+        M = abs(aa-bb)
+        G0 = id_initial_coupling(p1.distribution,p2.distribution)
+        reg_marginals = rho
+        pi_samp, pi_samp2, log = ot.gromov.fused_unbalanced_gromov_wasserstein(Cx=Cx,Cy=Cy,wx=wx,wy=wy, M=diff_mat,
+                                                                               reg_marginals = reg_marginals,
+                                                                                divergence = divergence,epsilon = epsilon,
+                                                                               log = True, alpha = 1- alpha,
+                                                                              init_pi=G0)
+        if correspondence:
+            return pi_samp, 0.5 * math.sqrt( max(0, log['fugw_cost']))
+        else:
+            return  0.5 * math.sqrt( max(0, log['fugw_cost']))
+
+    
+    @controller.wrap(limits=1, user_api='blas')
+    @staticmethod
+    def run_FUGW_dict(prot1: 'GW_protein', prot2:'GW_protein', d: dict[str , dict[str ,float]] ,alpha:float = 1, correspondence: bool = False) -> Union[float, tuple[float, np.array]]:
+        
+        """
+        This calculates the fused unbalanced Gromov-Wasserstein distance between two proteins.  
+        
+        :param prot1: The first protein
+        :param prot2: The second protein
+        :param d: The dictionary used for the fused distances based on the protein sequences. Of the form ``d['A']['B'] == float``
+        :param alpha: The trade-off parameter in [0,1] between fused term and geometric term. A higher value of ``alpha`` means more geometric weight
+        :param rho: Marginal relaxation term - trade off between geometric distortion and Kullback-Leibler divergence on marginals, higher rho means less mass is lost
+        :param epsilon: Regularization parameters for entropic approximation
+        :param correspondence: Whether to return the correspondence
+        :return: Returns the FGW distance and correspondence if ``correspondence``
+
+        """
+
+        assert 0 <= alpha <=1
+        D1 = prot1.ipdm
+        D2 = prot2.ipdm
+        n1 = len(prot1)    
+        n2 = len(prot2)
+        # M has shape (n1,n2)
+        M = np.zeros((n1,n2))
+        for i in range(n1):
+            for j in range(n2):
+                if prot1.seq[i] in d.keys() and prot2.seq[j] in d[prot1.seq[i]].keys():
+                    M[i,j] = d[prot1.seq[i]][prot2.seq[j]]
+                else:
+                    M[i,j] = np.nan
+
+        col_means = np.nanmean(M, axis = 0)
+        inds = np.where(np.isnan(M))
+        M[inds] = np.take(col_means, inds[1])
+        row_means = np.nanmean(M, axis = 1)
+        inds = np.where(np.isnan(M))
+        M[inds] = np.take(row_means, inds[0])
+        full_mean = np.nanmean(M)
+        inds = np.where(np.isnan(M))
+        M[inds] = full_mean
+
+        G0 = id_initial_coupling(p1.distribution,p2.distribution)
+        reg_marginals = rho
+        pi_samp, pi_samp2, log = ot.gromov.fused_unbalanced_gromov_wasserstein(Cx=Cx,Cy=Cy,wx=wx,wy=wy, M=diff_mat,
+                                                                               reg_marginals = reg_marginals,
+                                                                                divergence = divergence,epsilon = epsilon,
+                                                                               log = True, alpha = 1- alpha,
+                                                                              init_pi=G0)
+        if correspondence:
+            return pi_samp, 0.5 * math.sqrt( max(0, log['fugw_cost']))
+        else:
+            return  0.5 * math.sqrt( max(0, log['fugw_cost']))

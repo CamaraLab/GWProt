@@ -82,7 +82,6 @@ As this uses CAJAL, there is the ability to use other functionalities from CAJAL
 
 
 
-
 FGW computations are done with the `POT package <https://pythonot.github.io/>`_. Multiple ways of inputting the feature space data are included. The first is the most general as it can use any user-inputted feature difference matrix. However 
 a new difference matrix must be used for every pair of proteins. 
 
@@ -106,7 +105,18 @@ UGW computations are done with the `POT package <https://pythonot.github.io/>`_.
 .. autofunction:: GWProt.GW_protein.GW_protein.run_UGW
 
 
-It is not recommended to use these on downsampled proteins, as the data is lost from the excluded 
+Similarly we have three versions of fused unbalanced GW. 
+
+.. autofunction:: GWProt.GW_protein.GW_protein.run_FUGW_diff_mat
+
+.. autofunction:: GWProt.GW_protein.GW_protein.run_FUGW_data_lists
+
+.. autofunction:: GWProt.GW_protein.GW_protein.run_FUGW_dict
+
+
+
+
+It is not recommended to use fused or unbalanced methods on downsampled proteins, as the data is lost from the excluded 
 residues. 
 
 
