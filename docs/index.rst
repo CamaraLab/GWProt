@@ -20,6 +20,7 @@ found at the `GWProt GitHub repository <https://github.com/CamaraLab/GWProt>`_.
 
    gromov_wasserstein
    fused_gromov_wasserstein
+   unbalanced_gromov_wasserstein
    lgd
    distortion_scaling
 

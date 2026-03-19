@@ -18,7 +18,7 @@ residues :math:`x` and :math:`y`. The *fused Gromov-Wasserstein distance* betwee
 proteins :math:`X` and :math:`Y` is defined as:
 
 .. math::
-   FGW(X, Y) = \min_T \frac{1}{2} \left( \sum_{i, j, k, l} \left[ \alpha \cdot |d_X(x_i, x_j) - d_Y(y_k, y_l)|^2 + (1 - \alpha) \cdot \delta(x_i, y_j) \right] T_{i, k} T_{j, l} \right)^{1/2}
+   FGW(X, Y) = \min_T \frac{1}{2} \left( \sum_{i, j, k, l} \left[ \alpha \cdot |d_X(x_i, x_j) - d_Y(y_k, y_l)|^2 + (1 - \alpha) \cdot \delta(x_i, y_k) \right] T_{i, k} T_{j, l} \right)^{1/2}
 
 where :math:`\alpha \in [0, 1]` determines the weight of the geometric cost relative 
 to the biochemical penalty. Optimal values of :math:`\alpha` may vary depending on the 
