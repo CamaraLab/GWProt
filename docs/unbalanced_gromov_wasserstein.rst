@@ -15,7 +15,7 @@ Mathematical Formulation
     &+ \rho \cdot KL^\otimes(\pi_1(T) | \mu_X) + \rho \cdot KL^\otimes(\pi_2(T) | \mu_Y)  \right)^{1/2}
 
    
-Where :math:`KL` denotes Kullback-Leibler divergence ,:math:`\mu_1, \mu_2` are the probability distributions on :math:`X` and :math:`Y`, and :math:`\pi_1(T), \pi_2(T)` are the projection of :math:`T` onton :math:`X` and :math:`Y`. Note that :math:`T` is non-negative, but does not have the strict marginal constraints as in GW and FGW.
+Where :math:`KL` denotes Kullback-Leibler divergence, :math:`\mu_1, \mu_2` are the probability distributions on :math:`X` and :math:`Y`, and :math:`\pi_1(T), \pi_2(T)` are the projection of :math:`T` onton :math:`X` and :math:`Y`. Note that :math:`T` is non-negative, but does not have the strict marginal constraints as in GW and FGW.
 Optimal values of :math:`\rho` may vary depending on the proteins, and higher :math:`\rho` means more mass is preserved. 
 
 We similarly have *fused unbalanced Gromov-Wasserstein distance* defined as: 
