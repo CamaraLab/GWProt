@@ -1,5 +1,5 @@
 Fused Gromov-Wasserstein Correspondences
-=========================================
+===========================================
 
 Overview
 --------
@@ -12,7 +12,7 @@ FGW adds a penalty term for aligning biochemically dissimilar residues, enabling
 biologically meaningful alignments.
 
 Mathematical Formulation
-------------------------
+--------------------------
 Let :math:`\delta(x, y)` denote the difference in the biochemical data associated with 
 residues :math:`x` and :math:`y`. The *fused Gromov-Wasserstein distance* between 
 proteins :math:`X` and :math:`Y` is defined as:
@@ -25,6 +25,6 @@ to the biochemical penalty. Optimal values of :math:`\alpha` may vary depending 
 type of biochemical data used.
 
 References
-----------
+------------
 .. [1] Vayer, T., Chapel, L., Flamary, R., Tavenard, R., & Courty, N. (2019). Fused Gromov-Wasserstein distance for structured objects. Advances in Neural Information Processing Systems, 32.
 

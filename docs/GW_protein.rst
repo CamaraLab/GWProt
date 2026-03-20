@@ -77,7 +77,7 @@ This is a wrapper for the following two functions:
 As this uses CAJAL, there is the ability to use other functionalities from CAJAL.
 
 **Computing FGW and UGW**
---------------------
+-------------------------------
 
 
 
