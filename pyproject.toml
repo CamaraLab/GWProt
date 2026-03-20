@@ -16,7 +16,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "GWProt"
-readme = "README.rst"
+readme = "README.md"
 version = "0.0.2"
 authors = [{name = "Elijah Gunther, Pablo Camara", email = "elijah.gunther@pennmedicine.upenn.edu"}]
 classifiers=[

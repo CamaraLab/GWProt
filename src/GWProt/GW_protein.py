@@ -640,7 +640,7 @@ class GW_protein:
         n1 = len(D1)
         n2 = len(D2)
     
-        init_pi = GW_scripts.id_initial_coupling(p1.distribution,p2.distribution)
+        init_pi = id_initial_coupling(p1.distribution,p2.distribution)
         wx = p1.distribution
         wy = p2.distribution
         Cx = p1.ipdm
