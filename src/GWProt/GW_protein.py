@@ -651,7 +651,7 @@ class GW_protein:
     
         pi_samp, pi_samp2, log = ot.gromov.fused_unbalanced_gromov_wasserstein(Cx=Cx,Cy=Cy,wx=wx,wy=wy, M=M,
                                                                                reg_marginals = reg_marginals,
-                                                                                divergence = divergence,epsilon = epsilon,
+                                                                                divergence = 'kl',epsilon = epsilon,
                                                                                log = True, alpha = 0,
                                                                               init_pi=init_pi)
         if correspondence:
@@ -693,7 +693,7 @@ class GW_protein:
 
         pi_samp, pi_samp2, log = ot.gromov.fused_unbalanced_gromov_wasserstein(Cx=Cx,Cy=Cy,wx=wx,wy=wy, M=diff_mat,
                                                                                reg_marginals = reg_marginals,
-                                                                                divergence = divergence,epsilon = epsilon,
+                                                                                divergence ='kl',epsilon = epsilon,
                                                                                log = True, alpha = 1- alpha,
                                                                               init_pi=G0)
         if correspondence:
@@ -747,7 +747,7 @@ class GW_protein:
         reg_marginals = rho
         pi_samp, pi_samp2, log = ot.gromov.fused_unbalanced_gromov_wasserstein(Cx=Cx,Cy=Cy,wx=wx,wy=wy, M=diff_mat,
                                                                                reg_marginals = reg_marginals,
-                                                                                divergence = divergence,epsilon = epsilon,
+                                                                                divergence = 'kl',epsilon = epsilon,
                                                                                log = True, alpha = 1- alpha,
                                                                               init_pi=G0)
         if correspondence:
@@ -802,7 +802,7 @@ class GW_protein:
         reg_marginals = rho
         pi_samp, pi_samp2, log = ot.gromov.fused_unbalanced_gromov_wasserstein(Cx=Cx,Cy=Cy,wx=wx,wy=wy, M=diff_mat,
                                                                                reg_marginals = reg_marginals,
-                                                                                divergence = divergence,epsilon = epsilon,
+                                                                                divergence = 'kl',epsilon = epsilon,
                                                                                log = True, alpha = 1- alpha,
                                                                               init_pi=G0)
         if correspondence:
