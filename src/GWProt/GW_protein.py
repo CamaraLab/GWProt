@@ -690,7 +690,14 @@ class GW_protein:
         reg_marginals = rho
         G0 = id_initial_coupling(p1.distribution,p2.distribution)
 
-        pi_samp, pi_samp2, log = ot.gromov.fused_unbalanced_gromov_wasserstein(Cx=Cx,Cy=Cy,wx=wx,wy=wy, M=diff_mat,
+
+        wx = p1.distribution
+        wy = p2.distribution
+        Cx = p1.ipdm
+        Cy = p2.ipdm
+        reg_marginals = rho
+
+        pi_samp, pi_samp2, log = ot.gromov.fused_unbalanced_gromov_wasserstein(Cx=Cx,Cy=Cy,wx=wx,wy=wy, M=M,
                                                                                reg_marginals = reg_marginals,
                                                                                 divergence ='kl',epsilon = epsilon,
                                                                                log = True, alpha =  alpha,
@@ -744,7 +751,14 @@ class GW_protein:
         M = abs(aa-bb)
         G0 = id_initial_coupling(p1.distribution,p2.distribution)
         reg_marginals = rho
-        pi_samp, pi_samp2, log = ot.gromov.fused_unbalanced_gromov_wasserstein(Cx=Cx,Cy=Cy,wx=wx,wy=wy, M=diff_mat,
+
+        init_pi = id_initial_coupling(p1.distribution,p2.distribution)
+        wx = p1.distribution
+        wy = p2.distribution
+        Cx = p1.ipdm
+        Cy = p2.ipdm
+
+        pi_samp, pi_samp2, log = ot.gromov.fused_unbalanced_gromov_wasserstein(Cx=Cx,Cy=Cy,wx=wx,wy=wy, M=M,
                                                                                reg_marginals = reg_marginals,
                                                                                 divergence = 'kl',epsilon = epsilon,
                                                                                log = True, alpha = alpha,
@@ -796,9 +810,16 @@ class GW_protein:
         inds = np.where(np.isnan(M))
         M[inds] = full_mean
 
+        init_pi = id_initial_coupling(p1.distribution,p2.distribution)
+        wx = p1.distribution
+        wy = p2.distribution
+        Cx = p1.ipdm
+        Cy = p2.ipdm
+
+
         G0 = id_initial_coupling(p1.distribution,p2.distribution)
         reg_marginals = rho
-        pi_samp, pi_samp2, log = ot.gromov.fused_unbalanced_gromov_wasserstein(Cx=Cx,Cy=Cy,wx=wx,wy=wy, M=diff_mat,
+        pi_samp, pi_samp2, log = ot.gromov.fused_unbalanced_gromov_wasserstein(Cx=Cx,Cy=Cy,wx=wx,wy=wy, M=M,
                                                                                reg_marginals = reg_marginals,
                                                                                 divergence = 'kl',epsilon = epsilon,
                                                                                log = True, alpha =  alpha,
