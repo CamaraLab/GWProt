@@ -682,7 +682,6 @@ class GW_protein:
 
         
         p1,p2 = prot1, prot2
-        assert 0 <= alpha <=1
         D1 = p1.ipdm
         D2 = p2.ipdm
         n1 = len(p1)
@@ -694,7 +693,7 @@ class GW_protein:
         pi_samp, pi_samp2, log = ot.gromov.fused_unbalanced_gromov_wasserstein(Cx=Cx,Cy=Cy,wx=wx,wy=wy, M=diff_mat,
                                                                                reg_marginals = reg_marginals,
                                                                                 divergence ='kl',epsilon = epsilon,
-                                                                               log = True, alpha = 1- alpha,
+                                                                               log = True, alpha =  alpha,
                                                                               init_pi=G0)
         if correspondence:
             return pi_samp, 0.5 * math.sqrt( max(0, log['fugw_cost']))
@@ -748,7 +747,7 @@ class GW_protein:
         pi_samp, pi_samp2, log = ot.gromov.fused_unbalanced_gromov_wasserstein(Cx=Cx,Cy=Cy,wx=wx,wy=wy, M=diff_mat,
                                                                                reg_marginals = reg_marginals,
                                                                                 divergence = 'kl',epsilon = epsilon,
-                                                                               log = True, alpha = 1- alpha,
+                                                                               log = True, alpha = alpha,
                                                                               init_pi=G0)
         if correspondence:
             return pi_samp, 0.5 * math.sqrt( max(0, log['fugw_cost']))
@@ -774,7 +773,6 @@ class GW_protein:
 
         """
 
-        assert 0 <= alpha <=1
         D1 = prot1.ipdm
         D2 = prot2.ipdm
         n1 = len(prot1)    
@@ -803,7 +801,7 @@ class GW_protein:
         pi_samp, pi_samp2, log = ot.gromov.fused_unbalanced_gromov_wasserstein(Cx=Cx,Cy=Cy,wx=wx,wy=wy, M=diff_mat,
                                                                                reg_marginals = reg_marginals,
                                                                                 divergence = 'kl',epsilon = epsilon,
-                                                                               log = True, alpha = 1- alpha,
+                                                                               log = True, alpha =  alpha,
                                                                               init_pi=G0)
         if correspondence:
             return pi_samp, 0.5 * math.sqrt( max(0, log['fugw_cost']))
