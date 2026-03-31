@@ -32,7 +32,7 @@ from Bio import PDB, SeqIO
 import blosum
 import scipy.sparse.csgraph
 from typing import Mapping 
-from .GW_protein import GW_protein
+from .GW_protein import GW_protein , read_pdb
 
 
 
@@ -143,6 +143,23 @@ def get_BLOSUM_dict(n:int = 62)-> dict[str , dict[str ,float]]:
 
 
     return correct_dictionary(BB_raw)
+
+def split_data_list(ll: list, n: int) -> list[float]:
+    """
+
+    This method splits a list of ``float`` s into ``n`` evenly sized lists and returns a list of the means of the sublists. 
+    This is useful for inputting evenly downsampled proteins into ``GW_protein.GW_protein.run_FGW_datalists``
+    
+    :param ll: Input list of floats. 
+    :param n: How many
+    :return: A list of averaged values 
+    
+    """
+
+    if len(ll) <= n:
+        return ll
+    return [np.mean(l) for l in read_pdb.split_list(ll,n)] 
+
 
 def get_Grantham_dict()-> dict[str , dict[str ,float]]:
     """

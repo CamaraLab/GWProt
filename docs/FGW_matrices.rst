@@ -8,6 +8,9 @@ This module provides methods to generate difference dictionaries and data lists 
 .. module:: GWProt.FGW_matrices
 
 
+
+.. autofunction:: GWProt.FGW_matrices.split_data_list
+
 ----------------------
 
 
