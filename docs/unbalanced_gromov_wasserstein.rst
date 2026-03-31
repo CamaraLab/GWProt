@@ -24,7 +24,7 @@ Optimal values of :math:`\rho` may vary depending on the proteins, and higher :m
 We similarly have *fused unbalanced Gromov-Wasserstein distance* defined as: 
 
 .. math::
-    UGW(X, Y) 
+    FUGW(X, Y) 
     = \min_{T \geq 0}  \frac{1}{2} \Bigg( \sum_{i, j, k, l} [   |d_X(x_i, x_j) - d_Y(y_k, y_l)|^2    \cdot T_{i, k} T_{j, l}]  \\
     + \rho \cdot KL^\otimes(\pi_1(T) | \mu_X) + \rho \cdot KL^\otimes(\pi_2(T) | \mu_Y)   \\
        \alpha \cdot \sum_{i,j} \delta(x_i, y_k) \cdot T_{i, k} \Bigg)^{1/2}
