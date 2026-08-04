@@ -13,7 +13,11 @@ GWProt uses [Pymol 3](https://pymol.org/) for visualization and the [fasta36](ht
 Documentation
 =======================================
 
-Full documentation and tutorials can be found at [gwprot.readthedocs.io](https://gwprot.readthedocs.io/).
+Full documentation and tutorials are available at [gwprot.readthedocs.io](https://gwprot.readthedocs.io/). 
+
+For further details about GWProt see:
+
+- E. Gunther, P. G. Camara. _Exploring the structural lexicon of the proteome via metric geometry._ PLOS Computational Biology 22 (2026) 6. DOI: [10.1371/journal.pcbi.1014487](https://doi.org/10.1371/journal.pcbi.1014487).
 
 Docker
 =================================
